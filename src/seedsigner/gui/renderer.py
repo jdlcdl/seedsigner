@@ -200,6 +200,8 @@ class Renderer(ConfigurableSingleton):
         self.draw.rectangle((0, 0, self.canvas_width, self.canvas_height), outline=0, fill=0)
         self.show_image()
 
+    def toggle_backlight(self):
+        self.disp.toggle_backlight()
 
 
 

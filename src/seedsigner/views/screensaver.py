@@ -109,6 +109,7 @@ class ScreensaverScreen(LogoScreen):
         self.cur_y = int(self.logo.size[1] / 2)
 
         self._is_running = False
+        self._is_branding = False
         self.last_screen = None
 
 
@@ -116,7 +117,6 @@ class ScreensaverScreen(LogoScreen):
     def is_running(self):
         return self._is_running
     
-
     def rand_increment(self):
         max_increment = 10.0
         min_increment = 1.0
@@ -129,8 +129,13 @@ class ScreensaverScreen(LogoScreen):
     def start(self):
         if self.is_running:
             return
-
         self._is_running = True
+
+        if Settings.get_instance().get_value(SettingsConstants.SETTING__SCREENSAVER) == SettingsConstants.SCREENSAVER_BRANDING:
+            self._is_branding = True
+        else:
+            self._is_branding = False
+
 
         # Store the current screen in order to restore it later
         self.last_screen = self.renderer.canvas.copy()
@@ -141,9 +146,15 @@ class ScreensaverScreen(LogoScreen):
         # never gives up the lock until it returns.
         with self.renderer.lock:
             try:
+                if not self._is_branding:
+                    self.renderer.toggle_backlight()
                 while True:
                     if self.buttons.has_any_input():
                         return self.stop()
+
+                    if not self._is_branding:
+                        time.sleep(0.1)
+                        continue
 
                     # Must crop the image to the exact display size
                     crop = self.image.crop((
@@ -189,6 +200,9 @@ class ScreensaverScreen(LogoScreen):
     def stop(self):
         # Restore the original screen
         self.renderer.show_image(self.last_screen)
+
+        if not self._is_branding:
+            self.renderer.disp.toggle_backlight()
 
         self._is_running = False
 
