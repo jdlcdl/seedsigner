@@ -386,8 +386,10 @@ class SeedOptionsView(View):
         else:
             button_data.append(SCAN_PSBT)
         
-        if self.settings.get_value(SettingsConstants.SETTING__XPUB_EXPORT) == SettingsConstants.OPTION__ENABLED:
-            button_data.append(EXPORT_XPUB)
+        ### TEMPORARY -jdlcdl: force navigation while testing explicit dependency on enabled settings
+        #if self.settings.get_value(SettingsConstants.SETTING__XPUB_EXPORT) == SettingsConstants.OPTION__ENABLED:
+        #    button_data.append(EXPORT_XPUB)
+        button_data.append(EXPORT_XPUB)
 
         button_data.append(EXPLORER)
         button_data.append(BACKUP)
@@ -672,7 +674,8 @@ class SeedExportXpubDetailsView(View):
         
         self.seed_num = seed_num
         self.seed = self.controller.get_seed(self.seed_num)
-
+        if not self.settings.get_value(SettingsConstants.SETTING__XPUB_DETAILS) == SettingsConstants.OPTION__ENABLED:
+            raise Exception("This setting has been disabled!")
 
     def run(self):
         if self.script_type == SettingsConstants.CUSTOM_DERIVATION:
@@ -764,6 +767,9 @@ class SeedExportXpubQRDisplayView(View):
             wordlist_language_code=self.seed.wordlist_language_code
         )
 
+        if not self.settings.get_value(SettingsConstants.SETTING__XPUB_EXPORT) == SettingsConstants.OPTION__ENABLED:
+            raise Exception("This setting has been disabled!")
+
 
     def run(self):
         QRDisplayScreen(qr_encoder=self.qr_encoder).display()
@@ -812,6 +818,8 @@ class SeedWordsView(View):
             self.seed = self.controller.storage.get_pending_seed()
         else:
             self.seed = self.controller.get_seed(self.seed_num)
+            if not self.settings.get_value(SettingsConstants.SETTING__SEED_BACKUP) == SettingsConstants.OPTION__ENABLED:
+                raise Exception("This setting has been disabled!")
         self.page_index = page_index
         self.num_pages=int(len(self.seed.mnemonic_list)/4)
 
@@ -1100,6 +1108,8 @@ class SeedTranscribeSeedQRWholeQRView(View):
         self.seedqr_format = seedqr_format
         self.num_modules = num_modules
         self.seed = self.controller.get_seed(seed_num)
+        if not self.settings.get_value(SettingsConstants.SETTING__SEED_BACKUP) == SettingsConstants.OPTION__ENABLED:
+            raise Exception("This setting has been disabled!")
     
 
     def run(self):
@@ -1135,6 +1145,8 @@ class SeedTranscribeSeedQRZoomedInView(View):
         self.seed_num = seed_num
         self.seedqr_format = seedqr_format
         self.seed = self.controller.get_seed(seed_num)
+        if not self.settings.get_value(SettingsConstants.SETTING__SEED_BACKUP) == SettingsConstants.OPTION__ENABLED:
+            raise Exception("Disabled!")
     
 
     def run(self):

@@ -566,6 +566,8 @@ class ToolsAddressExplorerAddressListView(View):
         self.is_change = is_change
         self.start_index = start_index
         self.selected_button_index = selected_button_index
+        if not self.settings.get_value(SettingsConstants.SETTING__ADDRESS_EXPLORER) == SettingsConstants.OPTION__ENABLED:
+            raise Exception("This setting has been disabled!")
 
 
     def run(self):
