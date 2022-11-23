@@ -162,6 +162,11 @@ class SettingsConstants:
 
     # Hidden settings
     SETTING__QR_BRIGHTNESS = "qr_background_color"
+    PRUDENTLY_PARANOID_SETTINGS = [
+        SETTING__XPUB_EXPORT,
+        SETTING__SEED_BACKUP,
+        SETTING__ADDRESS_EXPLORER,
+    ]
 
 
     # Structural constants

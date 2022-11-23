@@ -159,6 +159,12 @@ class SettingsEntryUpdateSelectionView(View):
             else:
                 updated_value = value
 
+        if self.settings_entry.attr_name in SettingsConstants.PRUDENTLY_PARANOID_SETTINGS \
+        and initial_value == SettingsConstants.OPTION__DISABLED \
+        and updated_value == SettingsConstants.OPTION__ENABLED \
+        and len(self.controller.storage.seeds) > 0:
+            raise Exception("Please discard all seeds before enabling this option!")
+
         self.settings.set_value(
             attr_name=self.settings_entry.attr_name,
             value=updated_value
