@@ -29,7 +29,9 @@ class ToolsMenuView(View):
         DICE = ("New seed", FontAwesomeIconConstants.DICE)
         KEYBOARD = ("Calc 12th/24th word", FontAwesomeIconConstants.KEYBOARD)
         EXPLORER = "Address Explorer"
-        button_data = [IMAGE, DICE, KEYBOARD, EXPLORER]
+        button_data = [IMAGE, DICE, KEYBOARD]
+        if self.settings.get_value(SettingsConstants.SETTING__ADDRESS_EXPLORER) == SettingsConstants.OPTION__ENABLED:
+            button_data.append(EXPLORER)
         screen = ButtonListScreen(
             title="Tools",
             is_button_text_centered=False,

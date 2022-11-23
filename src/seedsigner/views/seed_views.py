@@ -386,13 +386,15 @@ class SeedOptionsView(View):
         else:
             button_data.append(SCAN_PSBT)
         
-        ### TEMPORARY -jdlcdl: force navigation while testing explicit dependency on enabled settings
-        #if self.settings.get_value(SettingsConstants.SETTING__XPUB_EXPORT) == SettingsConstants.OPTION__ENABLED:
-        #    button_data.append(EXPORT_XPUB)
-        button_data.append(EXPORT_XPUB)
+        if self.settings.get_value(SettingsConstants.SETTING__XPUB_EXPORT) == SettingsConstants.OPTION__ENABLED:
+            button_data.append(EXPORT_XPUB)
 
-        button_data.append(EXPLORER)
-        button_data.append(BACKUP)
+        if self.settings.get_value(SettingsConstants.SETTING__ADDRESS_EXPLORER) == SettingsConstants.OPTION__ENABLED:
+            button_data.append(EXPLORER)
+
+        if self.settings.get_value(SettingsConstants.SETTING__SEED_BACKUP) == SettingsConstants.OPTION__ENABLED:
+            button_data.append(BACKUP)
+
         button_data.append(DISCARD)
 
         selected_menu_num = seed_screens.SeedOptionsScreen(
@@ -674,8 +676,6 @@ class SeedExportXpubDetailsView(View):
         
         self.seed_num = seed_num
         self.seed = self.controller.get_seed(self.seed_num)
-        if not self.settings.get_value(SettingsConstants.SETTING__XPUB_DETAILS) == SettingsConstants.OPTION__ENABLED:
-            raise Exception("This setting has been disabled!")
 
     def run(self):
         if self.script_type == SettingsConstants.CUSTOM_DERIVATION:
@@ -1146,7 +1146,7 @@ class SeedTranscribeSeedQRZoomedInView(View):
         self.seedqr_format = seedqr_format
         self.seed = self.controller.get_seed(seed_num)
         if not self.settings.get_value(SettingsConstants.SETTING__SEED_BACKUP) == SettingsConstants.OPTION__ENABLED:
-            raise Exception("Disabled!")
+            raise Exception("This setting has been disabled!")
     
 
     def run(self):
