@@ -1,3 +1,9 @@
+# jdlcdl branch: prudently_paranoid_settings
+
+Some sensitive settings (Xpub export, Address explorer, Seed backup) can NOT be modified from 'disabled' to 'enabled' while seeds are currently loaded.
+
+---------------
+
 # Build an offline, airgapped Bitcoin signing device for less than $50!
 
 ![Image of SeedSigners in Open Pill Enclosures](docs/img/Open_Pill_Star.JPG)![Image of SeedSigner in an Orange Pill enclosure](docs/img/Orange_Pill.JPG)
