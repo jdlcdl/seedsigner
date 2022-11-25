@@ -1271,6 +1271,8 @@ class AddressVerificationStartView(View):
             script_type=script_type,
             network=network
         )
+        if not script_type in self.settings.get_value(SettingsConstants.SETTING__SCRIPT_TYPES):
+            raise Exception('Script Type is disabled in settings.')
 
 
     def run(self):
@@ -1300,6 +1302,9 @@ class AddressVerificationStartView(View):
         elif self.controller.unverified_address["script_type"] == SettingsConstants.LEGACY_P2PKH:
             # TODO: detect single sig vs multisig or have to prompt?
             return Destination(NotYetImplementedView)
+
+        if not sig_type in self.settings.get_value(SettingsConstants.SETTING__SIG_TYPES):
+            raise Exception('Sig Type is disabled in settings.')
 
         derivation_path = embit_utils.get_standard_derivation_path(
             network=self.controller.unverified_address["network"],
