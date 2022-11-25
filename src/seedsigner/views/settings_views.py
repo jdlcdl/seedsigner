@@ -159,11 +159,16 @@ class SettingsEntryUpdateSelectionView(View):
             else:
                 updated_value = value
 
+        # Cannot "enable" prudently paranoid settings while seeds are loaded
         if self.settings_entry.attr_name in SettingsConstants.PRUDENTLY_PARANOID_SETTINGS \
-        and initial_value == SettingsConstants.OPTION__DISABLED \
-        and updated_value == SettingsConstants.OPTION__ENABLED \
         and len(self.controller.storage.seeds) > 0:
-            raise Exception("Please discard all seeds before enabling this option!")
+            if self.settings_entry.type == SettingsConstants.TYPE__ENABLED_DISABLED \
+            and initial_value == SettingsConstants.OPTION__DISABLED \
+            and updated_value == SettingsConstants.OPTION__ENABLED:
+            	raise Exception("Please discard all seeds before enabling this option.")
+            elif self.settings_entry.type == SettingsConstants.TYPE__MULTISELECT \
+            and len(set(updated_value).difference(initial_value)) > 0:
+                raise Exception("Please discard all seeds before enabling any of these options.")
 
         self.settings.set_value(
             attr_name=self.settings_entry.attr_name,
