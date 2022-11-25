@@ -28,7 +28,7 @@ class PSBTSelectSeedView(View):
         if not self.controller.psbt:
             # Shouldn't be able to get here
             raise Exception("No PSBT currently loaded")
-        
+
         seeds = self.controller.storage.seeds
 
         SCAN_SEED = ("Scan a seed", FontAwesomeIconConstants.QRCODE)
@@ -465,6 +465,20 @@ class PSBTFinalizeView(View):
         if not psbt_parser:
             # Should not be able to get here
             return Destination(MainMenuView)
+
+        if psbt_parser.is_multisig:
+            if not SettingsConstants.MULTISIG in self.settings.get_value(SettingsConstants.SETTING__SIG_TYPES):
+                raise Exception("Multisig is disabled in settings.")
+        else:
+            if not SettingsConstants.SINGLE_SIG in self.settings.get_value(SettingsConstants.SETTING__SIG_TYPES):
+                raise Exception("Single Sig is disabled in settings.")
+        if psbt_parser.policy['type'] == "p2wpkh" \
+        and not SettingsConstants.NATIVE_SEGWIT in self.settings.get_value(SettingsConstants.SETTING__SCRIPT_TYPES):
+            raise Exception("Native Segwit is disabled in settings.")
+        if psbt_parser.policy['type'] == "p2wsh" \
+        and not SettingsConstants.NESTED_SEGWIT in self.settings.get_value(SettingsConstants.SETTING__SCRIPT_TYPES):
+            raise Exception("Nested Segwit is disabled in settings.")
+
 
         selected_menu_num = psbt_screens.PSBTFinalizeScreen(
             button_data=["Approve PSBT"]
