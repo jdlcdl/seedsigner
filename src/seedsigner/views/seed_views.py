@@ -768,7 +768,7 @@ class SeedExportXpubQRDisplayView(View):
         )
 
         if not self.settings.get_value(SettingsConstants.SETTING__XPUB_EXPORT) == SettingsConstants.OPTION__ENABLED:
-            raise Exception("This setting has been disabled!")
+            raise Exception("Xpub Export is disabled in settings.")
 
 
     def run(self):
@@ -819,7 +819,7 @@ class SeedWordsView(View):
         else:
             self.seed = self.controller.get_seed(self.seed_num)
             if not self.settings.get_value(SettingsConstants.SETTING__SEED_BACKUP) == SettingsConstants.OPTION__ENABLED:
-                raise Exception("This setting has been disabled!")
+                raise Exception("Seed Backup is disabled in settings.")
         self.page_index = page_index
         self.num_pages=int(len(self.seed.mnemonic_list)/4)
 
@@ -1109,7 +1109,7 @@ class SeedTranscribeSeedQRWholeQRView(View):
         self.num_modules = num_modules
         self.seed = self.controller.get_seed(seed_num)
         if not self.settings.get_value(SettingsConstants.SETTING__SEED_BACKUP) == SettingsConstants.OPTION__ENABLED:
-            raise Exception("This setting has been disabled!")
+            raise Exception("Seed Backup is disabled in settings.")
     
 
     def run(self):
@@ -1146,7 +1146,7 @@ class SeedTranscribeSeedQRZoomedInView(View):
         self.seedqr_format = seedqr_format
         self.seed = self.controller.get_seed(seed_num)
         if not self.settings.get_value(SettingsConstants.SETTING__SEED_BACKUP) == SettingsConstants.OPTION__ENABLED:
-            raise Exception("This setting has been disabled!")
+            raise Exception("Seed Backup is disabled in settings.")
     
 
     def run(self):

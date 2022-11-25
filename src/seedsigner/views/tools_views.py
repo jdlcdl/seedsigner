@@ -512,6 +512,8 @@ class ToolsAddressExplorerAddressTypeView(View):
             script_type=script_type,
         )
         if self.seed_num is not None:
+            if not SettingsConstants.SINGLE_SIG in self.settings.get_value(SettingsConstants.SETTING__SIG_TYPES):
+                raise Exception("Single Sig is disabled in settings.")
             self.seed = self.controller.storage.seeds[seed_num]
             data["seed_num"] = self.seed
 
@@ -569,7 +571,7 @@ class ToolsAddressExplorerAddressListView(View):
         self.start_index = start_index
         self.selected_button_index = selected_button_index
         if not self.settings.get_value(SettingsConstants.SETTING__ADDRESS_EXPLORER) == SettingsConstants.OPTION__ENABLED:
-            raise Exception("This setting has been disabled!")
+            raise Exception("Address Explorer is disabled in settings.")
 
 
     def run(self):
