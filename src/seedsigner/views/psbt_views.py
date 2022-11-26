@@ -467,18 +467,13 @@ class PSBTFinalizeView(View):
             return Destination(MainMenuView)
 
         if psbt_parser.is_multisig:
-            if not SettingsConstants.MULTISIG in self.settings.get_value(SettingsConstants.SETTING__SIG_TYPES):
-                raise Exception("Multisig is disabled in settings.")
+            self.settings.is_enabled(SettingsConstants.MULTISIG, assert_=True)
         else:
-            if not SettingsConstants.SINGLE_SIG in self.settings.get_value(SettingsConstants.SETTING__SIG_TYPES):
-                raise Exception("Single Sig is disabled in settings.")
-        if psbt_parser.policy['type'] == "p2wpkh" \
-        and not SettingsConstants.NATIVE_SEGWIT in self.settings.get_value(SettingsConstants.SETTING__SCRIPT_TYPES):
-            raise Exception("Native Segwit is disabled in settings.")
-        if psbt_parser.policy['type'] == "p2wsh" \
-        and not SettingsConstants.NESTED_SEGWIT in self.settings.get_value(SettingsConstants.SETTING__SCRIPT_TYPES):
-            raise Exception("Nested Segwit is disabled in settings.")
-
+            self.settings.is_enabled(SettingsConstants.SINGLE_SIG, assert_=True)
+        if psbt_parser.policy['type'] == "p2wpkh":
+            self.settings.is_enabled(SettingsConstants.NATIVE_SEGWIT, assert_=True)
+        elif psbt_parser.policy['type'] == "2wsh":
+            self.settings.is_enabled(SettingsConstants.NESTED_SEGWIT, assert_=True)
 
         selected_menu_num = psbt_screens.PSBTFinalizeScreen(
             button_data=["Approve PSBT"]
