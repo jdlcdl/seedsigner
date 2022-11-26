@@ -466,14 +466,19 @@ class PSBTFinalizeView(View):
             # Should not be able to get here
             return Destination(MainMenuView)
 
+        print(psbt_parser.__dict__)
         if psbt_parser.is_multisig:
             self.settings.is_enabled(SettingsConstants.MULTISIG, assert_=True)
+            if psbt_parser.policy['type'] == "p2wsh":
+                self.settings.is_enabled(SettingsConstants.NATIVE_SEGWIT, assert_=True)
+            elif psbt_parser.policy['type'] == "p2sh-p2wsh":
+                self.settings.is_enabled(SettingsConstants.NESTED_SEGWIT, assert_=True)
         else:
             self.settings.is_enabled(SettingsConstants.SINGLE_SIG, assert_=True)
-        if psbt_parser.policy['type'] == "p2wpkh":
-            self.settings.is_enabled(SettingsConstants.NATIVE_SEGWIT, assert_=True)
-        elif psbt_parser.policy['type'] == "2wsh":
-            self.settings.is_enabled(SettingsConstants.NESTED_SEGWIT, assert_=True)
+            if psbt_parser.policy['type'] == "p2wpkh":
+                self.settings.is_enabled(SettingsConstants.NATIVE_SEGWIT, assert_=True)
+            elif psbt_parser.policy['type'] == "p2sh-p2wpkh":
+                self.settings.is_enabled(SettingsConstants.NESTED_SEGWIT, assert_=True)
 
         selected_menu_num = psbt_screens.PSBTFinalizeScreen(
             button_data=["Approve PSBT"]
