@@ -1,6 +1,11 @@
 # jdlcdl branch: prudently_paranoid_settings
 
-Some sensitive settings (Xpub export, Address explorer, Seed backup) can NOT be modified from 'disabled' to 'enabled' while seeds are currently loaded.
+If the user has chosen to disable particular privacy/security settings, then these settings cannot be re-enabled while seeds are currently loaded.  Further, even if navigable, views which arguably should respect these settings will raise an exception if the settings are disable; ultimately, should not be able to navigate to disabled Views.
+* Sig types
+* Script types
+* Xpub export
+* Seed backup (new advanced setting)
+* Address explorer (new advanced setting)
 
 ---------------
 
