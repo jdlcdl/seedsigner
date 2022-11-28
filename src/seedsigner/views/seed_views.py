@@ -386,10 +386,14 @@ class SeedOptionsView(View):
         else:
             button_data.append(SCAN_PSBT)
         
-        if self.settings.is_enabled(SettingsConstants.SETTING__XPUB_EXPORT):
+        if self.settings.is_enabled(SettingsConstants.SETTING__XPUB_EXPORT) \
+        and self.settings.is_enabled(SettingsConstants.SETTING__SIG_TYPES) \
+        and self.settings.is_enabled(SettingsConstants.SETTING__SCRIPT_TYPES):
             button_data.append(EXPORT_XPUB)
 
-        if self.settings.is_enabled(SettingsConstants.SETTING__ADDRESS_EXPLORER):
+        if self.settings.is_enabled(SettingsConstants.SETTING__ADDRESS_EXPLORER) \
+        and self.settings.is_enabled(SettingsConstants.SINGLE_SIG) \
+        and self.settings.is_enabled(SettingsConstants.SETTING__SCRIPT_TYPES):
             button_data.append(EXPLORER)
 
         if self.settings.is_enabled(SettingsConstants.SETTING__SEED_BACKUP):

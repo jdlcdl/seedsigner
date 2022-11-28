@@ -155,14 +155,17 @@ class Settings(Singleton):
 
     def is_enabled(self, attr_name: str, assert_: bool = False) ->bool:
         """
-            Returns True if attr_name is enabled in settings, else False.
-            raises Exception if assert_ argument is True and not-enabled.
+            Returns True if attr_name is "enabled" in settings, else False.
+            raises Exception if assert_ argument is True and NOT "enabled".
         """
         enabled = False
         if attr_name in self._data:
             settings_entry = SettingsDefinition.get_settings_entry(attr_name)
             if settings_entry.type == SettingsConstants.TYPE__ENABLED_DISABLED:
                 if self.get_value(attr_name) == SettingsConstants.OPTION__ENABLED:
+                    enabled = True
+            elif settings_entry.type == SettingsConstants.TYPE__MULTISELECT:
+                if len(self.get_value(attr_name)):
                     enabled = True
         else:
             # maybe it's an option in a select_1 or multiselect
