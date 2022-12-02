@@ -149,7 +149,7 @@ class ScreensaverScreen(LogoScreen):
                 if not self._is_branding:
                     self.renderer.toggle_backlight()
                 while True:
-                    if self.buttons.has_any_input():
+                    if self.buttons.has_any_input() or self.buttons.override_ind:
                         return self.stop()
 
                     if not self._is_branding:
