@@ -189,8 +189,7 @@ class RestartView(View):
             time.sleep(0.25)
 
             # Kill the SeedSigner process; Running the process again.
-            # `.*` is a wildcard to detect either `python`` or `python3`.
-            call("kill $(pidof python*) & python /opt/src/main.py", shell=True)
+            call("kill $(pidof python python3) & python /opt/src/main.py", shell=True)
 
 
 
