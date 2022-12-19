@@ -1,6 +1,6 @@
 # jdlcdl branch: screensaver_blankscreen
 
-Instead of the bouncing seedsigner-pill after 2m of being idle (which then adds 55% to 60% cpu usage to seedsigner's python process), just blank the screen by pulling the backlight low, and stay cool. Controllable via the screensaver=blankscreen advanced settings entry.
+Instead of the bouncing SeedSigner-pill logo after 2m of being idle (which then adds 55% to 60% cpu usage to seedsigner's python process according to 'ps' as well as running warmer by 5-6 degrees celsius according to 'vcgencmd measure_temp' on an Rpi2), just blank the screen by pulling the backlight low and avoid the processing necessary to bounce the SeedSigner logo on screen -- and stay cool. Controllable via the screensaver=blankscreen advanced settings entry.
 
 ---------------
 # Build an offline, airgapped Bitcoin signing device for less than $50!
