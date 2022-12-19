@@ -1,11 +1,11 @@
 # jdlcdl branch: prudently_paranoid_settings
 
-If the user has chosen to disable particular privacy/security settings, then these settings cannot be re-enabled while seeds are currently loaded.  Further, even if navigable, views which arguably should respect these settings will raise an exception if the settings are disable; ultimately, should not be able to navigate to disabled Views.
-* Sig types
-* Script types
-* Xpub export
-* Seed backup (new advanced setting)
-* Address explorer (new advanced setting)
+If the user has chosen to disable particular privacy/security settings, then these settings cannot be re-enabled while seeds are currently loaded. For security/privacy reasons, even if navigable, views which arguably should respect these settings will raise an ugly exception at last minute if the settings are disabled. More functionally, the user will not even be offered navigation to views that are disabled by these settings.
+* Sig types (if disabled: blocks address verification/exploration, signing of psbts, and output of xpubs for this sig type)
+* Script types (if disabled: blocks address verification/exploration, signing of psbts, and output of xpubs for this script type)
+* Xpub export (if disabled: blocks display of xpub qrcode)
+* Seed backup (new advanced setting; if disabled: blocks seedbackup words/seedqr)
+* Address explorer (new advanced setting; if disabled: blocks exploration of addresses by selected seed, but does NOT block via scanned wallet-descriptor)
 
 ---------------
 
