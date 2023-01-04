@@ -1341,6 +1341,22 @@ class SeedSingleSigAddressVerificationSelectSeedScreen(ButtonListScreen):
 
 
 
+# begin borrowed code from an unmerged kdmukai branch
+@dataclass
+class SeedSelectSeedScreen(ButtonListScreen):
+    text: str = ""
+
+    def __post_init__(self):
+        self.is_bottom_list = True
+        super().__post_init__()
+        self.components.append(TextArea(
+            text=self.text,
+            screen_y=self.top_nav.height,
+        ))
+# end borrowed code from an unmerged kdmukai branch
+
+
+
 @dataclass
 class SeedAddressVerificationScreen(ButtonListScreen):
     """

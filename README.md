@@ -1,3 +1,9 @@
+# jdlcdl branch: seed_xor
+
+Once SeedXOR is enabled within advanced settings AND if another seed of the same mnemonic length is already loaded, then user can SeedXOR before finalizing.
+
+---------------
+
 # Build an offline, airgapped Bitcoin signing device for less than $50!
 
 ![Image of SeedSigners in Open Pill Enclosures](docs/img/Open_Pill_Star.JPG)![Image of SeedSigner in an Orange Pill enclosure](docs/img/Orange_Pill.JPG)

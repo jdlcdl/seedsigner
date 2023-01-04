@@ -113,6 +113,17 @@ class Seed:
     def get_xpub(self, wallet_path: str = '/', network: str = SettingsConstants.MAINNET):
         return embit_utils.get_xpub(seed_bytes=self.seed_bytes, derivation_path=wallet_path, embit_network=SettingsConstants.map_network_to_embit(network))
 
+    def seed_xor(self, other):
+        if len(self.mnemonic_list) != len(other.mnemonic_list):
+            raise Exception("XOR requires seeds of similar mnemonic length!")
+        if self.mnemonic_list == other.mnemonic_list:
+            raise Exception("You may not XOR a seed with itself.")
+        new_entropy = bytes(i^j for i,j in zip(
+            bip39.mnemonic_to_bytes(self.mnemonic_str),
+            bip39.mnemonic_to_bytes(other.mnemonic_str)
+        ))
+        self._mnemonic = bip39.mnemonic_from_bytes(new_entropy).split()
+        self._generate_seed()
 
     # Derives a BIP85 mnemonic (seed word) from the master seed words using embit functions
     def get_bip85_child_mnemonic(self, bip85_index: int, bip85_num_words: int, network: str = SettingsConstants.MAINNET):

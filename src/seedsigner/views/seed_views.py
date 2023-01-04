@@ -211,6 +211,7 @@ class SeedFinalizeView(View):
 
     def run(self):
         FINALIZE = "Done"
+        SEED_XOR = ("Seed XOR", FontAwesomeIconConstants.BIOHAZARD)
         PASSPHRASE = ("Add Passphrase", FontAwesomeIconConstants.LOCK)
         button_data = []
 
@@ -218,6 +219,10 @@ class SeedFinalizeView(View):
 
         if self.settings.get_value(SettingsConstants.SETTING__PASSPHRASE) != SettingsConstants.OPTION__DISABLED:
             button_data.append(PASSPHRASE)
+
+        if self.settings.get_value(SettingsConstants.SETTING__SEED_XOR) == SettingsConstants.OPTION__ENABLED \
+        and len([x for x in self.controller.storage.seeds if len(x.mnemonic_list) == len(self.seed.mnemonic_list)]):
+            button_data.append(SEED_XOR)
 
         selected_menu_num = seed_screens.SeedFinalizeScreen(
             fingerprint=self.fingerprint,
@@ -230,6 +235,9 @@ class SeedFinalizeView(View):
 
         elif button_data[selected_menu_num] == PASSPHRASE:
             return Destination(SeedAddPassphraseView)
+
+        elif button_data[selected_menu_num] == SEED_XOR:
+            return Destination(SeedXORSelectSeedView, skip_current_view=True)
 
 
 
@@ -291,7 +299,51 @@ class SeedReviewPassphraseView(View):
             return Destination(SeedOptionsView, view_args={"seed_num": seed_num}, clear_history=True)
             
             
-            
+
+class SeedXORSelectSeedView(View):
+    def __init__(self):
+        super().__init__()
+        self.seed = self.controller.storage.get_pending_seed()
+
+    def run(self):
+        seeds = [x for x in self.controller.storage.seeds if len(x.mnemonic_list) == len(self.seed.mnemonic_list)]
+        title = "Seed XOR"
+        text = "Select seed to XOR"
+        button_data = []
+        for seed in seeds:
+            button_str = seed.get_fingerprint(self.settings.get_value(SettingsConstants.SETTING__NETWORK))
+            button_data.append((button_str, SeedSignerCustomIconConstants.FINGERPRINT, "blue"))
+
+        selected_menu_num = seed_screens.SeedSelectSeedScreen(
+            title=title,
+            text=text,
+            is_button_text_centered=False,
+            button_data=button_data
+        ).display()
+
+        if selected_menu_num == RET_CODE__BACK_BUTTON:
+            return Destination(BackStackView)
+
+        else:
+            view_args = dict(seed_num=selected_menu_num)
+            return Destination(SeedXORApplyView, skip_current_view=True, view_args=view_args)            
+
+
+
+class SeedXORApplyView(View):
+    def __init__(self, seed_num: int = None):
+        super().__init__()
+        self.seed = self.controller.storage.get_pending_seed()
+        seeds = [x for x in self.controller.storage.seeds if len(x.mnemonic_list) == len(self.seed.mnemonic_list)]
+        if seed_num is not None:
+            self.other = seeds[seed_num]
+
+    def run(self):
+        self.seed.seed_xor(self.other)
+        return Destination(SeedFinalizeView, skip_current_view=True)
+
+
+
 class SeedDiscardView(View):
     def __init__(self, seed_num: int = None):
         super().__init__()
