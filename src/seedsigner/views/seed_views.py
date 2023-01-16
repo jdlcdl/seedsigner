@@ -833,13 +833,14 @@ class SeedWordsView(View):
     def __init__(self, seed_num: int, bip85_data: dict = None, page_index: int = 0):
         super().__init__()
         self.seed_num = seed_num
+        self.bip85_data = bip85_data
+        self.page_index = page_index
         if self.seed_num is None:
             self.seed = self.controller.storage.get_pending_seed()
         else:
             self.seed = self.controller.get_seed(self.seed_num)
-            self.settings.is_enabled(SettingsConstants.SETTING__SEED_BACKUP, assert_=True)
-        self.bip85_data = bip85_data
-        self.page_index = page_index
+            if self.bip85_data is None:
+                self.settings.is_enabled(SettingsConstants.SETTING__SEED_BACKUP, assert_=True)
 
 
     def run(self):
