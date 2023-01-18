@@ -114,14 +114,17 @@ class Seed:
         return embit_utils.get_xpub(seed_bytes=self.seed_bytes, derivation_path=wallet_path, embit_network=SettingsConstants.map_network_to_embit(network))
 
     def seed_xor(self, other):
-        if len(self.mnemonic_list) != len(other.mnemonic_list):
+        def xor_bytes(a, b):
+            return bytes(i^j for i, j in zip(a, b))
+        self_entropy = bip39.mnemonic_to_bytes(self.mnemonic_str)
+        other_entropy = bip39.mnemonic_to_bytes(other.mnemonic_str)
+        if len(self_entropy) != len(other_entropy):
             raise Exception("XOR requires seeds of similar mnemonic length!")
-        if self.mnemonic_list == other.mnemonic_list:
+        if self_entropy == other_entropy:
             raise Exception("You may not XOR a seed with itself.")
-        new_entropy = bytes(i^j for i,j in zip(
-            bip39.mnemonic_to_bytes(self.mnemonic_str),
-            bip39.mnemonic_to_bytes(other.mnemonic_str)
-        ))
+        if self_entropy == xor_bytes(other_entropy, b'\xff'*len(other_entropy)):
+            raise Exception("You may not XOR a seed with its inversion.")
+        new_entropy = xor_bytes(self_entropy, other_entropy)
         self._mnemonic = bip39.mnemonic_from_bytes(new_entropy).split()
         self._generate_seed()
 
