@@ -29,6 +29,17 @@ from .view import NotYetImplementedView, View, Destination, BackStackView, MainM
 
 
 
+def get_seedxor_seeds(seed, other_seeds):
+    """returns list of candidate seeds for SeedXOR"""
+    candidate_seeds = []
+    for other in other_seeds:
+        if len(other.mnemonic_list) == len(seed.mnemonic_list) \
+        and other.mnemonic_list != seed.mnemonic_list \
+        and len(other.passphrase) == 0:
+            candidate_seeds.append(other)
+    return candidate_seeds
+
+
 
 class SeedsMenuView(View):
     def __init__(self):
@@ -221,10 +232,7 @@ class SeedFinalizeView(View):
             button_data.append(PASSPHRASE)
 
         if self.settings.get_value(SettingsConstants.SETTING__SEED_XOR) == SettingsConstants.OPTION__ENABLED \
-        and len([x for x in self.controller.storage.seeds 			# todo: in 3 places, make it just 1
-                 if len(x.mnemonic_list) == len(self.seed.mnemonic_list) \
-                 and x.mnemonic_list != self.seed.mnemonic_list \
-                 and len(x.passphrase) == 0]):
+        and len(get_seedxor_seeds(self.seed, self.controller.storage.seeds)):
             button_data.append(SEED_XOR)
 
         selected_menu_num = seed_screens.SeedFinalizeScreen(
@@ -240,7 +248,7 @@ class SeedFinalizeView(View):
             return Destination(SeedAddPassphraseView)
 
         elif button_data[selected_menu_num] == SEED_XOR:
-            return Destination(SeedXORSelectSeedView, skip_current_view=True)
+            return Destination(SeedXORSelectSeedView)
 
 
 
@@ -312,10 +320,7 @@ class SeedXORSelectSeedView(View):
         self.seed = self.controller.storage.get_pending_seed()
 
     def run(self):
-        seeds = [x for x in self.controller.storage.seeds 			# todo: in many places, make it just 1
-                 if len(x.mnemonic_list) == len(self.seed.mnemonic_list) \
-                 and x.mnemonic_list != self.seed.mnemonic_list \
-                 and len(x.passphrase) == 0]
+        seeds = get_seedxor_seeds(self.seed, self.controller.storage.seeds)
         title = "Seed XOR"
         text = "Select seed to XOR"
         button_data = []
@@ -343,10 +348,7 @@ class SeedXORApplyView(View):
     def __init__(self, seed_num: int = None):
         super().__init__()
         self.seed = self.controller.storage.get_pending_seed()
-        seeds = [x for x in self.controller.storage.seeds 			# todo: in many places, make it just 1
-                 if len(x.mnemonic_list) == len(self.seed.mnemonic_list) \
-                 and x.mnemonic_list != self.seed.mnemonic_list \
-                 and len(x.passphrase) == 0]
+        seeds = get_seedxor_seeds(self.seed, self.controller.storage.seeds)
         if seed_num is not None:
             self.other = seeds[seed_num]
 
