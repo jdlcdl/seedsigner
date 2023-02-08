@@ -222,8 +222,8 @@ class SeedFinalizeView(View):
 
     def run(self):
         FINALIZE = "Done"
-        SEED_XOR = ("Seed XOR", FontAwesomeIconConstants.BIOHAZARD)
-        PASSPHRASE = ("Add Passphrase", FontAwesomeIconConstants.LOCK)
+        SEED_XOR = "Seed XOR"
+        PASSPHRASE = "BIP-39 Passphrase"
         button_data = []
 
         button_data.append(FINALIZE)
