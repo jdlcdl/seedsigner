@@ -174,6 +174,7 @@ class SettingsConstants:
         SETTING__XPUB_EXPORT,
         SETTING__SEED_BACKUP,
         SETTING__ADDRESS_EXPLORER,
+        SETTING__BIP85_CHILD_SEEDS,
     ]
 
 

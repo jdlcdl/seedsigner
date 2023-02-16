@@ -6,6 +6,7 @@ If the user has chosen to disable particular privacy/security settings, then the
 * Xpub export (if disabled: blocks display of xpub qrcode)
 * Seed backup (new advanced setting; if disabled: blocks seedbackup words/seedqr)
 * Address explorer (new advanced setting; if disabled: blocks exploration of addresses by selected seed, but does NOT block via scanned wallet-descriptor)
+* BIP-85 child seeds (if disabled: blocks BIP-85 child seeds)
 
 ---------------
 

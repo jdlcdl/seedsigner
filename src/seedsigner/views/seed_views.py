@@ -374,12 +374,12 @@ class SeedOptionsView(View):
             button_data.append(VERIFY_ADDRESS)
             
         if self.controller.psbt:
-         if PSBTParser.has_matching_input_fingerprint(self.controller.psbt, self.seed, network=self.settings.get_value(SettingsConstants.SETTING__NETWORK)):
-             if self.controller.resume_main_flow and self.controller.resume_main_flow == Controller.FLOW__PSBT:
-                 # Re-route us directly back to the start of the PSBT flow
-                 self.controller.resume_main_flow = None
-                 self.controller.psbt_seed = self.seed
-                 return Destination(PSBTOverviewView, skip_current_view=True)
+            if PSBTParser.has_matching_input_fingerprint(self.controller.psbt, self.seed, network=self.settings.get_value(SettingsConstants.SETTING__NETWORK)):
+                if self.controller.resume_main_flow and self.controller.resume_main_flow == Controller.FLOW__PSBT:
+                    # Re-route us directly back to the start of the PSBT flow
+                    self.controller.resume_main_flow = None
+                    self.controller.psbt_seed = self.seed
+                    return Destination(PSBTOverviewView, skip_current_view=True)
 
         button_data.append(SCAN_PSBT)
         
@@ -396,7 +396,7 @@ class SeedOptionsView(View):
         if self.settings.is_enabled(SettingsConstants.SETTING__SEED_BACKUP):
             button_data.append(BACKUP)
 
-        if self.settings.get_value(SettingsConstants.SETTING__BIP85_CHILD_SEEDS) == SettingsConstants.OPTION__ENABLED:
+        if self.settings.is_enabled(SettingsConstants.SETTING__BIP85_CHILD_SEEDS):
             button_data.append(BIP85_CHILD_SEED)
 
         button_data.append(DISCARD)
@@ -912,6 +912,7 @@ class SeedBIP85ApplicationModeView(View):
         self.seed_num = seed_num
         self.num_words = 0
         self.bip85_app_num = 39     # TODO: Support other Application numbers
+        self.settings.is_enabled(SettingsConstants.SETTING__BIP85_CHILD_SEEDS, assert_=True)
 
 
     def run(self):
