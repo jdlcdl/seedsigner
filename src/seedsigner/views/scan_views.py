@@ -49,6 +49,8 @@ class ScanView(View):
                 return Destination(PSBTSelectSeedView, skip_current_view=True)
 
             elif self.decoder.is_settings:
+                if len(self.controller.storage.seeds) > 0:
+                    raise Exception("Please discard all seeds before loading settings.")
                 from seedsigner.models.settings import Settings
                 settings = self.decoder.get_settings_data()
                 Settings.get_instance().update(new_settings=settings)
