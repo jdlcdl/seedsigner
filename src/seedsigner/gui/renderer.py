@@ -201,5 +201,6 @@ class Renderer(ConfigurableSingleton):
         self.show_image()
 
 
-
+    def toggle_backlight(self):
+        self.disp.toggle_backlight()
 
