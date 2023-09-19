@@ -6,6 +6,7 @@ from embit.networks import NETWORKS
 from typing import List
 
 from seedsigner.models.settings import SettingsConstants
+from seedsigner.helpers.more_entropy import inv_bits, rev_bits, rev_nibbles, rev_bytes, xor_bytes
 
 
 class InvalidSeedException(Exception):
@@ -111,6 +112,42 @@ class Seed:
         from seedsigner.helpers import embit_utils
         return embit_utils.get_xpub(seed_bytes=self.seed_bytes, derivation_path=wallet_path, embit_network=SettingsConstants.map_network_to_embit(network))
 
+    @property
+    def entropy(self):
+        return bip39.mnemonic_to_bytes(self.mnemonic_str)
+
+    def invert_bits(self):
+        new_entropy = inv_bits(self.entropy)
+        self._mnemonic = bip39.mnemonic_from_bytes(new_entropy).split()
+        self._generate_seed()
+
+    def reverse_bits(self):
+        new_entropy = rev_bits(self.entropy)
+        self._mnemonic = bip39.mnemonic_from_bytes(new_entropy).split()
+        self._generate_seed()
+
+    def reverse_nibbles(self):
+        new_entropy = rev_nibbles(self.entropy)
+        self._mnemonic = bip39.mnemonic_from_bytes(new_entropy).split()
+        self._generate_seed()
+
+    def reverse_bytes(self):
+        new_entropy = rev_bytes(self.entropy)
+        self._mnemonic = bip39.mnemonic_from_bytes(new_entropy).split()
+        self._generate_seed()
+
+    def seed_xor(self, other):
+        self_entropy = bip39.mnemonic_to_bytes(self.mnemonic_str)
+        other_entropy = bip39.mnemonic_to_bytes(other.mnemonic_str)
+        if len(self_entropy) != len(other_entropy):
+            raise Exception("XOR requires seeds of similar mnemonic length!")
+        if self_entropy == other_entropy:
+            raise Exception("You may not XOR a seed with itself.")
+        if self_entropy == inv_bits(other_entropy):
+            raise Exception("You may not XOR a seed with its inversion.")
+        new_entropy = xor_bytes(self.entropy, other.entropy)
+        self._mnemonic = bip39.mnemonic_from_bytes(new_entropy).split()
+        self._generate_seed()
 
     def get_bip85_child_mnemonic(self, bip85_index: int, bip85_num_words: int, network: str = SettingsConstants.MAINNET):
         """Derives the seed's nth BIP-85 child mnemonic"""

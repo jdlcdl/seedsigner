@@ -1,3 +1,15 @@
+# jdlcdl branch: more_entropy
+
+A "More entropy" choice is offered before finalizing a seed, if enabled in advanced settings. 
+Allows user to apply 4 reversible transformations to entropy + XOR:
+* Invert bits (mnemonic is decoded to entropy bits then all 0s become 1s and vice versa; XORed w/ 0xFFs)
+* Reverse bits (mnemonic is decoded to entropy bits, then reversed)
+* Reverse nibbles (mnemonic is decoded to entropy hex, then reversed)
+* Reverse bytes (mnemonic is decoded to entropy bytes, then reversed; endian-ness toggled)
+* XOR w/ another seed (other seed, w/ same-size mnemonic and w/o passphrase, must already be loaded)
+
+---------------
+
 # Build an offline, airgapped Bitcoin signing device for less than $50!
 
 ![Image of SeedSigners in Open Pill Enclosures](docs/img/Open_Pill_Star.JPG)![Image of SeedSigner in an Orange Pill enclosure](docs/img/Orange_Pill.JPG)
