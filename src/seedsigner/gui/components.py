@@ -72,6 +72,7 @@ class FontAwesomeIconConstants:
     ANGLE_LEFT = "\uf104"
     ANGLE_RIGHT = "\uf105"
     ANGLE_UP = "\uf106"
+    BIOHAZARD = "\u2623"
     CAMERA = "\uf030"
     CHEVRON_UP = "\uf077"
     CHEVRON_DOWN = "\uf078"

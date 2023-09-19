@@ -28,6 +28,18 @@ from seedsigner.views.view import NotYetImplementedView, OptionDisabledView, Vie
 
 
 
+def get_seedxor_seeds(seed, other_seeds):
+    """returns list of candidate seeds for SeedXOR"""
+    candidate_seeds = []
+    for other in other_seeds:
+        if len(other.mnemonic_list) == len(seed.mnemonic_list) \
+        and other.mnemonic_list != seed.mnemonic_list \
+        and len(other.passphrase) == 0:
+            candidate_seeds.append(other)
+    return candidate_seeds
+
+
+
 class SeedsMenuView(View):
     LOAD = "Load a seed"
 
@@ -289,6 +301,7 @@ class SeedMnemonicInvalidView(View):
 class SeedFinalizeView(View):
     FINALIZE = "Done"
     PASSPHRASE = "BIP-39 Passphrase"
+    MORE_ENTROPY = "More entropy"
 
     def __init__(self):
         super().__init__()
@@ -300,6 +313,9 @@ class SeedFinalizeView(View):
         button_data = [self.FINALIZE]
         if self.settings.get_value(SettingsConstants.SETTING__PASSPHRASE) != SettingsConstants.OPTION__DISABLED:
             button_data.append(self.PASSPHRASE)
+
+        if self.settings.get_value(SettingsConstants.SETTING__MORE_ENTROPY) != SettingsConstants.OPTION__DISABLED:
+            button_data.append(self.MORE_ENTROPY)
 
         selected_menu_num = self.run_screen(
             seed_screens.SeedFinalizeScreen,
@@ -314,6 +330,8 @@ class SeedFinalizeView(View):
         elif button_data[selected_menu_num] == self.PASSPHRASE:
             return Destination(SeedAddPassphraseView)
 
+        elif button_data[selected_menu_num] == self.MORE_ENTROPY:
+            return Destination(SeedMoreEntropyView)
 
 
 class SeedAddPassphraseView(View):
@@ -378,8 +396,90 @@ class SeedReviewPassphraseView(View):
             seed_num = self.controller.storage.finalize_pending_seed()
             return Destination(SeedOptionsView, view_args={"seed_num": seed_num}, clear_history=True)
             
+class SeedMoreEntropyView(View):
+    INVERT_BITS = "Invert bits"
+    REVERSE_BITS = "Reverse bits"
+    REVERSE_NIBBLES = "Reverse nibbles"
+    REVERSE_BYTES = "Reverse bytes"
+    SEED_XOR = "Seed XOR"
 
-            
+    def __init__(self):
+        super().__init__()
+        self.seed = self.controller.storage.get_pending_seed()
+        self.fingerprint = self.seed.get_fingerprint(self.settings.get_value(SettingsConstants.SETTING__NETWORK))
+
+    def run(self):
+        button_data = [self.INVERT_BITS, self.REVERSE_BITS, self.REVERSE_NIBBLES, self.REVERSE_BYTES]
+        if len(get_seedxor_seeds(self.seed, self.controller.storage.seeds)):
+            button_data.append(self.SEED_XOR)
+
+        ret = self.run_screen(
+            ButtonListScreen,
+            title=f"Entropy+ {self.fingerprint}",
+            is_button_text_centered=False,
+            button_data=button_data
+        )
+        if ret != RET_CODE__BACK_BUTTON:
+            ret = button_data[ret]
+
+        if ret == RET_CODE__BACK_BUTTON:
+            return Destination(SeedFinalizeView, skip_current_view=True)
+        elif ret == self.SEED_XOR:
+            return Destination(SeedXORSelectSeedView)
+        elif ret == self.INVERT_BITS:
+            self.seed.invert_bits()
+        elif ret == self.REVERSE_BITS:
+            self.seed.reverse_bits()
+        elif ret == self.REVERSE_NIBBLES:
+            self.seed.reverse_nibbles()
+        elif ret == self.REVERSE_BYTES:
+            self.seed.reverse_bytes()
+        return Destination(SeedMoreEntropyView, skip_current_view=True)
+
+
+class SeedXORSelectSeedView(View):
+    def __init__(self):
+        super().__init__()
+        self.seed = self.controller.storage.get_pending_seed()
+
+    def run(self):
+        seeds = get_seedxor_seeds(self.seed, self.controller.storage.seeds)
+        title = "Seed XOR"
+        text = "Select seed to XOR with"
+        button_data = []
+        for seed in seeds:
+            button_str = seed.get_fingerprint(self.settings.get_value(SettingsConstants.SETTING__NETWORK))
+            button_data.append((button_str, SeedSignerIconConstants.FINGERPRINT, "blue"))
+
+        selected_menu_num = self.run_screen(
+            seed_screens.SeedSelectSeedScreen,
+            title=title,
+            text=text,
+            is_button_text_centered=False,
+            button_data=button_data
+        )
+
+        if selected_menu_num == RET_CODE__BACK_BUTTON:
+            return Destination(BackStackView)
+
+        else:
+            view_args = dict(seed_num=selected_menu_num)
+            return Destination(SeedXORApplyView, skip_current_view=True, view_args=view_args)
+
+
+class SeedXORApplyView(View):
+    def __init__(self, seed_num: int = None):
+        super().__init__()
+        self.seed = self.controller.storage.get_pending_seed()
+        seeds = get_seedxor_seeds(self.seed, self.controller.storage.seeds)
+        if seed_num is not None:
+            self.other = seeds[seed_num]
+
+    def run(self):
+        self.seed.seed_xor(self.other)
+        return Destination(SeedMoreEntropyView, skip_current_view=True)
+
+
 class SeedDiscardView(View):
     KEEP = "Keep Seed"
     DISCARD = ("Discard", None, None, "red")
