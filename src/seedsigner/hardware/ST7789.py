@@ -160,8 +160,7 @@ class ST7789(object):
         pix = arr.tobytes()
         self.SetWindows ( 0, 0, self.width, self.height)
         GPIO.output(self._dc,GPIO.HIGH)
-        for i in range(0,len(pix),4096):
-            self._spi.writebytes(pix[i:i+4096])		
+        self._spi.writebytes2(pix)	
         
     def clear(self):
         """Clear contents of image buffer"""
@@ -170,6 +169,7 @@ class ST7789(object):
         GPIO.output(self._dc,GPIO.HIGH)
         for i in range(0,len(_buffer),4096):
             self._spi.writebytes(_buffer[i:i+4096])		
+        self._spi.writebytes2(_buffer)	
 
     def toggle_backlight(self):
         if self._bl_lit:

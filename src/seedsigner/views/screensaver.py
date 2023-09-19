@@ -89,7 +89,6 @@ class OpeningSplashScreen(LogoScreen):
 
 
 
-
 class ScreensaverScreen(LogoScreen):
     def __init__(self, buttons):
         super().__init__()
@@ -148,9 +147,9 @@ class ScreensaverScreen(LogoScreen):
             try:
                 if not self._is_branding:
                     self.renderer.toggle_backlight()
-                while True:
+                while self._is_running:
                     if self.buttons.has_any_input() or self.buttons.override_ind:
-                        return self.stop()
+                        break
 
                     if not self._is_branding:
                         time.sleep(0.1)
@@ -187,23 +186,23 @@ class ScreensaverScreen(LogoScreen):
                         self.increment_y = self.rand_increment()
                         if self.increment_y > 0.0:
                             self.increment_y *= -1.0
+
             except KeyboardInterrupt as e:
                 # Exit triggered; close gracefully
                 print("Shutting down Screensaver")
-                self.stop()
 
                 # Have to let the interrupt bubble up to exit the main app
                 raise e
 
+            finally:
+                self._is_running = False
+
+                # Restore the original screen
+                self.renderer.show_image(self.last_screen)
+
 
 
     def stop(self):
-        # Restore the original screen
-        self.renderer.show_image(self.last_screen)
-
+        self._is_running = False
         if not self._is_branding:
             self.renderer.disp.toggle_backlight()
-
-        self._is_running = False
-
-
