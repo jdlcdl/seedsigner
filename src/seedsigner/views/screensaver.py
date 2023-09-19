@@ -200,9 +200,9 @@ class ScreensaverScreen(LogoScreen):
                 # Restore the original screen
                 self.renderer.show_image(self.last_screen)
 
+                if not self._is_branding:
+                    self.renderer.disp.toggle_backlight()
 
 
     def stop(self):
         self._is_running = False
-        if not self._is_branding:
-            self.renderer.disp.toggle_backlight()
