@@ -155,6 +155,7 @@ class SettingsConstants:
     SETTING__SCRIPT_TYPES = "script_types"
     SETTING__XPUB_DETAILS = "xpub_details"
     SETTING__PASSPHRASE = "passphrase"
+    SETTING__MORE_ENTROPY = "more_entropy"
     SETTING__CAMERA_ROTATION = "camera_rotation"
     SETTING__COMPACT_SEEDQR = "compact_seedqr"
     SETTING__BIP85_CHILD_SEEDS = "bip85_child_seeds"
@@ -424,6 +425,12 @@ class SettingsDefinition:
                       display_name="Show xpub details",
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       default_value=SettingsConstants.OPTION__ENABLED),
+
+        SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
+                      attr_name=SettingsConstants.SETTING__MORE_ENTROPY,
+                      display_name="More entropy",
+                      visibility=SettingsConstants.VISIBILITY__ADVANCED,
+                      default_value=SettingsConstants.OPTION__DISABLED),
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__PASSPHRASE,
