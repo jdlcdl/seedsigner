@@ -2,21 +2,16 @@ import math
 import time
 
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List
 
 from PIL import Image, ImageDraw, ImageFilter
 from seedsigner.gui.renderer import Renderer
 from seedsigner.helpers.qr import QR
-from seedsigner.models.qr_type import QRType
 from seedsigner.models.threads import BaseThread, ThreadsafeCounter
-
-from seedsigner.models.seed import Seed
-from seedsigner.models.settings_definition import SettingsConstants, SettingsDefinition
 
 from .screen import RET_CODE__BACK_BUTTON, BaseScreen, BaseTopNavScreen, ButtonListScreen, KeyboardScreen, WarningEdgesMixin
 from ..components import (Button, FontAwesomeIconConstants, Fonts, FormattedAddress, IconButton,
-    IconTextLine, SeedSignerCustomIconConstants, TextArea, GUIConstants,
-    calc_text_centering)
+    IconTextLine, SeedSignerIconConstants, TextArea, GUIConstants, reflow_text_into_pages)
 
 from seedsigner.gui.keyboard import Keyboard, TextEntryDisplay
 from seedsigner.hardware.buttons import HardwareButtons, HardwareButtonsConstants
@@ -421,8 +416,8 @@ class SeedFinalizeScreen(ButtonListScreen):
         super().__post_init__()
 
         self.fingerprint_icontl = IconTextLine(
-            icon_name=SeedSignerCustomIconConstants.FINGERPRINT,
-            icon_color="blue",
+            icon_name=SeedSignerIconConstants.FINGERPRINT,
+            icon_color=GUIConstants.INFO_COLOR,
             icon_size=GUIConstants.ICON_FONT_SIZE + 12,
             label_text="fingerprint",
             value_text=self.fingerprint,
@@ -441,8 +436,8 @@ class SeedOptionsScreen(ButtonListScreen):
     has_passphrase: bool = False
 
     def __post_init__(self):
-        self.top_nav_icon_name = SeedSignerCustomIconConstants.FINGERPRINT
-        self.top_nav_icon_color = "blue"
+        self.top_nav_icon_name = SeedSignerIconConstants.FINGERPRINT
+        self.top_nav_icon_color = GUIConstants.INFO_COLOR
         self.title = self.fingerprint
         self.is_button_text_centered = False
         self.is_bottom_list = True
@@ -502,7 +497,7 @@ class SeedWordsScreen(WarningEdgesMixin, ButtonListScreen):
         for index, word in enumerate(self.words):
             draw.rounded_rectangle(
                 (number_box_x, number_box_y, number_box_x + number_box_width, number_box_y + number_box_height),
-                fill="#202020",
+                fill=GUIConstants.BUTTON_BACKGROUND_COLOR,
                 radius=5 * supersampling_factor
             )
             baseline_y = number_box_y + number_box_height - int((number_box_height - number_height)/2)
@@ -510,7 +505,7 @@ class SeedWordsScreen(WarningEdgesMixin, ButtonListScreen):
                 (number_box_x + int(number_box_width/2), baseline_y),
                 font=number_font,
                 text=str(self.page_index * words_per_page + index + 1),
-                fill="#0084ff",
+                fill=GUIConstants.INFO_COLOR,
                 anchor="ms"  # Middle (centered), baSeline
             )
 
@@ -529,6 +524,22 @@ class SeedWordsScreen(WarningEdgesMixin, ButtonListScreen):
         self.body_img = self.body_img.resize((self.canvas_width, self.body_height), Image.LANCZOS)
         self.body_img = self.body_img.filter(ImageFilter.SHARPEN)
         self.paste_images.append((self.body_img, (self.body_x, self.body_y)))
+
+
+
+@dataclass
+class SeedBIP85SelectChildIndexScreen(KeyboardScreen):
+    def __post_init__(self):
+        self.title = "BIP-85 Index"
+        self.user_input = ""
+
+        # Specify the keys in the keyboard
+        self.rows = 3
+        self.cols = 5
+        self.keys_charset = "0123456789"
+        self.show_save_button = True
+
+        super().__post_init__()
 
 
 
@@ -584,8 +595,8 @@ class SeedExportXpubDetailsScreen(WarningEdgesMixin, ButtonListScreen):
 
         # Set up the fingerprint and passphrase displays
         self.fingerprint_line = IconTextLine(
-            icon_name=SeedSignerCustomIconConstants.FINGERPRINT,
-            icon_color="blue",
+            icon_name=SeedSignerIconConstants.FINGERPRINT,
+            icon_color=GUIConstants.INFO_COLOR,
             label_text="Fingerprint",
             value_text=self.fingerprint,
             screen_x=GUIConstants.COMPONENT_PADDING,
@@ -594,7 +605,8 @@ class SeedExportXpubDetailsScreen(WarningEdgesMixin, ButtonListScreen):
         self.components.append(self.fingerprint_line)
 
         self.derivation_line = IconTextLine(
-            icon_name=SeedSignerCustomIconConstants.PATH,
+            icon_name=SeedSignerIconConstants.DERIVATION,
+            icon_color=GUIConstants.INFO_COLOR,
             label_text="Derivation",
             value_text=self.derivation_path,
             screen_x=GUIConstants.COMPONENT_PADDING,
@@ -604,6 +616,7 @@ class SeedExportXpubDetailsScreen(WarningEdgesMixin, ButtonListScreen):
 
         self.xpub_line = IconTextLine(
             icon_name=FontAwesomeIconConstants.X,
+            icon_color=GUIConstants.INFO_COLOR,
             label_text="Xpub",
             value_text=f"{self.xpub[:18]}...",
             font_name=GUIConstants.FIXED_WIDTH_FONT_NAME,
@@ -793,7 +806,7 @@ class SeedAddPassphraseScreen(BaseTopNavScreen):
         )
 
         self.hw_button3 = IconButton(
-            icon_name=FontAwesomeIconConstants.SOLID_CIRCLE_CHECK,
+            icon_name=SeedSignerIconConstants.CHECK,
             icon_color=GUIConstants.SUCCESS_COLOR,
             width=self.right_panel_buttons_width,
             screen_x=hw_button_x,
@@ -1009,8 +1022,8 @@ class SeedReviewPassphraseScreen(ButtonListScreen):
         super().__post_init__()
 
         self.components.append(IconTextLine(
-            icon_name=SeedSignerCustomIconConstants.FINGERPRINT,
-            icon_color="blue",
+            icon_name=SeedSignerIconConstants.FINGERPRINT,
+            icon_color=GUIConstants.INFO_COLOR,
             label_text="changes fingerprint",
             value_text=f"{self.fingerprint_without} >> {self.fingerprint_with}",
             is_text_centered=True,
@@ -1328,7 +1341,7 @@ class AddressVerificationSigTypeScreen(ButtonListScreen):
 
 
 @dataclass
-class SeedSingleSigAddressVerificationSelectSeedScreen(ButtonListScreen):
+class SeedSelectSeedScreen(ButtonListScreen):
     text: str = ""
 
     def __post_init__(self):
@@ -1484,16 +1497,75 @@ class MultisigWalletDescriptorScreen(ButtonListScreen):
             allow_text_overflow=True,
         ))
 
+
+
 @dataclass
-class SeedBIP85SelectChildIndexScreen(KeyboardScreen):
+class SeedSignMessageConfirmMessageScreen(ButtonListScreen):
+    page_num: int = None
+
     def __post_init__(self):
-        self.title = "BIP-85 Index"
-        self.user_input = ""
+        from seedsigner.controller import Controller
+        renderer = Renderer.get_instance()
+        start_y = GUIConstants.TOP_NAV_HEIGHT + GUIConstants.COMPONENT_PADDING
+        end_y = renderer.canvas_height - GUIConstants.EDGE_PADDING - GUIConstants.BUTTON_HEIGHT - GUIConstants.COMPONENT_PADDING
+        message_height = end_y - start_y
 
-        # Specify the keys in the keyboard
-        self.rows = 3
-        self.cols = 5
-        self.keys_charset = "0123456789"
-        self.show_save_button = True
+        self.sign_message_data = Controller.get_instance().sign_message_data
+        if "paged_message" not in self.sign_message_data:
+            paged = reflow_text_into_pages(
+                text=self.sign_message_data["message"],
+                width=renderer.canvas_width - 2*GUIConstants.EDGE_PADDING,
+                height=message_height,
+            )
+            self.sign_message_data["paged_message"] = paged
 
+        if self.page_num >= len(self.sign_message_data["paged_message"]):
+            raise Exception("Bug in paged_message calculation")
+
+        if len(self.sign_message_data["paged_message"]) == 1:
+            self.title = "Review Message"
+        else:
+            self.title = f"""Message (pt {self.page_num + 1}/{len(self.sign_message_data["paged_message"])})"""
+        self.is_bottom_list = True
+        self.is_button_text_centered = True
+        self.button_data = ["Next"]
         super().__post_init__()
+
+        message_display = TextArea(
+            text=self.sign_message_data["paged_message"][self.page_num],
+            is_text_centered=False,
+            allow_text_overflow=True,
+            screen_y=start_y,
+        )
+        self.components.append(message_display)
+
+
+
+@dataclass
+class SeedSignMessageConfirmAddressScreen(ButtonListScreen):
+    derivation_path: str = None
+    address: str = None
+
+    def __post_init__(self):
+        self.title = "Confirm Address"
+        self.is_bottom_list = True
+        self.is_button_text_centered = True
+        self.button_data = ["Sign Message"]
+        super().__post_init__()
+
+        derivation_path_display = IconTextLine(
+            icon_name=SeedSignerIconConstants.DERIVATION,
+            icon_color=GUIConstants.INFO_COLOR,
+            label_text="derivation path",
+            value_text=self.derivation_path,
+            is_text_centered=True,
+            screen_y=self.top_nav.height + GUIConstants.COMPONENT_PADDING,
+        )
+        self.components.append(derivation_path_display)
+
+        address_display = FormattedAddress(
+            address=self.address,
+            max_lines=3,
+            screen_y=derivation_path_display.screen_y + derivation_path_display.height + 2*GUIConstants.COMPONENT_PADDING,
+        )
+        self.components.append(address_display)

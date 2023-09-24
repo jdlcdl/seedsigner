@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="seedsigner",
-    version="0.6.0",
+    version="0.7.0",
     author="SeedSigner",
     author_email="author@example.com",
     description="Build an offline, airgapped Bitcoin signing device for less than $50!",
@@ -22,5 +22,6 @@ setuptools.setup(
     ],
     package_dir={"": "src"},
     packages=setuptools.find_packages(where="src"),
-    python_requires=">=3.6",
+    include_package_data=True,
+    python_requires=">=3.10",
 )

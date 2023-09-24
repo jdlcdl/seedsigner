@@ -1,16 +1,22 @@
 # Manual Installation Instructions
 
-Begin by acquiring a specific copy of the Raspberry Pi Lite operating system, dated 2021-05-28; this version can be found here:
+Begin by acquiring the latest 32-bit, Buster-based Raspberry Pi Lite operating system. This guide was tested using the version dated 2023-05-03; which can be found here:
 
-https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_armhf-2021-05-28/
+https://downloads.raspberrypi.org/raspios_oldstable_lite_armhf/images/raspios_oldstable_lite_armhf-2023-05-03/
 
-Best practice is to verify the downloaded .zip file containing the Raspberry Pi Lite OS matches the published SHA256 hash of the file; for additional reference that hash is: c5dad159a2775c687e9281b1a0e586f7471690ae28f2f2282c90e7d59f64273c. After verifying the file's data integrity, you can decompress the .zip file to obtain the operating system image that it contains. You can then use Balena's Etcher tool (https://www.balena.io/etcher/) to write the Raspberry Pi Lite software image to a memory card (4 GB or larger). It's important to note that an image authoring tool must be used (the operating system image cannot be simply copied into a file storage partition on the memory card).
+SeedSigner does not work any of the more recent versions of Debian. This is a known limitation and there are open tickets to track the progress of this ([Debian 11 ticket](https://github.com/SeedSigner/seedsigner/issues/431), [Debian 12 ticket](https://github.com/SeedSigner/seedsigner/issues/430)). This guide does not work on the 64-bit versions of Buster, however pull requests to update it to be compatible are welcome.
 
-The manual SeedSigner installation and configuration process requires an internet connection on the device to download the necessary libraries and code. But because the Pi Zero 1.3 does not have onboard wifi, you have two options:
+Best practice is to verify the downloaded file containing the Raspberry Pi Lite OS matches the published SHA256 hash of the file; for additional reference that hash is: 3d210e61b057de4de90eadb46e28837585a9b24247c221998f5bead04f88624c. After verifying the file's data integrity, you can decompress the .tar.xz file to obtain the operating system image that it contains. You can then use Balena's Etcher tool (https://www.balena.io/etcher/) to write the Raspberry Pi Lite software image to a memory card (4 GB or larger). It's important to note that an image authoring tool must be used (the operating system image cannot be simply copied into a file storage partition on the memory card).
 
-1. Run these steps on a separate Raspberry Pi 2/3/4 or Zero W which can connect to the internet and then transfer the SD card to the Pi Zero 1.3 when complete.
-2. OR configure the Pi Zero 1.3 directly by relaying through your computer's internet connection over USB. See instructions [here](usb_relay.md).
+The manual SeedSigner installation and configuration process requires an internet connection on the Pi to download the necessary libraries and code.  
+If your Pi does not have onboard wifi, you have two options:
 
+1. Run these steps on a separate Raspberry Pi 2/3/4 or Zero W which does have onboard Wi-Fi to connect to the internet, and then move the SD card over to the non Wi-Fi enabled Pi when complete.
+2. OR configure the non Wi-Fi enabled Pi directly by relaying through your computer's internet connection over USB. See instructions [here](usb_relay.md).
+
+If your Pi does have onboard Wi-Fi, then using the Rasberry Pi Imager software will allow you to easily configure your Pi's Wi-Fi connection, as well as simultaneously write the image file. That will make your initial SSH into the Pi much easier.   
+Use the Pi's onboard Wi-Fi only if you are setting up a local development environment, never for real funds or binary image creation. 
+  
 For the following steps you'll need to either connect a keyboard & monitor to the network-connected Raspberry Pi you are working with, or SSH into the Pi if you're familiar with that process.
 
 ### Configure the Pi
@@ -53,6 +59,7 @@ Set the following:
 When you exit the System Configuration tool, you will be prompted to reboot the system; allow the system to reboot and continue with these instructions.
 
 
+Each command should be run individually,unless its specified as a multi-line command.
 ### Change the default password
 Change the system's default password from the default "raspberry". Run the command:
 ```bash
@@ -150,7 +157,7 @@ Edit your bash profile with the command `nano ~/.profile` and add the following 
 ```bash
 export WORKON_HOME=$HOME/.envs
 export VIRTUALENVWRAPPER_PYTHON=/usr/bin/python3
-source /home/pi/.local/bin/virtualenvwrapper.sh
+source $HOME/.local/bin/virtualenvwrapper.sh
 ```
 Then `CTRL-X` and `y` to exit and save changes.
 
@@ -172,11 +179,26 @@ git clone https://github.com/SeedSigner/seedsigner
 cd seedsigner
 ```
 
+### Adding swap space
+Compiling the dependencies requires more RAM than is available on a Raspberry
+Pi 3B, let alone a Zero. Temporarily adding 1GB of additional swap space will
+work around this limitation. The `/swapfile` can be deleted after you reboot.
+
+If building on a Raspberry Pi board with more than 1GB of RAM, this step can
+be safely skipped.
+
+```bash
+sudo dd if=/dev/zero of=/swapfile bs=4096 count=$((1024*256))
+sudo chmod 0600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+```
 
 ### Install Python `pip` dependencies:
 ```bash
 # Takes 1hr 45min on a Pi Zero 1.3
 pip install -r requirements.txt
+pip install -r requirements-raspi.txt
 ```
 
 #### `pyzbar`
@@ -209,13 +231,22 @@ workon seedsigner-env
 pwd
 ```
 
+### Optional: increase spidev buffer size
+This allows `ST7789.py` to update the LCD without performing multiple write operations because the default buffer size is 4096 bytes. The default can be changed via the  `/boot/cmdline.txt` file. You will need to add `spidev.bufsiz=131072` to the end of this single lined file command.
+
+Example `cmdline.txt` contents:
+```
+console=serial0,115200 console=tty1 root=PARTUUID=2fa4ba7e-02 rootfstype=ext4 elevator=deadline fsck.repair=yes rootwait modules-load=dwc2,g_ether spidev.bufsiz=131072
+```
 
 ### Configure `systemd` to run SeedSigner at boot:
+
 ```bash
 sudo nano /etc/systemd/system/seedsigner.service
 ```
 
-Add the following contents to the text file that was created:
+Add the following contents to the text file that was created:  
+If you are not using the username pi, then replace  `pi` in the service section below with your username. There are 3 lines to change.   
 ```ini
 [Unit]
 Description=Seedsigner
