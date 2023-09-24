@@ -13,7 +13,7 @@ If the user has chosen to disable particular privacy/security settings, then the
 
 # Build an offline, airgapped Bitcoin signing device for less than $50!
 
-![Image of SeedSigners in Open Pill Enclosures](docs/img/Open_Pill_Star.JPG)![Image of SeedSigner in an Orange Pill enclosure](docs/img/Orange_Pill.JPG)
+![Image of SeedSigners in Mini Pill Enclosures](docs/img/Mini_Pill_Main_Photo.jpg)
 
 ---------------
 
@@ -30,7 +30,7 @@ If the user has chosen to disable particular privacy/security settings, then the
 
 # Project Summary
 
-The goal of SeedSigner is to lower the cost and complexity of Bitcoin multi-signature wallet use. To accomplish this goal, SeedSigner offers anyone the opportunity to build a verifiably air-gapped, stateless Bitcoin signing device using inexpensive, publicly available hardware components (usually < $50). SeedSigner helps users save with Bitcoin by assisting with trustless private key generation and multi-signature wallet setup, and helps users transact with Bitcoin via a secure, air-gapped QR-exchange signing model.
+The goal of SeedSigner is to lower the cost and complexity of Bitcoin multi-signature wallet use. To accomplish this goal, SeedSigner offers anyone the opportunity to build a verifiably air-gapped, stateless Bitcoin signing device using inexpensive, publicly available hardware components (usually < $50). SeedSigner helps users save with Bitcoin by assisting with trustless private key generation and multisignature (aka "multisig") wallet setup, and helps users transact with Bitcoin via a secure, air-gapped QR-exchange signing model.
 
 Additional information about the project can be found at [SeedSigner.com](https://seedsigner.com).
 
@@ -39,20 +39,22 @@ You can follow [@SeedSigner](https://twitter.com/SeedSigner) on Twitter for the 
 If you have specific questions about the project, our [Telegram Group](https://t.me/joinchat/GHNuc_nhNQjLPWsS) is a great place to ask them.
 
 ### Feature Highlights:
-* Calculate word 12/24 of a BIP39 seed phrase
-* Create a 24-word BIP39 seed phrase with 99 dice rolls
-* Create a 24-word BIP39 seed phrase by taking a digital photo 
-* Temporarily store up to 3 seed phrases while device is powered
-* Guided interface to manually create a SeedQR for instant input [(demo video here)](https://youtu.be/c1-PqTNx1vc)
-* BIP39 passphrase / word 25 support
-* Native Segwit Multisig XPUB generation w/ QR display
-* Scan and parse transaction data from animated QR codes
+* Calculate the final word (aka checksum) of a 12- or 24-word BIP39 seed phrase
+* Create a 24-word BIP39 seed phrase with 99 dice rolls or a 12-word with 50 rolls [(Verifying dice seed generation)](docs/dice_verification.md)
+* Create a 12- or 24-word BIP39 seed phrase via image entropy from the onboard camera 
+* Temporarily stores seeds in memory while the device is powered; all memory is wiped when power is removed
+* SD card removable after boot to ensure no secret data can be written to it
+* Guided interface to manually transcribe a seed to the SeedQR format for instant seed loading [(demo video here)](https://youtu.be/c1-PqTNx1vc)
+* BIP39 passphrase (aka "word 25") support
+* Native Segwit Multisig XPUB generation
+* PSBT-compliant; scan and parse transaction data from animated QR codes
 * Sign transactions & transfer XPUB data using animated QR codes [(demo video here)](https://youtu.be/LPqvdQ2gSzs)
-* Live preview during photo-to-seed and QR scanning UX
+* Live preview during image entropy seed generation and QR scanning UX
 * Optimized seed word entry interface
 * Support for Bitcoin Mainnet & Testnet
 * Support for custom user-defined derivation paths
 * On-demand receive address verification
+* Address Explorer for single sig and multisig wallets
 * User-configurable QR code display density
 * Responsive, event-driven user interface
 
@@ -65,10 +67,10 @@ If you have specific questions about the project, our [Telegram Group](https://t
 * If you think SeedSigner adds value to the Bitcoin ecosystem, please help us spread the word! (tweets, pics, videos, etc.)
 
 ### Planned Upcoming Improvements / Functionality:
-* Single-sig and multi-sig change address verification
-* Re-imagined, graphically-focused user interface
 * Multi-language support
-* Customized Linux live-boot OS to allow MicroSD card removal
+* Significantly faster boot time
+* Reproducible builds
+* Port to MicroPython to broaden the range of compatible hardware to include low-cost microcontrollers
 * Other optimizations based on user feedback!
 
 ---------------
@@ -93,27 +95,27 @@ Notes:
 ## A Special Note On Minimizing Trust
 As is the nature of pre-packaged software downloads, downloading and using the prepared SeedSigner release images means implicitly placing trust in the individual preparing those images; in our project the release images are prepared and signed by the eponymous creator of the project, SeedSigner "the person". That individual is additionally the only person in possession of the PGP keys that are used to sign the release images.
 
-However, one of the many advantages of the open source software model is that the need for this kind of trust can be negated by our users' ability to (1) review the project's source code and (2) assemble the operating image necessary to use the software themselves. From our project's inception, instructions to build a SeedSigner operating image (using precisely the same process that is used to create the prepared release images) have been made availabile. We have put a lot of thought and work into making these instructions easy to understand and follow, even for less technical users. These instructions can be found [here](docs/manual_installation.md).
+However, one of the many advantages of the open source software model is that the need for this kind of trust can be negated by our users' ability to (1) review the project's source code and (2) assemble the operating image necessary to use the software themselves. From our project's inception, instructions to build a SeedSigner operating image (using precisely the same process that is used to create the prepared release images) have been made available. We have put a lot of thought and work into making these instructions easy to understand and follow, even for less technical users. These instructions can be found [here](docs/manual_installation.md).
 
 ## Downloading the Software
 
    
-Download the current Version (0.6.0) software image that is compatible with your  Raspberry Pi Hardware. The Pi Zero 1.3 is the most common and recommended board.
+Download the current Version (0.7.0) software image that is compatible with your  Raspberry Pi Hardware. The Pi Zero 1.3 is the most common and recommended board.
 | Board                 | Download Image Link/Name          |
 | --------------------- | --------------------------------- |
-|**[Raspberry Pi Zero 1.3](https://www.raspberrypi.com/products/raspberry-pi-zero/)**      |[`seedsigner_os.0.6.0.pi0.img`](https://github.com/SeedSigner/seedsigner/releases/download/0.6.0/seedsigner_os.0.6.0.pi0.img)      |
-|[Raspberry Pi Zero W](https://www.raspberrypi.com/products/raspberry-pi-zero-w/)    |[`seedsigner_os.0.6.0.pi0.img`](https://github.com/SeedSigner/seedsigner/releases/download/0.6.0/seedsigner_os.0.6.0.pi0.img)      |
-|[Raspberry Pi Zero 2 W](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/)  |[`seedsigner_os.0.6.0.pi02w.img`](https://github.com/SeedSigner/seedsigner/releases/download/0.6.0/seedsigner_os.0.6.0.pi02w.img)    |
-|[Raspberry Pi 2 Model B](https://www.raspberrypi.com/products/raspberry-pi-2-model-b/) |[`seedsigner_os.0.6.0.pi2.img`](https://github.com/SeedSigner/seedsigner/releases/download/0.6.0/seedsigner_os.0.6.0.pi2.img)      |
-|[Raspberry Pi 3 Model B](https://www.raspberrypi.com/products/raspberry-pi-3-model-b/) |[`seedsigner_os.0.6.0.pi02w.img`](https://github.com/SeedSigner/seedsigner/releases/download/0.6.0/seedsigner_os.0.6.0.pi02w.img)    |
-|[Raspberry Pi 4 Model B](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/) |[`seedsigner_os.0.6.0.pi4.img`](https://github.com/SeedSigner/seedsigner/releases/download/0.6.0/seedsigner_os.0.6.0.pi4.img)      |
-|[Raspberry Pi 400](https://www.raspberrypi.com/products/raspberry-pi-400-unit/) |[`seedsigner_os.0.6.0.pi4.img`](https://github.com/SeedSigner/seedsigner/releases/download/0.6.0/seedsigner_os.0.6.0.pi4.img)      |
+|**[Raspberry Pi Zero 1.3](https://www.raspberrypi.com/products/raspberry-pi-zero/)**      |[`seedsigner_os.0.7.0.pi0.img`](https://github.com/SeedSigner/seedsigner/releases/download/0.7.0/seedsigner_os.0.7.0.pi0.img)      |
+|[Raspberry Pi Zero W](https://www.raspberrypi.com/products/raspberry-pi-zero-w/)    |[`seedsigner_os.0.7.0.pi0.img`](https://github.com/SeedSigner/seedsigner/releases/download/0.7.0/seedsigner_os.0.7.0.pi0.img)      |
+|[Raspberry Pi Zero 2 W](https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/)  |[`seedsigner_os.0.7.0.pi02w.img`](https://github.com/SeedSigner/seedsigner/releases/download/0.7.0/seedsigner_os.0.7.0.pi02w.img)    |
+|[Raspberry Pi 2 Model B](https://www.raspberrypi.com/products/raspberry-pi-2-model-b/) |[`seedsigner_os.0.7.0.pi2.img`](https://github.com/SeedSigner/seedsigner/releases/download/0.7.0/seedsigner_os.0.7.0.pi2.img)      |
+|[Raspberry Pi 3 Model B](https://www.raspberrypi.com/products/raspberry-pi-3-model-b/) |[`seedsigner_os.0.7.0.pi02w.img`](https://github.com/SeedSigner/seedsigner/releases/download/0.7.0/seedsigner_os.0.7.0.pi02w.img)    |
+|[Raspberry Pi 4 Model B](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/) |[`seedsigner_os.0.7.0.pi4.img`](https://github.com/SeedSigner/seedsigner/releases/download/0.7.0/seedsigner_os.0.7.0.pi4.img)      |
+|[Raspberry Pi 400](https://www.raspberrypi.com/products/raspberry-pi-400-unit/) |[`seedsigner_os.0.7.0.pi4.img`](https://github.com/SeedSigner/seedsigner/releases/download/0.7.0/seedsigner_os.0.7.0.pi4.img)      |
 
 Note: If you have physically removed the WiFi component from your board, you will still use the image file of the original(un-modified) hardware. (Our files are compiled/based on the *processor* architecture). Although it is better to spend a few minutes upfront to determine which specific Pi hardware/model you have, if you are still unsure which hardware you have, you can try using the pi0.img file. Making an incorrect choice here will not ruin your board, because this is software, not firmware. 
 
 **also download** these 2 signature verification files to the same folder  
-[The Plaintext manifest file](https://github.com/SeedSigner/seedsigner/releases/download/0.6.0/seedsigner.0.6.0.sha256)  
-[The Signature of the manifest file](https://github.com/SeedSigner/seedsigner/releases/download/0.6.0/seedsigner.0.6.0.sha256.sig)
+[The Plaintext manifest file](https://github.com/SeedSigner/seedsigner/releases/download/0.7.0/seedsigner.0.7.0.sha256.txt)  
+[The Signature of the manifest file](https://github.com/SeedSigner/seedsigner/releases/download/0.7.0/seedsigner.0.7.0.sha256.txt.sig)
 
 Users familiar with older versions of the SeedSigner software might be surprised with how fast their software downloads now are, because since version 0.6.0 the software image files are now 100x smaller! Each image file is now under 42 Megabytes so your downloads and verifications will be very quick now (and might even seem *too* quick)!  
 
@@ -142,7 +144,7 @@ The result should confirm that 1 key was *either* imported or updated. *Ignore* 
 
 Next, you will run the *verify* command on the signature (.sig) file. (*Verify* must be run from inside the same folder that you downloaded the files into earlier. The `*`'s in this command will auto-fill the version from your current folder, so it should be copied and pasted as-is.)   
 ```
-gpg --verify seedsigner.0.6.*.sha256.sig
+gpg --verify seedsigner.0.7.*.sha256.txt.sig
 ```
 
 When the verify command completes successfully, it should display output like this:
@@ -212,21 +214,21 @@ Now that you have confirmed that you do have the real SeedSigner Project's Publi
 
  **On Linux or OSX:** Run this command
 ```
-shasum -a 256 --ignore-missing --check seedsigner.0.6.*.sha256  
+shasum -a 256 --ignore-missing --check seedsigner.0.7.*.sha256.txt  
 ```
 
 **On Windows (inside Powershell):** Run this command
 ```
-CertUtil -hashfile  seedsigner_os.0.6.0.Insert_Your_Pi_Models_binary_here_For_Example_pi02w.img SHA256 
+CertUtil -hashfile  seedsigner_os.0.7.0.Insert_Your_Pi_Models_binary_here_For_Example_pi02w.img SHA256 
 ```
 On Windows, you must then manually compare the resulting file hash value to the corresponding hash value shown inside the .SHA256 cleartext file.
  <BR>
 
 Wait up to 30 seconds for the command to complete, and it should display:
 ```
-seedsigner_os.0.6.x.[Your_Pi_Model_For_Example:pi02w].img: OK
+seedsigner_os.0.7.x.[Your_Pi_Model_For_Example:pi02w].img: OK
 ```
-**If you receive the "OK" message** for your **seedsigner_os.0.6.x.[Your_Pi_Model_For_Example:pi02w].img file**, as shown above, then your verification is fully complete!  
+**If you receive the "OK" message** for your **seedsigner_os.0.7.x.[Your_Pi_Model_For_Example:pi02w].img file**, as shown above, then your verification is fully complete!  
 **All of your downloaded files have now been confirmed as both authentic and unaltered!** You can proceed to create/write your MicroSD card😄😄 !!     
 
 If your file result shows "FAILED", then you must stop here immediately. Do not continue. Contact us for assistance at  the Telegram group address above.
