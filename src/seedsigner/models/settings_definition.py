@@ -151,6 +151,8 @@ class SettingsConstants:
     SETTING__NETWORK = "network"
     SETTING__QR_DENSITY = "qr_density"
     SETTING__XPUB_EXPORT = "xpub_export"
+    SETTING__SEED_BACKUP = "seed_backup"
+    SETTING__ADDRESS_EXPLORER = "address_explorer"
     SETTING__SIG_TYPES = "sig_types"
     SETTING__SCRIPT_TYPES = "script_types"
     SETTING__XPUB_DETAILS = "xpub_details"
@@ -166,6 +168,14 @@ class SettingsConstants:
 
     # Hidden settings
     SETTING__QR_BRIGHTNESS = "qr_background_color"
+    PRUDENTLY_PARANOID_SETTINGS = [
+        SETTING__SIG_TYPES,
+        SETTING__SCRIPT_TYPES,
+        SETTING__XPUB_EXPORT,
+        SETTING__SEED_BACKUP,
+        SETTING__ADDRESS_EXPLORER,
+        SETTING__BIP85_CHILD_SEEDS,
+    ]
 
 
     # Structural constants
@@ -401,7 +411,7 @@ class SettingsDefinition:
                       attr_name=SettingsConstants.SETTING__XPUB_EXPORT,
                       display_name="Xpub export",
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
-                      default_value=SettingsConstants.OPTION__ENABLED),
+                      default_value=SettingsConstants.OPTION__DISABLED),
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__SIG_TYPES,
@@ -424,6 +434,18 @@ class SettingsDefinition:
                       display_name="Show xpub details",
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       default_value=SettingsConstants.OPTION__ENABLED),
+
+        SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
+                      attr_name=SettingsConstants.SETTING__SEED_BACKUP,
+                      display_name="Seed backup",
+                      visibility=SettingsConstants.VISIBILITY__ADVANCED,
+                      default_value=SettingsConstants.OPTION__DISABLED),
+
+        SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
+                      attr_name=SettingsConstants.SETTING__ADDRESS_EXPLORER,
+                      display_name="Address Explorer",
+                      visibility=SettingsConstants.VISIBILITY__ADVANCED,
+                      default_value=SettingsConstants.OPTION__DISABLED),
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__PASSPHRASE,

@@ -374,22 +374,29 @@ class SeedOptionsView(View):
             button_data.append(VERIFY_ADDRESS)
             
         if self.controller.psbt:
-         if PSBTParser.has_matching_input_fingerprint(self.controller.psbt, self.seed, network=self.settings.get_value(SettingsConstants.SETTING__NETWORK)):
-             if self.controller.resume_main_flow and self.controller.resume_main_flow == Controller.FLOW__PSBT:
-                 # Re-route us directly back to the start of the PSBT flow
-                 self.controller.resume_main_flow = None
-                 self.controller.psbt_seed = self.seed
-                 return Destination(PSBTOverviewView, skip_current_view=True)
+            if PSBTParser.has_matching_input_fingerprint(self.controller.psbt, self.seed, network=self.settings.get_value(SettingsConstants.SETTING__NETWORK)):
+                if self.controller.resume_main_flow and self.controller.resume_main_flow == Controller.FLOW__PSBT:
+                    # Re-route us directly back to the start of the PSBT flow
+                    self.controller.resume_main_flow = None
+                    self.controller.psbt_seed = self.seed
+                    return Destination(PSBTOverviewView, skip_current_view=True)
 
         button_data.append(SCAN_PSBT)
         
-        if self.settings.get_value(SettingsConstants.SETTING__XPUB_EXPORT) == SettingsConstants.OPTION__ENABLED:
+        if self.settings.is_enabled(SettingsConstants.SETTING__XPUB_EXPORT) \
+        and self.settings.is_enabled(SettingsConstants.SETTING__SIG_TYPES) \
+        and self.settings.is_enabled(SettingsConstants.SETTING__SCRIPT_TYPES):
             button_data.append(EXPORT_XPUB)
 
-        button_data.append(EXPLORER)
-        button_data.append(BACKUP)
+        if self.settings.is_enabled(SettingsConstants.SETTING__ADDRESS_EXPLORER) \
+        and self.settings.is_enabled(SettingsConstants.SINGLE_SIG) \
+        and self.settings.is_enabled(SettingsConstants.SETTING__SCRIPT_TYPES):
+            button_data.append(EXPLORER)
 
-        if self.settings.get_value(SettingsConstants.SETTING__BIP85_CHILD_SEEDS) == SettingsConstants.OPTION__ENABLED:
+        if self.settings.is_enabled(SettingsConstants.SETTING__SEED_BACKUP):
+            button_data.append(BACKUP)
+
+        if self.settings.is_enabled(SettingsConstants.SETTING__BIP85_CHILD_SEEDS):
             button_data.append(BIP85_CHILD_SEED)
 
         button_data.append(DISCARD)
@@ -475,7 +482,11 @@ class SeedExportXpubSigTypeView(View):
 
         SINGLE_SIG = "Single Sig"
         MULTISIG = "Multisig"
-        button_data=[SINGLE_SIG, MULTISIG]
+        button_data = []
+        if self.settings.is_enabled(SettingsConstants.SINGLE_SIG):
+            button_data.append(SINGLE_SIG)
+        if self.settings.is_enabled(SettingsConstants.MULTISIG):
+            button_data.append(MULTISIG)
 
         selected_menu_num = ButtonListScreen(
             title="Export Xpub",
@@ -771,6 +782,9 @@ class SeedExportXpubQRDisplayView(View):
             wordlist_language_code=self.seed.wordlist_language_code
         )
 
+        self.settings.is_enabled(SettingsConstants.SETTING__XPUB_EXPORT, assert_=True)
+
+
 
     def run(self):
         QRDisplayScreen(qr_encoder=self.qr_encoder).display()
@@ -820,12 +834,14 @@ class SeedWordsView(View):
     def __init__(self, seed_num: int, bip85_data: dict = None, page_index: int = 0):
         super().__init__()
         self.seed_num = seed_num
+        self.bip85_data = bip85_data
+        self.page_index = page_index
         if self.seed_num is None:
             self.seed = self.controller.storage.get_pending_seed()
         else:
             self.seed = self.controller.get_seed(self.seed_num)
-        self.bip85_data = bip85_data
-        self.page_index = page_index
+            if self.bip85_data is None:
+                self.settings.is_enabled(SettingsConstants.SETTING__SEED_BACKUP, assert_=True)
 
 
     def run(self):
@@ -898,6 +914,7 @@ class SeedBIP85ApplicationModeView(View):
         self.seed_num = seed_num
         self.num_words = 0
         self.bip85_app_num = 39     # TODO: Support other Application numbers
+        self.settings.is_enabled(SettingsConstants.SETTING__BIP85_CHILD_SEEDS, assert_=True)
 
 
     def run(self):
@@ -1225,6 +1242,7 @@ class SeedTranscribeSeedQRWholeQRView(View):
         self.seedqr_format = seedqr_format
         self.num_modules = num_modules
         self.seed = self.controller.get_seed(seed_num)
+        self.settings.is_enabled(SettingsConstants.SETTING__SEED_BACKUP, assert_=True)
     
 
     def run(self):
@@ -1260,6 +1278,7 @@ class SeedTranscribeSeedQRZoomedInView(View):
         self.seed_num = seed_num
         self.seedqr_format = seedqr_format
         self.seed = self.controller.get_seed(seed_num)
+        self.settings.is_enabled(SettingsConstants.SETTING__SEED_BACKUP, assert_=True)
     
 
     def run(self):
@@ -1384,6 +1403,7 @@ class AddressVerificationStartView(View):
             script_type=script_type,
             network=network
         )
+        self.settings.is_enabled(script_type, assert_=True)
 
 
     def run(self):
@@ -1413,6 +1433,8 @@ class AddressVerificationStartView(View):
         elif self.controller.unverified_address["script_type"] == SettingsConstants.LEGACY_P2PKH:
             # TODO: detect single sig vs multisig or have to prompt?
             return Destination(NotYetImplementedView)
+
+        self.settings.is_enabled(sig_type, assert_=True)
 
         derivation_path = embit_utils.get_standard_derivation_path(
             network=self.controller.unverified_address["network"],
