@@ -20,6 +20,7 @@ class TestToolsFlows(FlowTest):
         seed = Seed(mnemonic=["abandon "* 11 + "about"])
         controller.storage.set_pending_seed(seed)
         controller.storage.finalize_pending_seed()
+        self.settings.set_value(SettingsConstants.SETTING__ADDRESS_EXPLORER, SettingsConstants.OPTION__ENABLED)
 
         self.run_sequence([
             FlowStep(MainMenuView, button_data_selection=MainMenuView.TOOLS),
@@ -40,6 +41,7 @@ class TestToolsFlows(FlowTest):
             Address Explorer step upon completion.
         """
         controller = Controller.get_instance()
+        self.settings.set_value(SettingsConstants.SETTING__ADDRESS_EXPLORER, SettingsConstants.OPTION__ENABLED)
 
         def load_seed_into_decoder(view: scan_views.ScanView):
             view.decoder.add_data("0000" * 11 + "0003")
@@ -80,6 +82,8 @@ class TestToolsFlows(FlowTest):
         def load_wrong_data_into_decoder(view: scan_views.ScanView):
             view.decoder.add_data("bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq")
 
+        self.settings.set_value(SettingsConstants.SETTING__ADDRESS_EXPLORER, SettingsConstants.OPTION__ENABLED)
+
         # Finalize the new seed w/out passphrase
         self.run_sequence([
             FlowStep(MainMenuView, button_data_selection=MainMenuView.TOOLS),
@@ -108,6 +112,8 @@ class TestToolsFlows(FlowTest):
         seed = Seed(mnemonic=["abandon "* 11 + "about"])
         controller.storage.set_pending_seed(seed)
         controller.storage.finalize_pending_seed()
+        self.settings.set_value(SettingsConstants.SETTING__ADDRESS_EXPLORER, SettingsConstants.OPTION__ENABLED)
+
 
         # Scenario 1: Seed already onboard, multiple script types enabled, BACK can still
         #  change script type selection.

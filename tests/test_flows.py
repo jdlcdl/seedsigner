@@ -58,6 +58,7 @@ class TestFlowTest(FlowTest):
         """
         # Disable dire warnings so that the SeedWordsWarningView won't execute its run_screen()
         self.settings.set_value(SettingsConstants.SETTING__DIRE_WARNINGS, SettingsConstants.OPTION__DISABLED)
+        self.settings.set_value(SettingsConstants.SETTING__SEED_BACKUP, SettingsConstants.OPTION__ENABLED)
         self.controller.storage.set_pending_seed(Seed(mnemonic=["bacon"] * 24))
         self.controller.storage.finalize_pending_seed()
 
@@ -105,6 +106,7 @@ class TestFlowTest(FlowTest):
         self.controller = Controller.get_instance()
 
         # Load a seed into the Controller
+        self.settings.set_value(SettingsConstants.SETTING__SEED_BACKUP, SettingsConstants.OPTION__ENABLED)
         seed = Seed(mnemonic=["abandon "* 11 + "about"])
         self.controller.storage.set_pending_seed(seed)
         self.controller.storage.finalize_pending_seed()

@@ -105,6 +105,13 @@ def test_generate_screenshots(target_locale):
         attr_name=SettingsConstants.SETTING__COMPACT_SEEDQR,
         value=SettingsConstants.OPTION__ENABLED
     )
+
+    # so we get prudently paranoid settings offers
+    controller.settings.set_value(SettingsConstants.SETTING__XPUB_EXPORT, SettingsConstants.OPTION__ENABLED)
+    controller.settings.set_value(SettingsConstants.SETTING__SEED_BACKUP, SettingsConstants.OPTION__ENABLED)
+    controller.settings.set_value(SettingsConstants.SETTING__ADDRESS_EXPLORER, SettingsConstants.OPTION__ENABLED)
+    controller.settings.set_value(SettingsConstants.SETTING__BIP85_CHILD_SEEDS, SettingsConstants.OPTION__ENABLED)
+
     for settings_entry in SettingsDefinition.settings_entries:
         if settings_entry.visibility == SettingsConstants.VISIBILITY__HIDDEN:
             continue

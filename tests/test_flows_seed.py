@@ -116,6 +116,8 @@ class TestSeedFlows(FlowTest):
                     FlowStep(MainMenuView),
                 ]
         )
+
+        self.settings.set_value(SettingsConstants.SETTING__XPUB_EXPORT, SettingsConstants.OPTION__ENABLED)
             
         # Load a finalized Seed into the Controller
         mnemonic = "blush twice taste dawn feed second opinion lazy thumb play neglect impact".split()
@@ -151,6 +153,9 @@ class TestSeedFlows(FlowTest):
         """
             If sig_type/script_type/coordinator disabled, then these options are not available
         """
+
+        self.settings.set_value(SettingsConstants.SETTING__XPUB_EXPORT, SettingsConstants.OPTION__ENABLED)
+
         # Load a finalized Seed into the Controller
         mnemonic = "blush twice taste dawn feed second opinion lazy thumb play neglect impact".split()
         self.controller.storage.set_pending_seed(Seed(mnemonic=mnemonic))
@@ -209,6 +214,9 @@ class TestSeedFlows(FlowTest):
         """
             Export XPUB flow for custom derivation finishes at MainMenuView
         """
+
+        self.settings.set_value(SettingsConstants.SETTING__XPUB_EXPORT, SettingsConstants.OPTION__ENABLED)
+
         # Load a finalized Seed into the Controller
         mnemonic = "blush twice taste dawn feed second opinion lazy thumb play neglect impact".split()
         self.controller.storage.set_pending_seed(Seed(mnemonic=mnemonic))
@@ -257,6 +265,8 @@ class TestSeedFlows(FlowTest):
             SettingsConstants.SETTING__SCRIPT_TYPES: SettingsConstants.NESTED_SEGWIT,
             SettingsConstants.SETTING__COORDINATORS: SettingsConstants.COORDINATOR__SPECTER_DESKTOP,
         })
+
+        self.settings.set_value(SettingsConstants.SETTING__XPUB_EXPORT, SettingsConstants.OPTION__ENABLED)
 
         self.run_sequence(
             initial_destination_view_args=dict(seed_num=0),

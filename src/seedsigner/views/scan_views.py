@@ -89,6 +89,8 @@ class ScanView(View):
                 return Destination(PSBTSelectSeedView, skip_current_view=True)
 
             elif self.decoder.is_settings:
+                if len(self.controller.storage.seeds) > 0:
+                    raise Exception("Please discard all seeds before loading settings.")
                 data = self.decoder.get_settings_data()
                 return Destination(SettingsIngestSettingsQRView, view_args=dict(data=data))
             

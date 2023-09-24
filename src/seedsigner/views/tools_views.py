@@ -32,7 +32,10 @@ class ToolsMenuView(View):
     ADDRESS = "Verify address"
 
     def run(self):
-        button_data = [self.IMAGE, self.DICE, self.KEYBOARD, self.EXPLORER, self.ADDRESS]
+        button_data = [self.IMAGE, self.DICE, self.KEYBOARD]
+        if self.settings.is_enabled(SettingsConstants.SETTING__ADDRESS_EXPLORER):
+            button_data.append(self.EXPLORER)
+        button_data.append(self.ADDRESS)
 
         selected_menu_num = self.run_screen(
             ButtonListScreen,
@@ -524,6 +527,7 @@ class ToolsAddressExplorerAddressTypeView(View):
             script_type=script_type,
         )
         if self.seed_num is not None:
+            self.settings.is_enabled(SettingsConstants.SINGLE_SIG, assert_=True)
             self.seed = self.controller.storage.seeds[seed_num]
             data["seed_num"] = self.seed
 
@@ -588,6 +592,7 @@ class ToolsAddressExplorerAddressListView(View):
         self.start_index = start_index
         self.selected_button_index = selected_button_index
         self.initial_scroll = initial_scroll
+        self.settings.is_enabled(SettingsConstants.SETTING__ADDRESS_EXPLORER, assert_=True)
 
 
     def run(self):
