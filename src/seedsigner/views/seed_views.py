@@ -1073,7 +1073,7 @@ class SeedBIP85SelectChildIndexView(View):
             )
 
         return Destination(
-            SeedWordsWarningView,
+            SeedWordsBackupTestPromptView,
             view_args=dict(
                 seed_num=self.seed_num,
                 bip85_data=dict(child_index=int(ret), num_words=self.num_words),
@@ -1120,8 +1120,9 @@ class SeedWordsBackupTestPromptView(View):
 
     def run(self):
         VERIFY = "Verify"
+        REVIEW = "Review"
         SKIP = "Skip"
-        button_data = [VERIFY, SKIP]
+        button_data = [VERIFY, REVIEW, SKIP]
 
         FINALIZE = ("Finalize child")
         if self.seed_num is not None and self.bip85_data:
@@ -1134,6 +1135,12 @@ class SeedWordsBackupTestPromptView(View):
         if button_data[selected_menu_num] == VERIFY:
             return Destination(
                 SeedWordsBackupTestView,
+                view_args=dict(seed_num=self.seed_num, bip85_data=self.bip85_data),
+            )
+
+        elif button_data[selected_menu_num] == REVIEW:
+            return Destination(
+                SeedWordsWarningView,
                 view_args=dict(seed_num=self.seed_num, bip85_data=self.bip85_data),
             )
 
