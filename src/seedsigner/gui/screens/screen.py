@@ -1,18 +1,19 @@
 import time
 
 from dataclasses import dataclass
+from gettext import gettext as _
 from PIL import Image, ImageDraw, ImageColor
 from typing import Any, List, Tuple
 from seedsigner.gui.keyboard import Keyboard, TextEntryDisplay
 from seedsigner.gui.renderer import Renderer
+from seedsigner.hardware.buttons import HardwareButtons, HardwareButtonsConstants
 
 from seedsigner.models.threads import BaseThread, ThreadsafeCounter
 from seedsigner.models.encode_qr import EncodeQR
-from seedsigner.models.settings import Settings, SettingsConstants
+from seedsigner.models.settings import SettingsConstants
 
 from ..components import (FontAwesomeIconConstants, GUIConstants, BaseComponent, Button, Icon, IconButton, LargeIconButton, SeedSignerCustomIconConstants, TopNav, TextArea, load_image, ToastOverlay)
 
-from seedsigner.hardware.buttons import HardwareButtonsConstants, HardwareButtons
 
 
 # Must be huge numbers to avoid conflicting with the selected_button returned by the
@@ -24,10 +25,16 @@ RET_CODE__POWER_BUTTON = 1001
 
 @dataclass
 class BaseScreen(BaseComponent):
+    disable_inputs: bool = False
+
+
     def __post_init__(self):
         super().__post_init__()
         
-        self.hw_inputs = HardwareButtons.get_instance()
+        if not self.disable_inputs:
+            # For testing or rendering screen previews off the device when hardware
+            # support is not available.
+            self.hw_inputs = HardwareButtons.get_instance()
 
         # Implementation classes can add their own BaseThread to run in parallel with the
         # main execution thread.
@@ -147,7 +154,7 @@ class LoadingScreenThread(BaseThread):
             if self.text:
                 TextArea(
                     text=self.text,
-                    font_size=GUIConstants.TOP_NAV_TITLE_FONT_SIZE,
+                    font_size=GUIConstants.get_top_nav_title_font_size(),
                     screen_y=int((renderer.canvas_height - bounding_box[3])/2),
                 ).render()
 
@@ -180,7 +187,7 @@ class LoadingScreenThread(BaseThread):
                     width=GUIConstants.COMPONENT_PADDING
                 )
 
-                renderer.show_image()
+                renderer.show_image(is_background_thread=True)
             position += arc_sweep
 
 
@@ -190,7 +197,7 @@ class BaseTopNavScreen(BaseScreen):
     top_nav_icon_name: str = None
     top_nav_icon_color: str = None
     title: str = "Screen Title"
-    title_font_size: int = GUIConstants.TOP_NAV_TITLE_FONT_SIZE
+    title_font_size: int = GUIConstants.get_top_nav_title_font_size()
     show_back_button: bool = True
     show_power_button: bool = False
 
@@ -257,8 +264,8 @@ class ButtonListScreen(BaseTopNavScreen):
     selected_button: int = 0
     is_button_text_centered: bool = True
     is_bottom_list: bool = False
-    button_font_name: str = GUIConstants.BUTTON_FONT_NAME
-    button_font_size: int = GUIConstants.BUTTON_FONT_SIZE
+    button_font_name: str = None
+    button_font_size: int = None
     button_selected_color: str = GUIConstants.ACCENT_COLOR
 
     # Params for version of list used for Settings
@@ -270,7 +277,12 @@ class ButtonListScreen(BaseTopNavScreen):
 
 
     def __post_init__(self):
+        if not self.button_font_name:
+            self.button_font_name = GUIConstants.get_button_font_name()
+        if not self.button_font_size:
+            self.button_font_size = GUIConstants.get_button_font_size()
         super().__post_init__()
+
         button_height = GUIConstants.BUTTON_HEIGHT
         if len(self.button_data) == 1:
             button_list_height = button_height
@@ -355,6 +367,9 @@ class ButtonListScreen(BaseTopNavScreen):
     def _render(self):
         super()._render()
         self._render_visible_buttons()
+
+        # Write the screen updates
+        self.renderer.show_image()
 
 
     def _render_visible_buttons(self):
@@ -511,12 +526,17 @@ class ButtonListScreen(BaseTopNavScreen):
 @dataclass
 class LargeButtonScreen(BaseTopNavScreen):
     button_data: list = None                  # list can be a mix of str or tuple(label: str, icon_name: str)
-    button_font_name: str = GUIConstants.BUTTON_FONT_NAME
-    button_font_size: int = 20
+    button_font_name: str = None
+    button_font_size: int = None
     button_selected_color: str = GUIConstants.ACCENT_COLOR
     selected_button: int = 0
 
     def __post_init__(self):
+        if not self.button_font_name:
+            self.button_font_name = GUIConstants.get_button_font_name()
+        if not self.button_font_size:
+            self.button_font_size = GUIConstants.get_button_font_size() + 2
+
         super().__post_init__()
 
         if len(self.button_data) not in [2, 4]:
@@ -732,20 +752,22 @@ class QRDisplayScreen(BaseScreen):
 
 @dataclass
 class LargeIconStatusScreen(ButtonListScreen):
-    title: str = "Success!"
+    title: str = None
     status_icon_name: str = SeedSignerCustomIconConstants.CIRCLE_CHECK
     status_icon_size: int = GUIConstants.ICON_PRIMARY_SCREEN_SIZE
     status_color: str = GUIConstants.SUCCESS_COLOR
-    status_headline: str = "Success!"  # The colored text under the large icon
+    status_headline: str = None
     text: str = ""                          # The body text of the screen
     button_data: list = None
-    allow_text_overflow: bool = False
 
 
     def __post_init__(self):
+        if not self.title:
+            self.title = _("Success!")
+
         self.is_bottom_list: bool = True
         if not self.button_data:
-            self.button_data = ["OK"]
+            self.button_data = [_("OK")]
         super().__post_init__()
 
         self.status_icon = Icon(
@@ -764,7 +786,6 @@ class LargeIconStatusScreen(ButtonListScreen):
                 width=self.canvas_width,
                 screen_y=next_y,
                 font_color=self.status_color,
-                allow_text_overflow=self.allow_text_overflow,
             )
             self.components.append(self.warning_headline_textarea)
             next_y = next_y + self.warning_headline_textarea.height
@@ -774,7 +795,6 @@ class LargeIconStatusScreen(ButtonListScreen):
             text=self.text,
             width=self.canvas_width,
             screen_y=next_y,
-            allow_text_overflow=self.allow_text_overflow,
         ))
 
 
@@ -856,14 +876,15 @@ class WarningEdgesMixin:
 
 @dataclass
 class WarningScreen(WarningEdgesMixin, LargeIconStatusScreen):
-    title: str = "Caution"
     status_icon_name: str = SeedSignerCustomIconConstants.CIRCLE_EXCLAMATION
     status_color: str = "yellow"
-    status_headline: str = "Privacy Leak!"     # The colored text under the alert icon
 
     def __post_init__(self):
+        if not self.title:
+            self.title = _("Caution")
+        
         if not self.button_data:
-            self.button_data = ["I Understand"]
+            self.button_data = [_("I Understand")]
 
         super().__post_init__()
 
@@ -871,20 +892,25 @@ class WarningScreen(WarningEdgesMixin, LargeIconStatusScreen):
 
 @dataclass
 class DireWarningScreen(WarningScreen):
-    status_headline: str = "Classified Info!"     # The colored text under the alert icon
     status_color: str = GUIConstants.DIRE_WARNING_COLOR
+
+    def __post_init__(self):
+        if not self.status_headline:
+            self.status_headline = _("Classified Info!")
+        
+        super().__post_init__()
 
 
 
 @dataclass
 class ResetScreen(BaseTopNavScreen):
     def __post_init__(self):
-        self.title = "Restarting"
+        self.title = _("Restarting")
         self.show_back_button = False
         super().__post_init__()
 
         self.components.append(TextArea(
-            text="SeedSigner is restarting.\n\nAll in-memory data will be wiped.",
+            text=_("SeedSigner is restarting.\n\nAll in-memory data will be wiped."),
             screen_y=self.top_nav.height,
             height=self.canvas_height - self.top_nav.height,
         ))
@@ -894,12 +920,12 @@ class ResetScreen(BaseTopNavScreen):
 @dataclass
 class PowerOffScreen(BaseTopNavScreen):
     def __post_init__(self):
-        self.title = "Powering Off"
+        self.title = _("Powering Off")
         self.show_back_button = False
         super().__post_init__()
 
         self.components.append(TextArea(
-            text="Please wait about 30 seconds before disconnecting power.",
+            text=_("Please wait about 30 seconds before disconnecting power."),
             screen_y=self.top_nav.height,
             height=self.canvas_height - self.top_nav.height,
         ))
@@ -942,7 +968,7 @@ class KeyboardScreen(BaseTopNavScreen):
     rows: int = None
     cols: int = None
     keyboard_font_name: str = GUIConstants.FIXED_WIDTH_EMPHASIS_FONT_NAME
-    keyboard_font_size: int = GUIConstants.TOP_NAV_TITLE_FONT_SIZE + 2
+    keyboard_font_size: int = None
     key_height: int = None
     keys_charset: str = None
     keys_to_values: dict = None
@@ -951,6 +977,9 @@ class KeyboardScreen(BaseTopNavScreen):
     initial_value: str = ""
 
     def __post_init__(self):
+        if self.keyboard_font_size is None:
+            self.keyboard_font_size = GUIConstants.get_top_nav_title_font_size() + 2
+
         super().__post_init__()
 
         if self.initial_value:
@@ -1104,8 +1133,8 @@ class KeyboardScreen(BaseTopNavScreen):
                 if self.update_title():
                     TextArea(
                         text=self.title,
-                        font_name=GUIConstants.TOP_NAV_TITLE_FONT_NAME,
-                        font_size=GUIConstants.TOP_NAV_TITLE_FONT_SIZE,
+                        font_name=GUIConstants.get_top_nav_title_font_name(),
+                        font_size=GUIConstants.get_top_nav_title_font_size(),
                         height=self.top_nav.height,
                     ).render()
                     self.top_nav.render_buttons()
@@ -1127,7 +1156,7 @@ class KeyboardScreen(BaseTopNavScreen):
             Optionally update the self.title after each completed key input.
             
             e.g. to increment the dice roll count:
-                self.title = f"Roll {self.cursor_position + 1}"
+                self.title = _("Roll {}".format(self.cursor_position + 1))
         """
         return False
 
@@ -1153,7 +1182,7 @@ class MicroSDToastScreen(BaseScreen):
             self.toast = ToastOverlay(
                 icon_name=FontAwesomeIconConstants.SDCARD,
                 color=GUIConstants.NOTIFICATION_COLOR,
-                label_text="MicroSD removed"
+                label_text=_("MicroSD removed")
             )
         
         elif self.action == MicroSD.ACTION__INSERTED:
@@ -1161,7 +1190,7 @@ class MicroSDToastScreen(BaseScreen):
             self.toast = ToastOverlay(
                 icon_name=FontAwesomeIconConstants.SDCARD,
                 color=GUIConstants.NOTIFICATION_COLOR,
-                label_text="MicroSD inserted"
+                label_text=_("MicroSD inserted")
             )
         
         self.toast.render()

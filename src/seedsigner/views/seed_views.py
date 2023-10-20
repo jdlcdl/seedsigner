@@ -6,6 +6,7 @@ from binascii import hexlify
 from embit import bip39
 from embit.descriptor import Descriptor
 from embit.networks import NETWORKS
+from gettext import gettext as _
 from typing import List
 
 from seedsigner.controller import Controller
@@ -48,10 +49,10 @@ class SeedsMenuView(View):
         button_data = []
         for seed in self.seeds:
             button_data.append((seed["fingerprint"], SeedSignerCustomIconConstants.FINGERPRINT, "blue"))
-        button_data.append("Load a seed")
+        button_data.append(_("Load a seed"))
 
         selected_menu_num = ButtonListScreen(
-            title="In-Memory Seeds",
+            title=_("In-Memory Seeds"),
             is_button_text_centered=False,
             button_data=button_data
         ).display()
@@ -72,10 +73,10 @@ class SeedsMenuView(View):
 ****************************************************************************"""
 class LoadSeedView(View):
     def run(self):
-        SEED_QR = (" Scan a SeedQR", FontAwesomeIconConstants.QRCODE)
-        TYPE_12WORD = ("Enter 12-word seed", FontAwesomeIconConstants.KEYBOARD)
-        TYPE_24WORD = ("Enter 24-word seed", FontAwesomeIconConstants.KEYBOARD)
-        CREATE = (" Create a seed", FontAwesomeIconConstants.PLUS)
+        SEED_QR = (_("Scan a SeedQR"), FontAwesomeIconConstants.QRCODE)
+        TYPE_24WORD = (_("Enter 24-word seed"), FontAwesomeIconConstants.KEYBOARD)
+        TYPE_12WORD = (_("Enter 12-word seed"), FontAwesomeIconConstants.KEYBOARD)
+        CREATE = (_("Create a seed"), FontAwesomeIconConstants.PLUS)
         button_data=[
             SEED_QR,
             TYPE_12WORD,
@@ -84,7 +85,7 @@ class LoadSeedView(View):
         ]
 
         selected_menu_num = ButtonListScreen(
-            title="Load A Seed",
+            title=_("Load A Seed"),
             is_button_text_centered=False,
             button_data=button_data
         ).display()
@@ -120,7 +121,8 @@ class SeedMnemonicEntryView(View):
 
     def run(self):
         ret = seed_screens.SeedMnemonicEntryScreen(
-            title=f"Seed Word #{self.cur_word_index + 1}",  # Human-readable 1-indexing!
+            # TRANSLATOR_NOTE: Inserts the word number (e.g. "Seed Word #6")
+            title=_("Seed Word #{}").format(self.cur_word_index + 1),  # Human-readable 1-indexing!
             initial_letters=list(self.cur_word) if self.cur_word else ["a"],
             wordlist=Seed.get_wordlist(wordlist_language_code=self.settings.get_value(SettingsConstants.SETTING__WORDLIST_LANGUAGE)),
         ).display()
@@ -180,14 +182,14 @@ class SeedMnemonicInvalidView(View):
 
 
     def run(self):
-        EDIT = "Review & Edit"
-        DISCARD = ("Discard", None, None, "red")
+        EDIT = _("Review & Edit")
+        DISCARD = (_("Discard"), None, None, "red")
         button_data = [EDIT, DISCARD]
 
         selected_menu_num = WarningScreen(
-            title="Invalid Mnemonic!",
+            title=_("Invalid Mnemonic!"),
             status_headline=None,
-            text=f"Checksum failure; not a valid seed phrase.",
+            text=_("Checksum failure; not a valid seed phrase."),
             show_back_button=False,
             button_data=button_data,
         ).display()
@@ -205,12 +207,25 @@ class SeedFinalizeView(View):
     def __init__(self):
         super().__init__()
         self.seed = self.controller.storage.get_pending_seed()
-        self.fingerprint = self.seed.get_fingerprint(network=self.settings.get_value(SettingsConstants.SETTING__NETWORK))
+
+        if self.seed.get_fingerprint == "":
+            # Expected normal user flow
+            self.fingerprint = self.seed.get_fingerprint(network=self.settings.get_value(SettingsConstants.SETTING__NETWORK))
+
+        else:
+            # This view should display the "naked" seed's fingerprint. Normally the
+            # just-loaded seed would be naked, but this is special handling for the
+            # screenshot generator which creates a pending seed w/a passphrase already
+            # set.
+            passphrase = self.seed.passphrase
+            self.seed.set_passphrase("")
+            self.fingerprint = self.seed.get_fingerprint(network=self.settings.get_value(SettingsConstants.SETTING__NETWORK))
+            self.seed.set_passphrase(passphrase)
 
 
     def run(self):
-        FINALIZE = "Done"
-        PASSPHRASE = "BIP-39 Passphrase"
+        FINALIZE = _("Done")
+        PASSPHRASE = (_("BIP-39 Passphrase"), FontAwesomeIconConstants.LOCK)
         button_data = []
 
         button_data.append(FINALIZE)
@@ -228,7 +243,27 @@ class SeedFinalizeView(View):
             return Destination(SeedOptionsView, view_args={"seed_num": seed_num}, clear_history=True)
 
         elif button_data[selected_menu_num] == PASSPHRASE:
+            if self.settings.get_value(attr_name=SettingsConstants.SETTING__PASSPHRASE_WARNING) == SettingsConstants.OPTION__ENABLED:
+                return Destination(SeedPassphraseWarningView)
+
+            else:
+                return Destination(SeedAddPassphraseView)
+
+
+
+class SeedPassphraseWarningView(View):
+    def run(self):
+        selected_menu_num = WarningScreen(
+            status_headline=None,
+            text=_("""BIP-39 passphrase changes your seed, resulting in new xpubs, wallets, etc.\nBe sure you know what you're doing!""")
+        ).display()
+
+        if selected_menu_num == 0:
+            # User clicked "I Understand"
             return Destination(SeedAddPassphraseView)
+
+        elif selected_menu_num == RET_CODE__BACK_BUTTON:
+            return Destination(BackStackView)
 
 
 
@@ -263,8 +298,8 @@ class SeedReviewPassphraseView(View):
 
 
     def run(self):
-        EDIT = "Edit passphrase"
-        DONE = "Done"
+        EDIT = _("Edit passphrase")
+        DONE = _("Done")
         button_data = [EDIT, DONE]
 
         # Get the before/after fingerprints
@@ -305,15 +340,15 @@ class SeedDiscardView(View):
 
 
     def run(self):
-        KEEP = "Keep Seed"
-        DISCARD = ("Discard", None, None, "red")
+        KEEP = _("Keep Seed")
+        DISCARD = (_("Discard"), None, None, "red")
         button_data = [KEEP, DISCARD]
 
         fingerprint = self.seed.get_fingerprint(self.settings.get_value(SettingsConstants.SETTING__NETWORK))
         selected_menu_num = WarningScreen(
-            title="Discard Seed?",
+            title=_("Discard Seed?"),
             status_headline=None,
-            text=f"Wipe seed {fingerprint} from the device?",
+            text=_("Wipe seed {} from the device?").format(fingerprint),
             show_back_button=False,
             button_data=button_data,
         ).display()
@@ -347,13 +382,13 @@ class SeedOptionsView(View):
     def run(self):
         from seedsigner.views.psbt_views import PSBTOverviewView
 
-        SCAN_PSBT = ("Scan PSBT", FontAwesomeIconConstants.QRCODE)
-        VERIFY_ADDRESS = "Verify Addr"
-        EXPORT_XPUB = "Export Xpub"
-        EXPLORER = "Address Explorer"
-        BACKUP = ("Backup Seed", None, None, None, SeedSignerCustomIconConstants.SMALL_CHEVRON_RIGHT)
-        BIP85_CHILD_SEED = "BIP-85 Child Seed"
-        DISCARD = ("Discard Seed", None, None, "red")
+        SCAN_PSBT = (_("Scan PSBT"), FontAwesomeIconConstants.QRCODE)
+        VERIFY_ADDRESS = _("Verify Addr")
+        EXPORT_XPUB = _("Export Xpub")
+        EXPLORER = _("Address Explorer")
+        BACKUP = (_("Backup Seed"), None, None, None, SeedSignerCustomIconConstants.SMALL_CHEVRON_RIGHT)
+        BIP85_CHILD_SEED = _("BIP-85 Child Seed")
+        DISCARD = (_("Discard Seed"), None, None, "red")
 
         button_data = []
 
@@ -438,14 +473,13 @@ class SeedBackupView(View):
     
 
     def run(self):
-        VIEW_WORDS = "View Seed Words"
-        EXPORT_SEEDQR = "Export as SeedQR"
+        VIEW_WORDS = _("View Seed Words")
+        EXPORT_SEEDQR = _("Export as SeedQR")
         button_data = [VIEW_WORDS, EXPORT_SEEDQR]
 
-        selected_menu_num = ButtonListScreen(
-            title="Backup Seed",
+        selected_menu_num = seed_screens.SeedBackupScreen(
             button_data=button_data,
-            is_bottom_list=True,
+            has_passphrase=self.seed.has_passphrase,
         ).display()
 
         if selected_menu_num == RET_CODE__BACK_BUTTON:
@@ -473,12 +507,12 @@ class SeedExportXpubSigTypeView(View):
             # Nothing to select; skip this screen
             return Destination(SeedExportXpubScriptTypeView, view_args={"seed_num": self.seed_num, "sig_type": self.settings.get_value(SettingsConstants.SETTING__SIG_TYPES)[0]}, skip_current_view=True)
 
-        SINGLE_SIG = "Single Sig"
-        MULTISIG = "Multisig"
+        SINGLE_SIG = _("Single Sig")
+        MULTISIG = _("Multisig")
         button_data=[SINGLE_SIG, MULTISIG]
 
         selected_menu_num = ButtonListScreen(
-            title="Export Xpub",
+            title=_("Export Xpub"),
             button_data=button_data
         ).display()
 
@@ -514,17 +548,18 @@ class SeedExportXpubScriptTypeView(View):
                 return Destination(SeedExportXpubCoordinatorView, view_args=args, skip_current_view=True)
 
         button_data = []
-        for script_type in self.settings.get_multiselect_value_display_names(SettingsConstants.SETTING__SCRIPT_TYPES):
-            button_data.append(script_type)
+        for script_type, display_name in SettingsConstants.ALL_SCRIPT_TYPES:
+            if script_type in self.settings.get_value(SettingsConstants.SETTING__SCRIPT_TYPES):
+                button_data.append((script_type, _(display_name)))
         
-        title = "Export Xpub"
+        title = _("Export Xpub")
         if self.controller.resume_main_flow == Controller.FLOW__ADDRESS_EXPLORER:
-            title = "Address Explorer"
+            title = _("Address Explorer")
 
         selected_menu_num = ButtonListScreen(
             title=title,
             is_button_text_centered=False,
-            button_data=button_data,
+            button_data=[x[1] for x in button_data],
             is_bottom_list=True,
         ).display()
 
@@ -535,9 +570,7 @@ class SeedExportXpubScriptTypeView(View):
             return Destination(BackStackView)
 
         else:
-            script_types_settings_entry = SettingsDefinition.get_settings_entry(SettingsConstants.SETTING__SCRIPT_TYPES)
-            selected_display_name = button_data[selected_menu_num]
-            args["script_type"] = script_types_settings_entry.get_selection_option_value_by_display_name(selected_display_name)
+            args["script_type"] = button_data[selected_menu_num][0]
 
             if args["script_type"] == SettingsConstants.CUSTOM_DERIVATION:
                 return Destination(SeedExportXpubCustomDerivationView, view_args=args)
@@ -607,7 +640,7 @@ class SeedExportXpubCoordinatorView(View):
             return Destination(SeedExportXpubWarningView, view_args=args, skip_current_view=True)
 
         selected_menu_num = ButtonListScreen(
-            title="Export Xpub",
+            title=_("Export Xpub"),
             is_button_text_centered=False,
             button_data=self.settings.get_multiselect_value_display_names(SettingsConstants.SETTING__COORDINATORS),
         ).display()
@@ -649,8 +682,8 @@ class SeedExportXpubWarningView(View):
             return destination
 
         selected_menu_num = WarningScreen(
-            status_headline="Privacy Leak!",
-            text="""Xpub can be used to view all future transactions.""",
+            status_headline=_("Privacy Leak!"),
+            text=_("Xpub can be used to view all future transactions."),
         ).display()
 
         if selected_menu_num == 0:
@@ -694,7 +727,7 @@ class SeedExportXpubDetailsView(View):
 
         else:
             # The derivation calc takes a few moments. Run the loading screen while we wait.
-            self.loading_screen = LoadingScreenThread(text="Generating xpub...")
+            self.loading_screen = LoadingScreenThread(text=_("Generating xpub..."))
             self.loading_screen.start()
 
             try:
@@ -804,7 +837,7 @@ class SeedWordsWarningView(View):
             return destination
 
         selected_menu_num = DireWarningScreen(
-            text="""You must keep your seed words private & away from all online devices.""",
+            text=_("You must keep your seed words private & away from all online devices."),
         ).display()
 
         if selected_menu_num == 0:
@@ -829,18 +862,18 @@ class SeedWordsView(View):
 
 
     def run(self):
-        NEXT = "Next"
-        DONE = "Done"
+        NEXT = _("Next")
+        DONE = _("Done")
 
         # Slice the mnemonic to our current 4-word section
         words_per_page = 4  # TODO: eventually make this configurable for bigger screens?
 
         if self.bip85_data is not None:
             mnemonic = self.seed.get_bip85_child_mnemonic(self.bip85_data["child_index"], self.bip85_data["num_words"]).split()
-            title = f"""Child #{self.bip85_data["child_index"]}"""
+            title = _("Child #{}").format(self.bip85_data["child_index"])
         else:
             mnemonic = self.seed.mnemonic_display_list
-            title = "Seed Words"
+            title = _("Seed Words")
         words = mnemonic[self.page_index*words_per_page:(self.page_index + 1)*words_per_page]
 
         button_data = []
@@ -902,13 +935,13 @@ class SeedBIP85ApplicationModeView(View):
 
     def run(self):
         # TODO: Future enhancement to display WIF (HD-SEED) and XPRV (Bip32)?
-        WORDS_12 = "12 Words"
-        WORDS_24 = "24 Words"
+        WORDS_12 = _("12 Words")
+        WORDS_24 = _("24 Words")
 
         button_data = [WORDS_12, WORDS_24]
 
         selected_menu_num = ButtonListScreen(
-            title="BIP-85 Num Words",
+            title=_("BIP-85 Num Words"),
             button_data=button_data
         ).display()
 
@@ -962,8 +995,8 @@ class SeedWordsBackupTestPromptView(View):
 
 
     def run(self):
-        VERIFY = "Verify"
-        SKIP = "Skip"
+        VERIFY = _("Verify")
+        SKIP = _("Skip")
         button_data = [VERIFY, SKIP]
         selected_menu_num = seed_screens.SeedWordsBackupTestPromptScreen(
             button_data=button_data,
@@ -1020,7 +1053,7 @@ class SeedWordsBackupTestView(View):
         random.shuffle(button_data)
 
         selected_menu_num = ButtonListScreen(
-            title=f"Verify Word #{self.cur_index + 1}",
+            title=_("Verify Word #{}").format(self.cur_index + 1),
             show_back_button=False,
             button_data=button_data,
             is_bottom_list=True,
@@ -1068,15 +1101,15 @@ class SeedWordsBackupTestMistakeView(View):
 
 
     def run(self):
-        REVIEW = "Review Seed Words"
-        RETRY = "Try Again"
+        REVIEW = _("Review Seed Words")
+        RETRY = _("Try Again")
         button_data = [REVIEW, RETRY]
 
         selected_menu_num = DireWarningScreen(
-            title="Verification Error",
+            title=_("Verification Error"),
             show_back_button=False,
-            status_headline=f"Wrong Word!",
-            text=f"Word #{self.cur_index + 1} is not \"{self.wrong_word}\"!",
+            status_headline=_("Wrong Word!"),
+            text=_("Word #{} is not \"{}\"!").format(self.cur_index + 1, self.wrong_word),
             button_data=button_data,
         ).display()
 
@@ -1105,11 +1138,11 @@ class SeedWordsBackupTestSuccessView(View):
 
     def run(self):
         LargeIconStatusScreen(
-            title="Backup Verified",
+            title=_("Backup Verified"),
             show_back_button=False,
-            status_headline="Success!",
-            text="All mnemonic backup words were successfully verified!",
-            button_data=["OK"]
+            status_headline=_("Success!"),
+            text=_("All mnemonic backup words were successfully verified!"),
+            button_data=[_("OK")]
         ).display()
 
         if self.seed_num is not None:
@@ -1131,13 +1164,13 @@ class SeedTranscribeSeedQRFormatView(View):
     def run(self):
         seed = self.controller.get_seed(self.seed_num)
         if len(seed.mnemonic_list) == 12:
-            STANDARD = "Standard: 25x25"
-            COMPACT = "Compact: 21x21"
+            STANDARD = _("Standard: 25x25")
+            COMPACT = _("Compact: 21x21")
             num_modules_standard = 25
             num_modules_compact = 21
         else:
-            STANDARD = "Standard: 29x29"
-            COMPACT = "Compact: 25x25"
+            STANDARD = _("Standard: 29x29")
+            COMPACT = _("Compact: 25x25")
             num_modules_standard = 29
             num_modules_compact = 25
 
@@ -1155,8 +1188,10 @@ class SeedTranscribeSeedQRFormatView(View):
 
         button_data = [STANDARD, COMPACT]
 
+        print(f"button_data: {button_data}")
+
         selected_menu_num = seed_screens.SeedTranscribeSeedQRFormatScreen(
-            title="SeedQR Format",
+            title=_("SeedQR Format"),
             button_data=button_data,
         ).display()
 
@@ -1205,8 +1240,8 @@ class SeedTranscribeSeedQRWarningView(View):
             return destination
 
         selected_menu_num = DireWarningScreen(
-            status_headline="SeedQR is your private key!",
-            text="""Never photograph it or scan it into an online device.""",
+            status_headline=_("SeedQR is your private key!"),
+            text=_("Never photograph it or scan it into an online device."),
         ).display()
 
         if selected_menu_num == RET_CODE__BACK_BUTTON:
@@ -1298,12 +1333,12 @@ class SeedTranscribeSeedQRConfirmQRPromptView(View):
     
 
     def run(self):
-        SCAN = ("Confirm SeedQR", FontAwesomeIconConstants.QRCODE)
-        DONE = "Done"
+        SCAN = (_("Confirm SeedQR"), FontAwesomeIconConstants.QRCODE)
+        DONE = _("Done")
         button_data = [SCAN, DONE]
 
         selected_menu_option = seed_screens.SeedTranscribeSeedQRConfirmQRPromptScreen(
-            title="Confirm SeedQR?",
+            title=_("Confirm SeedQR?"),
             button_data=button_data,
         ).display()
 
@@ -1331,7 +1366,10 @@ class SeedTranscribeSeedQRConfirmScanView(View):
         # TODO: Does this belong in its own BaseThread?
         wordlist_language_code = self.settings.get_value(SettingsConstants.SETTING__WORDLIST_LANGUAGE)
         self.decoder = DecodeQR(wordlist_language_code=wordlist_language_code)
-        ScanScreen(decoder=self.decoder, instructions_text="Scan your SeedQR").display()
+        ScanScreen(
+            decoder=self.decoder,
+            instructions_text=_("Scan your SeedQR")
+        ).display()
 
         if self.decoder.is_complete:
             if self.decoder.is_seed:
@@ -1339,22 +1377,22 @@ class SeedTranscribeSeedQRConfirmScanView(View):
                 # Found a valid mnemonic seed! But does it match?
                 if seed_mnemonic != self.seed.mnemonic_list:
                     DireWarningScreen(
-                        title="Confirm SeedQR",
-                        status_headline="Error!",
-                        text="Your transcribed SeedQR does not match your original seed!",
+                        title=_("Confirm SeedQR"),
+                        status_headline=_("Error!"),
+                        text=_("Your transcribed SeedQR does not match your original seed!"),
                         show_back_button=False,
-                        button_data=["Review SeedQR"],
+                        button_data=[_("Review SeedQR")],
                     ).display()
 
                     return Destination(BackStackView, skip_current_view=True)
                 
                 else:
                     LargeIconStatusScreen(
-                        title="Confirm SeedQR",
-                        status_headline="Success!",
-                        text="Your transcribed SeedQR successfully scanned and yielded the same seed.",
+                        title=_("Confirm SeedQR"),
+                        status_headline=_("Success!"),
+                        text=_("Your transcribed SeedQR successfully scanned and yielded the same seed."),
                         show_back_button=False,
-                        button_data=["OK"],
+                        button_data=[_("OK")],
                     ).display()
 
                     return Destination(SeedOptionsView, view_args={"seed_num": self.seed_num})
@@ -1362,11 +1400,11 @@ class SeedTranscribeSeedQRConfirmScanView(View):
             else:
                 # Will this case ever happen? Will trigger if a different kind of QR code is scanned
                 DireWarningScreen(
-                    title="Confirm SeedQR",
-                    status_headline="Error!",
-                    text="Your transcribed SeedQR could not be read!",
+                    title=_("Confirm SeedQR"),
+                    status_headline=_("Error!"),
+                    text=_("Your transcribed SeedQR could not be read!"),
                     show_back_button=False,
-                    button_data=["Review SeedQR"],
+                    button_data=[_("Review SeedQR")],
                 ).display()
 
                 return Destination(BackStackView, skip_current_view=True)
@@ -1435,8 +1473,8 @@ class AddressVerificationSigTypeView(View):
 
         button_data = [SINGLE_SIG, MULTISIG]
         selected_menu_num = seed_screens.AddressVerificationSigTypeScreen(
-            title="Verify Address",
-            text="Sig type can't be auto-detected from this address. Please specify:",
+            title=_("Verify Address"),
+            text=_("Sig type can't be auto-detected from this address. Please specify:"),
             button_data=button_data,
             is_bottom_list=True,
         ).display()
@@ -1473,24 +1511,24 @@ class SeedSingleSigAddressVerificationSelectSeedView(View):
     def run(self):
         seeds = self.controller.storage.seeds
 
-        SCAN_SEED = ("Scan a seed", FontAwesomeIconConstants.QRCODE)
-        TYPE_12WORD = ("Enter 12-word seed", FontAwesomeIconConstants.KEYBOARD)
-        TYPE_24WORD = ("Enter 24-word seed", FontAwesomeIconConstants.KEYBOARD)
+        SCAN_SEED = (_("Scan a seed"), FontAwesomeIconConstants.QRCODE)
+        TYPE_12WORD = (_("Enter 12-word seed"), FontAwesomeIconConstants.KEYBOARD)
+        TYPE_24WORD = (_("Enter 24-word seed"), FontAwesomeIconConstants.KEYBOARD)
         button_data = []
 
-        text = "Load the seed to verify"
+        text = _("Load the seed to verify")
 
         for seed in seeds:
             button_str = seed.get_fingerprint(self.settings.get_value(SettingsConstants.SETTING__NETWORK))
             button_data.append((button_str, SeedSignerCustomIconConstants.FINGERPRINT, "blue"))
-            text = "Select seed to verify"
+            text = _("Select seed to verify")
 
         button_data.append(SCAN_SEED)
         button_data.append(TYPE_12WORD)
         button_data.append(TYPE_24WORD)
 
         selected_menu_num = seed_screens.SeedSingleSigAddressVerificationSelectSeedScreen(
-            title="Verify Address",
+            title=_("Verify Address"),
             text=text,
             is_button_text_centered=False,
             button_data=button_data
@@ -1541,7 +1579,7 @@ class SeedAddressVerificationView(View):
         self.is_multisig = self.controller.unverified_address["sig_type"] == SettingsConstants.MULTISIG
         if not self.is_multisig:
             if seed_num is None:
-                raise Exception("Can't validate a single sig addr without specifying a seed")
+                raise Exception(_("Can't validate a single sig addr without specifying a seed"))
             self.seed_num = seed_num
             self.seed = self.controller.get_seed(seed_num)
         else:
@@ -1586,8 +1624,9 @@ class SeedAddressVerificationView(View):
         # Start brute-force calculations from the zero-th index
         self.addr_verification_thread.start()
 
-        SKIP_10 = "Skip 10"
-        CANCEL = "Cancel"
+        # TRANSLATOR_NOTE: Option when scanning for a matching address; skips ten addresses ahead
+        SKIP_10 = _("Skip 10")
+        CANCEL = _("Cancel")
         button_data = [SKIP_10, CANCEL]
 
         script_type_settings_entry = SettingsDefinition.get_settings_entry(SettingsConstants.SETTING__SCRIPT_TYPES)
@@ -1713,12 +1752,12 @@ class AddressVerificationSuccessView(View):
         verified_index_is_change = self.controller.unverified_address["verified_index_is_change"]
 
         if sig_type == SettingsConstants.MULTISIG:
-            source = "multisig"
+            source = _("multisig")
         else:
-            source = f"seed {self.seed.get_fingerprint()}"
+            source = _("seed {}").format(self.seed.get_fingerprint())
 
         LargeIconStatusScreen(
-            status_headline="Address Verified",
+            status_headline=_("Address Verified"),
             text=f"""{address[:7]} = {source}'s {"change" if verified_index_is_change else "receive"} address #{verified_index}."""
         ).display()
 
@@ -1728,8 +1767,8 @@ class AddressVerificationSuccessView(View):
 
 class LoadMultisigWalletDescriptorView(View):
     def run(self):
-        SCAN = ("Scan Descriptor", FontAwesomeIconConstants.QRCODE)
-        CANCEL = "Cancel"
+        SCAN = (_("Scan Descriptor"), FontAwesomeIconConstants.QRCODE)
+        CANCEL = _("Cancel")
         button_data = [SCAN, CANCEL]
         selected_menu_num = seed_screens.LoadMultisigWalletDescriptorScreen(
             button_data=button_data,
@@ -1757,11 +1796,12 @@ class MultisigWalletDescriptorView(View):
             fingerprints.append(fingerprint)
         
         policy = descriptor.brief_policy.split("multisig")[0].strip()
-
-        RETURN = "Return to PSBT"
-        VERIFY = "Verify Addr"
-        EXPLORER = "Address Explorer"
-        OK = "OK"
+        policy = " / ".join(policy.split(" of ")) # i18n w/o l10n since coming from non-l10n embit
+        
+        RETURN = _("Return to PSBT")
+        VERIFY = _("Verify Addr")
+        EXPLORER = _("Address Explorer")
+        OK = _("OK")
 
         button_data = [OK]
         if self.controller.resume_main_flow:

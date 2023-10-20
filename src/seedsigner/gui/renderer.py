@@ -1,8 +1,9 @@
-from PIL import Image, ImageDraw, ImageFont
+import os
+from gettext import gettext as _
+from PIL import Image, ImageDraw
 from threading import Lock
 
 from seedsigner.gui.components import Fonts, GUIConstants
-from seedsigner.hardware.ST7789 import ST7789
 from seedsigner.models import ConfigurableSingleton
 
 
@@ -19,7 +20,7 @@ class Renderer(ConfigurableSingleton):
 
     @classmethod
     def configure_instance(cls):
-        from seedsigner.models.settings import Settings
+        from seedsigner.hardware.ST7789 import ST7789
 
         # Instantiate the one and only Renderer instance
         renderer = cls.__new__(cls)
@@ -34,7 +35,10 @@ class Renderer(ConfigurableSingleton):
         renderer.draw = ImageDraw.Draw(renderer.canvas)
 
 
-    def show_image(self, image=None, alpha_overlay=None):
+    def show_image(self, image=None, alpha_overlay=None, is_background_thread: bool = False):
+        """
+            is_background_thread: Only used by the ScreenshotRenderer.
+        """
         if alpha_overlay:
             if image == None:
                 image = self.canvas
@@ -88,7 +92,7 @@ class Renderer(ConfigurableSingleton):
         text_overlay = Image.new("RGBA", (self.canvas_width, self.canvas_height), (255,255,255,0))
         text_overlay_draw = ImageDraw.Draw(text_overlay)
         if not font:
-            font = Fonts.get_font(GUIConstants.BODY_FONT_NAME, GUIConstants.BODY_FONT_SIZE)
+            font = Fonts.get_font(GUIConstants.get_body_font_name(), GUIConstants.get_body_font_size())
         tw, th = text_overlay_draw.textsize(text, font=font)
         if text_background:
             text_overlay_draw.rectangle(((240 - tw) / 2 - 3, 240 - th, (240 - tw) / 2 + tw + 3, 240), fill=text_background)
@@ -141,7 +145,7 @@ class Renderer(ConfigurableSingleton):
 
     # TODO: Should probably move this to templates.py
     def draw_prompt_yes_no(self, lines = [], title = "", bottom = "") -> None:
-        self.draw_prompt_custom("", "Yes ", "No ", lines, title, bottom)
+        self.draw_prompt_custom("", _("Yes "), _("No "), lines, title, bottom)
         return
 
 
@@ -199,7 +203,5 @@ class Renderer(ConfigurableSingleton):
     def display_blank_screen(self):
         self.draw.rectangle((0, 0, self.canvas_width, self.canvas_height), outline=0, fill=0)
         self.show_image()
-
-
 
 

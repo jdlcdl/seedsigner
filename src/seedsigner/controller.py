@@ -1,5 +1,6 @@
 import logging
 import traceback
+import gettext
 import os
 
 from embit.descriptor import Descriptor
@@ -86,6 +87,9 @@ class Controller(Singleton):
 
     back_stack: BackStack = None
     screensaver: ScreensaverScreen = None
+
+    # Babel initialization
+    gettext.install('messages', localedir='seedsigner/resources/babel')
 
 
     @classmethod

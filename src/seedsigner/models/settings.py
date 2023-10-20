@@ -1,5 +1,7 @@
+import gettext
 import json
 import os
+import pathlib
 
 from typing import Any, List
 
@@ -28,6 +30,18 @@ class Settings(Singleton):
             if os.path.exists(Settings.SETTINGS_FILENAME):
                 with open(Settings.SETTINGS_FILENAME) as settings_file:
                     settings.update(json.load(settings_file), disable_missing_entries=False)
+
+            # Setup Babel
+            path = os.path.join(
+                pathlib.Path(__file__).parent.resolve().parent.resolve(),
+                "resources",
+                "babel"
+            )
+            gettext.bindtextdomain('messages', localedir=path)
+            gettext.textdomain('messages')
+
+            # Load default/persistent locale setting
+            settings.load_locale()
 
         return cls._instance
 
@@ -83,11 +97,8 @@ class Settings(Singleton):
                 # TODO: If value is not in entry.selection_options...
 
 
-        # Can't just merge the _data dict; have to replace keys they have in common
-        #   (otherwise list values will be merged instead of replaced).
         for key, value in new_settings.items():
-            self._data.pop(key, None)
-            self._data[key] = value
+            self.set_value(key, value)
 
 
     def set_value(self, attr_name: str, value: any):
@@ -97,7 +108,9 @@ class Settings(Singleton):
             Note that for multiselect, the value must be a List.
         """
         if attr_name not in self._data:
-            raise Exception(f"Setting for {attr_name} not found")
+            # Outdated settings
+            print(f"Setting {attr_name} not recognized. Ignoring.")
+            return
 
         if SettingsDefinition.get_settings_entry(attr_name).type == SettingsConstants.TYPE__MULTISELECT:
             if type(value) != list:
@@ -113,7 +126,11 @@ class Settings(Singleton):
                 
         self._data[attr_name] = value
         self.save()
-    
+
+        # Special handling for babel
+        if attr_name == SettingsConstants.SETTING__LOCALE:
+            self.load_locale()
+
 
     def get_value(self, attr_name: str):
         """
@@ -164,6 +181,14 @@ class Settings(Singleton):
         return display_names
 
 
+    def load_locale(self):
+        locale = self.get_value(SettingsConstants.SETTING__LOCALE)
+        os.environ['LANGUAGE'] = locale
+
+        # Re-initialize with the new locale
+        print(f"Set LANGUAGE locale to {os.environ['LANGUAGE']}")
+
+
 
     """
         Intentionally keeping the properties very limited to avoid an expectation of
@@ -171,7 +196,7 @@ class Settings(Singleton):
 
         It's more cumbersome, but instead use:
 
-        settings.get_value(SettingsConstants.SETTING__MY_SETTING_ATTR)
+        Settings.get_instance().get_value(SettingsConstants.SETTING__MY_SETTING_ATTR)
     """
     @property
     def debug(self) -> bool:
@@ -187,7 +212,7 @@ class Settings(Singleton):
                 # restore persistent settings back to defaults
                 entry = SettingsDefinition.get_settings_entry(SettingsConstants.SETTING__PERSISTENT_SETTINGS)
                 entry.selection_options = SettingsConstants.OPTIONS__ENABLED_DISABLED
-                entry.help_text = "Store Settings on SD card."
+                entry.help_text = _("Store Settings on SD card.")
                 
                 # if Settings file exists (meaning persistent settings was previously enabled), write out current settings to disk
                 if os.path.exists(Settings.SETTINGS_FILENAME):
@@ -202,4 +227,4 @@ class Settings(Singleton):
                 # set persistent settings to only have disabled as an option, adding additional help text that microSD is removed
                 entry = SettingsDefinition.get_settings_entry(SettingsConstants.SETTING__PERSISTENT_SETTINGS)
                 entry.selection_options = SettingsConstants.OPTIONS__ONLY_DISABLED
-                entry.help_text = "MicroSD card is removed"
+                entry.help_text = _("MicroSD card is removed")

@@ -2,21 +2,19 @@ import math
 import time
 
 from dataclasses import dataclass
-from typing import List, Tuple
+from gettext import gettext as _
+from typing import List
 
 from PIL import Image, ImageDraw, ImageFilter
 from seedsigner.gui.renderer import Renderer
 from seedsigner.helpers.qr import QR
-from seedsigner.models.qr_type import QRType
 from seedsigner.models.threads import BaseThread, ThreadsafeCounter
 
 from seedsigner.models.seed import Seed
-from seedsigner.models.settings_definition import SettingsConstants, SettingsDefinition
 
 from .screen import RET_CODE__BACK_BUTTON, BaseScreen, BaseTopNavScreen, ButtonListScreen, KeyboardScreen, WarningEdgesMixin
-from ..components import (Button, FontAwesomeIconConstants, Fonts, FormattedAddress, IconButton,
-    IconTextLine, SeedSignerCustomIconConstants, TextArea, GUIConstants,
-    calc_text_centering)
+from ..components import (Button, FontAwesomeIconConstants, Fonts, FormattedAddress, Icon, IconButton,
+    IconTextLine, SeedSignerCustomIconConstants, TextArea, GUIConstants)
 
 from seedsigner.gui.keyboard import Keyboard, TextEntryDisplay
 from seedsigner.hardware.buttons import HardwareButtons, HardwareButtonsConstants
@@ -88,7 +86,7 @@ class SeedMnemonicEntryScreen(BaseTopNavScreen):
             text="abcdefghijklmnopqrstuvwxyz",
             is_text_centered=False,
             font_name=GUIConstants.FIXED_WIDTH_EMPHASIS_FONT_NAME,
-            font_size=GUIConstants.BUTTON_FONT_SIZE+4,
+            font_size=GUIConstants.get_button_font_size() + 4,
             screen_x=self.matches_list_x,
             screen_y=self.highlighted_row_y,
             width=self.canvas_width - self.matches_list_x + GUIConstants.COMPONENT_PADDING,
@@ -117,7 +115,7 @@ class SeedMnemonicEntryScreen(BaseTopNavScreen):
             height=arrow_button_height,
         )
 
-        self.word_font = Fonts.get_font(GUIConstants.FIXED_WIDTH_EMPHASIS_FONT_NAME, GUIConstants.BUTTON_FONT_SIZE+4)
+        self.word_font = Fonts.get_font(GUIConstants.FIXED_WIDTH_EMPHASIS_FONT_NAME, GUIConstants.get_button_font_size() + 4)
         (left, top, right, bottom) = self.word_font.getbbox("abcdefghijklmnopqrstuvwxyz", anchor="ls")
         self.word_font_height = -1 * top
         self.matches_list_row_height = self.word_font_height + GUIConstants.COMPONENT_PADDING
@@ -410,22 +408,21 @@ class SeedMnemonicEntryScreen(BaseTopNavScreen):
 @dataclass
 class SeedFinalizeScreen(ButtonListScreen):
     fingerprint: str = None
-    title: str = "Finalize Seed"
     is_bottom_list: bool = True
     button_data: list = None
 
     def __post_init__(self):
         self.show_back_button = False
-
+        self.title = _("Finalize Seed")
         super().__post_init__()
 
         self.fingerprint_icontl = IconTextLine(
             icon_name=SeedSignerCustomIconConstants.FINGERPRINT,
             icon_color="blue",
             icon_size=GUIConstants.ICON_FONT_SIZE + 12,
-            label_text="fingerprint",
+            label_text=_("fingerprint"),
             value_text=self.fingerprint,
-            font_size=GUIConstants.BODY_FONT_SIZE + 2,
+            font_size=GUIConstants.get_body_font_size() + 2,
             is_text_centered=True,
             screen_y=self.top_nav.height + int((self.buttons[0].screen_y - self.top_nav.height) / 2) - 30
         )
@@ -451,6 +448,24 @@ class SeedOptionsScreen(ButtonListScreen):
 
 
 @dataclass
+class SeedBackupScreen(ButtonListScreen):
+    has_passphrase: bool = False
+
+    def __post_init__(self):
+        self.title = _("Backup Seed")
+        self.is_bottom_list = True
+        super().__post_init__()
+
+        if self.has_passphrase:
+            self.components.append(TextArea(
+                # TRANSLATOR_NOTE: Additional explainer for the two seed backup options (mnemonic phrase and SeedQR).
+                text=_("Backups do not include your passphrase."),
+                screen_y=self.top_nav.height + GUIConstants.COMPONENT_PADDING,
+            ))
+
+
+
+@dataclass
 class SeedWordsScreen(WarningEdgesMixin, ButtonListScreen):
     words: List[str] = None
     page_index: int = 0
@@ -460,6 +475,8 @@ class SeedWordsScreen(WarningEdgesMixin, ButtonListScreen):
 
 
     def __post_init__(self):
+        # TRANSLATOR_NOTE: Displays the page number and total: (e.g. page 1 of 6)
+        self.title = _("Seed Words: {}/{}").format(self.page_index + 1, self.num_pages)
         super().__post_init__()
 
         words_per_page = len(self.words)
@@ -470,7 +487,7 @@ class SeedWordsScreen(WarningEdgesMixin, ButtonListScreen):
 
         # Have to supersample the whole body since it's all at the small font size
         supersampling_factor = 1
-        font = Fonts.get_font(GUIConstants.BODY_FONT_NAME, (GUIConstants.TOP_NAV_TITLE_FONT_SIZE + 2) * supersampling_factor)
+        font = Fonts.get_font(GUIConstants.get_body_font_name(), (GUIConstants.get_top_nav_title_font_size() + 2) * supersampling_factor)
 
         # Calc horizontal center based on longest word
         max_word_width = 0
@@ -480,7 +497,7 @@ class SeedWordsScreen(WarningEdgesMixin, ButtonListScreen):
                 max_word_width = right
 
         # Measure the max digit height for the numbering boxes, from baseline
-        number_font = Fonts.get_font(GUIConstants.BODY_FONT_NAME, GUIConstants.BUTTON_FONT_SIZE * supersampling_factor)
+        number_font = Fonts.get_font(GUIConstants.get_body_font_name(), GUIConstants.get_button_font_size() * supersampling_factor)
         (left, top, right, bottom) = number_font.getbbox("24", anchor="ls")
         number_height = -1 * top
         number_width = right
@@ -525,7 +542,7 @@ class SeedWordsScreen(WarningEdgesMixin, ButtonListScreen):
             number_box_y += number_box_height + (int(1.5*GUIConstants.COMPONENT_PADDING) * supersampling_factor)
 
         # Resize to target and sharpen final image
-        self.body_img = self.body_img.resize((self.canvas_width, self.body_height), Image.LANCZOS)
+        self.body_img = self.body_img.resize((self.canvas_width, self.body_height), Image.Resampling.LANCZOS)
         self.body_img = self.body_img.filter(ImageFilter.SHARPEN)
         self.paste_images.append((self.body_img, (self.body_x, self.body_y)))
 
@@ -534,13 +551,13 @@ class SeedWordsScreen(WarningEdgesMixin, ButtonListScreen):
 @dataclass
 class SeedWordsBackupTestPromptScreen(ButtonListScreen):
     def __post_init__(self):
-        self.title = "Verify Backup?"
+        self.title = _("Verify Backup?")
         self.show_back_button = False
         self.is_bottom_list = True
         super().__post_init__()
 
         self.components.append(TextArea(
-            text="Optionally verify that your mnemonic backup is correct.",
+            text=_("Optionally verify that your mnemonic backup is correct."),
             screen_y=self.top_nav.height,
             is_text_centered=True,
         ))
@@ -550,7 +567,7 @@ class SeedWordsBackupTestPromptScreen(ButtonListScreen):
 @dataclass
 class SeedExportXpubCustomDerivationScreen(KeyboardScreen):
     def __post_init__(self):
-        self.title = "Derivation Path"
+        self.title = _("Derivation Path")
         self.user_input = "m/"
 
         # Specify the keys in the keyboard
@@ -566,17 +583,16 @@ class SeedExportXpubCustomDerivationScreen(KeyboardScreen):
 @dataclass
 class SeedExportXpubDetailsScreen(WarningEdgesMixin, ButtonListScreen):
     # Customize defaults
-    title: str = "Xpub Details"
     is_bottom_list: bool = True
     fingerprint: str = None
     has_passphrase: bool = False
     derivation_path: str = "m/84'/0'/0'"
     xpub: str = "zpub6r..."
-    button_data=["Export Xpub"]
 
     def __post_init__(self):
         # Programmatically set up other args
-        self.button_data = ["Export Xpub"]
+        self.button_data = [_("Export Xpub")]
+        self.title = _("Xpub Details")
 
         # Initialize the base class
         super().__post_init__()
@@ -585,7 +601,7 @@ class SeedExportXpubDetailsScreen(WarningEdgesMixin, ButtonListScreen):
         self.fingerprint_line = IconTextLine(
             icon_name=SeedSignerCustomIconConstants.FINGERPRINT,
             icon_color="blue",
-            label_text="Fingerprint",
+            label_text=_("Fingerprint"),
             value_text=self.fingerprint,
             screen_x=GUIConstants.COMPONENT_PADDING,
             screen_y=self.top_nav.height + GUIConstants.COMPONENT_PADDING,
@@ -594,7 +610,8 @@ class SeedExportXpubDetailsScreen(WarningEdgesMixin, ButtonListScreen):
 
         self.derivation_line = IconTextLine(
             icon_name=SeedSignerCustomIconConstants.PATH,
-            label_text="Derivation",
+            # TRANSLATOR_NOTE: Short for "Derivation Path"
+            label_text=_("Derivation"),
             value_text=self.derivation_path,
             screen_x=GUIConstants.COMPONENT_PADDING,
             screen_y=self.components[-1].screen_y + self.components[-1].height + int(1.5*GUIConstants.COMPONENT_PADDING),
@@ -603,10 +620,10 @@ class SeedExportXpubDetailsScreen(WarningEdgesMixin, ButtonListScreen):
 
         self.xpub_line = IconTextLine(
             icon_name=FontAwesomeIconConstants.X,
-            label_text="Xpub",
+            label_text=_("Xpub"),
             value_text=f"{self.xpub[:18]}...",
             font_name=GUIConstants.FIXED_WIDTH_FONT_NAME,
-            font_size=GUIConstants.BODY_FONT_SIZE + 2,
+            font_size=GUIConstants.get_body_font_size() + 2,
             screen_x=GUIConstants.COMPONENT_PADDING,
             screen_y=self.components[-1].screen_y + self.components[-1].height + int(1.5*GUIConstants.COMPONENT_PADDING),
         )
@@ -616,9 +633,7 @@ class SeedExportXpubDetailsScreen(WarningEdgesMixin, ButtonListScreen):
 
 @dataclass
 class SeedAddPassphraseScreen(BaseTopNavScreen):
-    title: str = "BIP-39 Passphrase"
     passphrase: str = ""
-
     KEYBOARD__LOWERCASE_BUTTON_TEXT = "abc"
     KEYBOARD__UPPERCASE_BUTTON_TEXT = "ABC"
     KEYBOARD__DIGITS_BUTTON_TEXT = "123"
@@ -627,6 +642,7 @@ class SeedAddPassphraseScreen(BaseTopNavScreen):
 
 
     def __post_init__(self):
+        self.title = _("BIP-39 Passphrase")
         super().__post_init__()
 
         keys_lower = "abcdefghijklmnopqrstuvwxyz"
@@ -775,7 +791,7 @@ class SeedAddPassphraseScreen(BaseTopNavScreen):
             text=self.KEYBOARD__UPPERCASE_BUTTON_TEXT,
             is_text_centered=False,
             font_name=GUIConstants.FIXED_WIDTH_EMPHASIS_FONT_NAME,
-            font_size=GUIConstants.BUTTON_FONT_SIZE + 4,
+            font_size=GUIConstants.get_button_font_size() + 4,
             width=self.right_panel_buttons_width,
             screen_x=hw_button_x,
             screen_y=hw_button_y - 3*GUIConstants.COMPONENT_PADDING - GUIConstants.BUTTON_HEIGHT,
@@ -785,7 +801,7 @@ class SeedAddPassphraseScreen(BaseTopNavScreen):
             text=self.KEYBOARD__DIGITS_BUTTON_TEXT,
             is_text_centered=False,
             font_name=GUIConstants.FIXED_WIDTH_EMPHASIS_FONT_NAME,
-            font_size=GUIConstants.BUTTON_FONT_SIZE + 4,
+            font_size=GUIConstants.get_button_font_size() + 4,
             width=self.right_panel_buttons_width,
             screen_x=hw_button_x,
             screen_y=hw_button_y,
@@ -1002,25 +1018,53 @@ class SeedReviewPassphraseScreen(ButtonListScreen):
 
     def __post_init__(self):
         # Customize defaults
-        self.title = "Verify Passphrase"
+        self.title = _("Verify Passphrase")
         self.is_bottom_list = True
 
         super().__post_init__()
 
-        self.components.append(IconTextLine(
-            icon_name=SeedSignerCustomIconConstants.FINGERPRINT,
-            icon_color="blue",
-            label_text="changes fingerprint",
-            value_text=f"{self.fingerprint_without} >> {self.fingerprint_with}",
-            is_text_centered=True,
-            screen_y = self.buttons[0].screen_y - GUIConstants.COMPONENT_PADDING - int(GUIConstants.BODY_FONT_SIZE*2.5)
+        fingerprint_change_label = TextArea(
+            # TRANSLATOR_NOTE: Describes the effect of applying a BIP-39 passphrase; it changes the seed's fingerprint
+            text=_("changes seed:"),
+            font_size=GUIConstants.LABEL_FONT_SIZE,
+            font_color=GUIConstants.LABEL_FONT_COLOR,
+            is_text_centered=False,
+            screen_x=int(1.25*GUIConstants.EDGE_PADDING),
+            screen_y=self.buttons[0].screen_y - GUIConstants.COMPONENT_PADDING - int(GUIConstants.get_body_font_size()*2.25)
+        )
+        self.components.append(fingerprint_change_label)
+
+        screen_y = fingerprint_change_label.screen_y + fingerprint_change_label.height + int(GUIConstants.COMPONENT_PADDING/2)
+        self.components.append(TextArea(
+            text=self.fingerprint_without,
+            font_name=GUIConstants.FIXED_WIDTH_EMPHASIS_FONT_NAME,
+            font_size=GUIConstants.get_body_font_size() + 4,
+            font_color=GUIConstants.LABEL_FONT_COLOR,
+            is_text_centered=False,
+            screen_x=int(1.25*GUIConstants.EDGE_PADDING),
+            screen_y=screen_y,
+        ))
+        self.components.append(Icon(
+            icon_name=FontAwesomeIconConstants.CARET_RIGHT,
+            icon_size=GUIConstants.get_body_font_size() + 4,
+            icon_color=GUIConstants.LIGHT_BLUE,
+            screen_x=self.components[-1].screen_x + self.components[-1].width + 2*GUIConstants.COMPONENT_PADDING,
+            screen_y=screen_y,
+        ))
+        self.components.append(TextArea(
+            text=self.fingerprint_with,
+            font_name=GUIConstants.FIXED_WIDTH_EMPHASIS_FONT_NAME,
+            font_size=GUIConstants.get_body_font_size() + 4,
+            is_text_centered=False,
+            screen_x=self.components[-1].screen_x + self.components[-1].width,
+            screen_y=screen_y,
         ))
 
         if self.passphrase != self.passphrase.strip() or "  " in self.passphrase:
             self.passphrase = self.passphrase.replace(" ", "\u2589")
         available_height = self.components[-1].screen_y - self.top_nav.height + GUIConstants.COMPONENT_PADDING
-        max_font_size = GUIConstants.TOP_NAV_TITLE_FONT_SIZE + 8
-        min_font_size = GUIConstants.TOP_NAV_TITLE_FONT_SIZE - 4
+        max_font_size = GUIConstants.get_top_nav_title_font_size() + 8
+        min_font_size = GUIConstants.get_top_nav_title_font_size() - 4
         font_size = max_font_size
         max_lines = 3
         passphrase = [self.passphrase]
@@ -1052,6 +1096,7 @@ class SeedReviewPassphraseScreen(ButtonListScreen):
                 text=line,
                 font_name=GUIConstants.FIXED_WIDTH_FONT_NAME,
                 font_size=font_size,
+                font_color="orange",
                 is_text_centered=True,
                 screen_y=screen_y,
                 allow_text_overflow=True
@@ -1066,17 +1111,23 @@ class SeedTranscribeSeedQRFormatScreen(ButtonListScreen):
         self.is_bottom_list = True
         super().__post_init__()
 
+        print(self)
+
         self.components.append(IconTextLine(
-            label_text="Standard",
-            value_text="BIP-39 wordlist indices",
+            # TRANSLATOR_NOTE: Refers to the SeedQR type: Standard or Compact
+            label_text=_("Standard"),
+            # TRANSLATOR_NOTE: Briefly explains the Standard SeedQR data format
+            value_text=_("BIP-39 wordlist indices"),
             is_text_centered=False,
             auto_line_break=True,
             screen_x=GUIConstants.EDGE_PADDING,
             screen_y=self.top_nav.height + GUIConstants.COMPONENT_PADDING,
         ))
         self.components.append(IconTextLine(
-            label_text="Compact",
-            value_text="Raw entropy bits",
+            # TRANSLATOR_NOTE: Refers to the SeedQR type: Standard or Compact
+            label_text=_("Compact"),
+            # TRANSLATOR_NOTE: Briefly explains the Compact SeedQR data format
+            value_text=_("Raw entropy bits"),
             is_text_centered=False,
             screen_x=GUIConstants.EDGE_PADDING,
             screen_y=self.components[-1].screen_y + self.components[-1].height + 2*GUIConstants.COMPONENT_PADDING,
@@ -1090,8 +1141,9 @@ class SeedTranscribeSeedQRWholeQRScreen(WarningEdgesMixin, ButtonListScreen):
     num_modules: int = None
 
     def __post_init__(self):
-        self.title = "Transcribe SeedQR"
-        self.button_data = [f"Begin {self.num_modules}x{self.num_modules}"]
+        self.title = _("Transcribe SeedQR")
+        # TRANSLATOR_NOTE: Refers to the QR code size: 21x21, 25x25, or 29x29
+        self.button_data = [_("Begin {}x{}").format(self.num_modules, self.num_modules)]
         self.is_bottom_list = True
         self.status_color = GUIConstants.DIRE_WARNING_COLOR
         super().__post_init__()
@@ -1168,8 +1220,8 @@ class SeedTranscribeSeedQRZoomedInScreen(BaseScreen):
         draw.line((self.mask_width, self.mask_height, self.canvas_width - self.mask_width, self.mask_height), fill=GUIConstants.ACCENT_COLOR)
         draw.line((self.mask_width, self.canvas_height - self.mask_height, self.canvas_width - self.mask_width, self.canvas_height - self.mask_height), fill=GUIConstants.ACCENT_COLOR)
 
-        msg = "click to exit"
-        font = Fonts.get_font(GUIConstants.BODY_FONT_NAME, GUIConstants.BODY_FONT_SIZE)
+        msg = _("click to exit")
+        font = Fonts.get_font(GUIConstants.get_body_font_name(), GUIConstants.get_body_font_size())
         (left, top, right, bottom) = font.getbbox(msg, anchor="ls")
         msg_height = -1 * top
         msg_width = right
@@ -1195,8 +1247,8 @@ class SeedTranscribeSeedQRZoomedInScreen(BaseScreen):
             text=msg,
             background_color=GUIConstants.BACKGROUND_COLOR,
             is_text_centered=True,
-            screen_y=self.canvas_height - GUIConstants.BODY_FONT_SIZE - GUIConstants.COMPONENT_PADDING,
-            height=GUIConstants.BODY_FONT_SIZE + GUIConstants.COMPONENT_PADDING,
+            screen_y=self.canvas_height - GUIConstants.get_body_font_size() - GUIConstants.COMPONENT_PADDING,
+            height=GUIConstants.get_body_font_size() + GUIConstants.COMPONENT_PADDING,
         ).render()
 
 
@@ -1210,7 +1262,7 @@ class SeedTranscribeSeedQRZoomedInScreen(BaseScreen):
         draw.rectangle((self.mask_width, 0, self.canvas_width - self.mask_width, self.pixels_per_block), fill=GUIConstants.ACCENT_COLOR)
         draw.rectangle((0, self.mask_height, self.pixels_per_block, self.canvas_height - self.mask_height), fill=GUIConstants.ACCENT_COLOR)
 
-        label_font = Fonts.get_font(GUIConstants.FIXED_WIDTH_EMPHASIS_FONT_NAME, GUIConstants.TOP_NAV_TITLE_FONT_SIZE + 8)
+        label_font = Fonts.get_font(GUIConstants.FIXED_WIDTH_EMPHASIS_FONT_NAME, 28)
         x_label = block_labels_x[cur_block_x]
         (left, top, right, bottom) = label_font.getbbox(x_label, anchor="ls")
         x_label_height = -1 * top
@@ -1304,7 +1356,7 @@ class SeedTranscribeSeedQRConfirmQRPromptScreen(ButtonListScreen):
         super().__post_init__()
 
         self.components.append(TextArea(
-            text="Optionally scan your transcribed SeedQR to confirm that it reads back correctly.",
+            text=_("Optionally scan your transcribed SeedQR to confirm that it reads back correctly."),
             screen_y=self.top_nav.height,
             height=self.buttons[0].screen_y - self.top_nav.height,
         ))
@@ -1361,10 +1413,9 @@ class SeedAddressVerificationScreen(ButtonListScreen):
 
     def __post_init__(self):
         # Customize defaults
-        self.title = "Verify Address"
+        self.title = _("Verify Address")
         self.is_bottom_list = True
         self.show_back_button = False
-        self.button_data = ["Skip 10", "Cancel"]
 
         super().__post_init__()
 
@@ -1425,9 +1476,10 @@ class SeedAddressVerificationScreen(ButtonListScreen):
                     return
 
                 textarea = TextArea(
-                    text=f"Checking address {self.threadsafe_counter.cur_count}",
-                    font_name=GUIConstants.BODY_FONT_NAME,
-                    font_size=GUIConstants.BODY_FONT_SIZE,
+                    # TRANSLATOR_NOTE: Inserts the nth address number (e.g. "Checking address 7")
+                    text=_("Checking address {}").format(self.threadsafe_counter.cur_count),
+                    font_name=GUIConstants.get_body_font_name(),
+                    font_size=GUIConstants.get_body_font_size(),
                     screen_y=self.screen_y
                 )
 
@@ -1442,12 +1494,12 @@ class SeedAddressVerificationScreen(ButtonListScreen):
 @dataclass
 class LoadMultisigWalletDescriptorScreen(ButtonListScreen):
     def __post_init__(self):
-        self.title = "Multisig Verification"
+        self.title = _("Multisig Verification")
         self.is_bottom_list = True
         super().__post_init__()
 
         self.components.append(TextArea(
-            text="Load your multisig wallet descriptor to verify your receive/self-transfer or change address.",
+            text=_("Load your multisig wallet descriptor to verify your receive/self-transfer or change address."),
             screen_y=self.top_nav.height,
             height=self.buttons[0].screen_y - self.top_nav.height,
         ))
@@ -1460,33 +1512,33 @@ class MultisigWalletDescriptorScreen(ButtonListScreen):
     fingerprints: List[str] = None
 
     def __post_init__(self):
-        self.title = "Descriptor Loaded"
+        self.title = _("Descriptor Loaded")
         self.is_bottom_list = True
         super().__post_init__()
 
         self.components.append(IconTextLine(
-            label_text="Policy",
+            # TRANSLATOR_NOTE: Label for the multisig wallet's signing policy (e.g. 2-of-3)
+            label_text=_("Policy"),
             value_text=self.policy,
-            font_size=GUIConstants.TOP_NAV_TITLE_FONT_SIZE,
+            font_size=20,
             screen_y=self.top_nav.height,
             is_text_centered=True,
         ))
 
         self.components.append(IconTextLine(
-            label_text="Signing Keys",
+            label_text=_("Signing Keys"),
             value_text=" ".join(self.fingerprints),
-            font_size=GUIConstants.TOP_NAV_TITLE_FONT_SIZE + 4,
+            font_size=24,
             font_name=GUIConstants.FIXED_WIDTH_EMPHASIS_FONT_NAME,
             screen_y=self.components[-1].screen_y + self.components[-1].height + 2*GUIConstants.COMPONENT_PADDING,
             is_text_centered=True,
             auto_line_break=True,
-            allow_text_overflow=True,
         ))
 
 @dataclass
 class SeedBIP85SelectChildIndexScreen(KeyboardScreen):
     def __post_init__(self):
-        self.title = "BIP-85 Index"
+        self.title = _("BIP-85 Index")
         self.user_input = ""
 
         # Specify the keys in the keyboard

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from gettext import gettext as _
 from typing import List
 
 from seedsigner.gui.components import FontAwesomeIconConstants, GUIConstants
@@ -128,14 +129,14 @@ class MainMenuView(View):
         from .tools_views import ToolsMenuView
         from seedsigner.gui.screens import LargeButtonScreen
         menu_items = [
-            (("Scan", FontAwesomeIconConstants.QRCODE), ScanView),
-            (("Seeds", FontAwesomeIconConstants.KEY), SeedsMenuView),
-            (("Tools", FontAwesomeIconConstants.SCREWDRIVER_WRENCH), ToolsMenuView),
-            (("Settings", FontAwesomeIconConstants.GEAR), SettingsMenuView),
+            ((_("Scan"), FontAwesomeIconConstants.QRCODE), ScanView),
+            ((_("Seeds"), FontAwesomeIconConstants.KEY), SeedsMenuView),
+            ((_("Tools"), FontAwesomeIconConstants.SCREWDRIVER_WRENCH), ToolsMenuView),
+            ((_("Settings"), FontAwesomeIconConstants.GEAR), SettingsMenuView),
         ]
 
         screen = LargeButtonScreen(
-            title="Home",
+            title=_("Home"),
             title_font_size=26,
             button_data=[entry[0] for entry in menu_items],
             show_back_button=False,
@@ -152,11 +153,11 @@ class MainMenuView(View):
 
 class PowerOptionsView(View):
     def run(self):
-        RESET = ("Restart", FontAwesomeIconConstants.ROTATE_RIGHT)
-        POWER_OFF = ("Power Off", FontAwesomeIconConstants.POWER_OFF)
+        RESET = (_("Restart"), FontAwesomeIconConstants.ROTATE_RIGHT)
+        POWER_OFF = (_("Power Off"), FontAwesomeIconConstants.POWER_OFF)
         button_data = [RESET, POWER_OFF]
         selected_menu_num = LargeButtonScreen(
-            title="Reset / Power",
+            title=_("Reset / Power"),
             show_back_button=True,
             button_data=button_data
         ).display()
@@ -217,17 +218,16 @@ class PowerOffView(View):
                 call("sudo shutdown --poweroff now", shell=True)
 
 
-
 class NotYetImplementedView(View):
     """
         Temporary View to use during dev.
     """
     def run(self):
         WarningScreen(
-            title="Work In Progress",
-            status_headline="Not Yet Implemented",
-            text="This is still on our to-do list!",
-            button_data=["Back to Main Menu"],
+            title=_("Work In Progress"),
+            status_headline=_("Not Yet Implemented"),
+            text=_("This is still on our to-do list!"),
+            button_data=[_("Back to Main Menu")],
         ).display()
 
         return Destination(MainMenuView)
@@ -241,12 +241,11 @@ class UnhandledExceptionView(View):
 
     def run(self):
         DireWarningScreen(
-            title="System Error",
+            title=_("System Error"),
             status_headline=self.error[0],
             text=self.error[1] + "\n" + self.error[2],
-            button_data=["OK"],
+            button_data=[_("OK")],
             show_back_button=False,
-            allow_text_overflow=True,  # Fit what we can, let the rest go off the edges
         ).display()
         
         return Destination(MainMenuView, clear_history=True)

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Any, List
 
+from gettext import gettext as _
 
 
 class SettingsConstants:
@@ -10,25 +11,25 @@ class SettingsConstants:
     OPTION__PROMPT = "P"
     OPTION__REQUIRED = "R"
     OPTIONS__ENABLED_DISABLED = [
-        (OPTION__ENABLED, "Enabled"),
-        (OPTION__DISABLED, "Disabled"),
+        (OPTION__ENABLED, _("Enabled")),
+        (OPTION__DISABLED, _("Disabled")),
     ]
     OPTIONS__ONLY_DISABLED = [
-        (OPTION__DISABLED, "Disabled"),
+        (OPTION__DISABLED, _("Disabled")),
     ]
     OPTIONS__PROMPT_REQUIRED_DISABLED = [
-        (OPTION__PROMPT, "Prompt"),
-        (OPTION__REQUIRED, "Required"),
-        (OPTION__DISABLED, "Disabled"),
+        (OPTION__PROMPT, _("Prompt")),
+        (OPTION__REQUIRED, _("Required")),
+        (OPTION__DISABLED, _("Disabled")),
     ]
     OPTIONS__ENABLED_DISABLED_REQUIRED = OPTIONS__ENABLED_DISABLED +[
-        (OPTION__REQUIRED, "Required"),
+        (OPTION__REQUIRED, _("Required")),
     ]
     OPTIONS__ENABLED_DISABLED_PROMPT = OPTIONS__ENABLED_DISABLED + [
-        (OPTION__PROMPT, "Prompt"),
+        (OPTION__PROMPT, _("Prompt")),
     ]
     ALL_OPTIONS = OPTIONS__ENABLED_DISABLED_PROMPT + [
-        (OPTION__REQUIRED, "Required"),
+        (OPTION__REQUIRED, _("Required")),
     ]
 
     # User-facing selection options
@@ -45,10 +46,36 @@ class SettingsConstants:
         (COORDINATOR__KEEPER, "Keeper"),
     ]
 
-    LANGUAGE__ENGLISH = "en"
-    ALL_LANGUAGES = [
-        (LANGUAGE__ENGLISH, "English"),
+    LOCALE__ARABIC = "ar"
+    LOCALE__CZECH = "cs"
+    LOCALE__ENGLISH = "en"
+    LOCALE__FRENCH = "fr"
+    LOCALE__GERMAN = "de"
+    LOCALE__HEBREW = "he"
+    LOCALE__JAPANESE = "ja"
+    LOCALE__KOREAN = "kr"
+    LOCALE__PORTUGUESE = "pt"
+    LOCALE__RUSSIAN = "ru"
+    LOCALE__SPANISH = "es"
+    ALL_LOCALES = [
+        # TRANSLATOR_NOTE: Translator is expected ONLY to change their own locale below
+        (LOCALE__ARABIC, _("Arabic")),
+        (LOCALE__CZECH, _("Czech")),
+        (LOCALE__ENGLISH, "English"),
+        (LOCALE__FRENCH, _("French")),
+        (LOCALE__GERMAN, _("German")),
+        (LOCALE__HEBREW, _("Hebrew")),
+        (LOCALE__JAPANESE, _("Japanese")),
+        (LOCALE__KOREAN, _("Korean")),
+        (LOCALE__PORTUGUESE, _("Portuguese")),
+        (LOCALE__RUSSIAN, _("Russian")),
+        (LOCALE__SPANISH, _("Spanish")),
     ]
+    # Some locales disabled below
+    ALL_LOCALES.remove((LOCALE__ARABIC, _("Arabic")))
+    ALL_LOCALES.remove((LOCALE__HEBREW, _("Hebrew")))
+    ALL_LOCALES.remove((LOCALE__JAPANESE, _("Japanese")))
+    ALL_LOCALES.remove((LOCALE__KOREAN, _("Korean")))
 
     BTC_DENOMINATION__BTC = "btc"
     BTC_DENOMINATION__SATS = "sats"
@@ -66,10 +93,10 @@ class SettingsConstants:
     CAMERA_ROTATION__180 = 180
     CAMERA_ROTATION__270 = 270
     ALL_CAMERA_ROTATIONS = [
-        (CAMERA_ROTATION__0, "0°"),
-        (CAMERA_ROTATION__90, "90°"),
-        (CAMERA_ROTATION__180, "180°"),
-        (CAMERA_ROTATION__270, "270°"),
+        (CAMERA_ROTATION__0, _("0°")),
+        (CAMERA_ROTATION__90, _("90°")),
+        (CAMERA_ROTATION__180, _("180°")),
+        (CAMERA_ROTATION__270, _("270°")),
     ]
 
     # QR code constants
@@ -77,9 +104,9 @@ class SettingsConstants:
     DENSITY__MEDIUM = "M"
     DENSITY__HIGH = "H"
     ALL_DENSITIES = [
-        (DENSITY__LOW, "Low"),
-        (DENSITY__MEDIUM, "Medium"),
-        (DENSITY__HIGH, "High"),
+        (DENSITY__LOW, _("Low")),
+        (DENSITY__MEDIUM, _("Medium")),
+        (DENSITY__HIGH, _("High")),
     ]
 
     # Seed-related constants
@@ -87,9 +114,9 @@ class SettingsConstants:
     TESTNET = "T"
     REGTEST = "R"
     ALL_NETWORKS = [
-        (MAINNET, "Mainnet"),
-        (TESTNET, "Testnet"),
-        (REGTEST, "Regtest")
+        (MAINNET, _("Mainnet")),
+        (TESTNET, _("Testnet")),
+        (REGTEST, _("Regtest"))
     ]
 
     @classmethod
@@ -105,8 +132,8 @@ class SettingsConstants:
     SINGLE_SIG = "ss"
     MULTISIG = "ms"
     ALL_SIG_TYPES = [
-        (SINGLE_SIG, "Single Sig"),
-        (MULTISIG, "Multisig"),
+        (SINGLE_SIG, _("Single Sig")),
+        (MULTISIG, _("Multisig")),
     ]
 
     LEGACY_P2PKH = "leg"  # Intentionally excluded from ALL_SCRIPT_TYPES
@@ -115,10 +142,10 @@ class SettingsConstants:
     TAPROOT = "tr"
     CUSTOM_DERIVATION = "cus"
     ALL_SCRIPT_TYPES = [
-        (NATIVE_SEGWIT, "Native Segwit"),
-        (NESTED_SEGWIT, "Nested Segwit (legacy)"),
-        (TAPROOT, "Taproot"),
-        (CUSTOM_DERIVATION, "Custom Derivation"),
+        (NATIVE_SEGWIT, _("Native Segwit")),
+        (NESTED_SEGWIT, _("Nested Segwit (legacy)")),
+        (TAPROOT, _("Taproot")),
+        (CUSTOM_DERIVATION, _("Custom Derivation")),
     ]
 
     WORDLIST_LANGUAGE__ENGLISH = "en"
@@ -142,7 +169,7 @@ class SettingsConstants:
 
     
     # Individual SettingsEntry attr_names
-    SETTING__LANGUAGE = "language"
+    SETTING__LOCALE = "locale"
     SETTING__WORDLIST_LANGUAGE = "wordlist_language"
     SETTING__PERSISTENT_SETTINGS = "persistent_settings"
     SETTING__COORDINATORS = "coordinators"
@@ -160,6 +187,7 @@ class SettingsConstants:
     SETTING__BIP85_CHILD_SEEDS = "bip85_child_seeds"
     SETTING__PRIVACY_WARNINGS = "privacy_warnings"
     SETTING__DIRE_WARNINGS = "dire_warnings"
+    SETTING__PASSPHRASE_WARNING = "passphrase_warning"
     SETTING__PARTNER_LOGOS = "partner_logos"
 
     SETTING__DEBUG = "debug"
@@ -269,7 +297,7 @@ class SettingsEntry:
                 option_value = option
                 display_name = option
             if option_value == value:
-                return display_name
+                return _(display_name)
 
 
     def get_selection_option_value_by_display_name(self, display_name: str):
@@ -336,19 +364,17 @@ class SettingsDefinition:
     settings_entries: List[SettingsEntry] = [
         # General options
 
-        # TODO: Full babel multilanguage support! Until then, type == HIDDEN
         SettingsEntry(category=SettingsConstants.CATEGORY__SYSTEM,
-                      attr_name=SettingsConstants.SETTING__LANGUAGE,
-                      display_name="Language",
+                      attr_name=SettingsConstants.SETTING__LOCALE,
+                      display_name=_("Language"),
                       type=SettingsConstants.TYPE__SELECT_1,
-                      visibility=SettingsConstants.VISIBILITY__HIDDEN,
-                      selection_options=SettingsConstants.ALL_LANGUAGES,
-                      default_value=SettingsConstants.LANGUAGE__ENGLISH),
+                      selection_options=SettingsConstants.ALL_LOCALES,
+                      default_value=SettingsConstants.LOCALE__ENGLISH),
 
         # TODO: Support other bip-39 wordlist languages! Until then, type == HIDDEN
         SettingsEntry(category=SettingsConstants.CATEGORY__SYSTEM,
                       attr_name=SettingsConstants.SETTING__WORDLIST_LANGUAGE,
-                      display_name="Mnemonic language",
+                      display_name=_("Mnemonic language"),
                       type=SettingsConstants.TYPE__SELECT_1,
                       visibility=SettingsConstants.VISIBILITY__HIDDEN,
                       selection_options=SettingsConstants.ALL_WORDLIST_LANGUAGES,
@@ -356,13 +382,13 @@ class SettingsDefinition:
 
         SettingsEntry(category=SettingsConstants.CATEGORY__SYSTEM,
                       attr_name=SettingsConstants.SETTING__PERSISTENT_SETTINGS,
-                      display_name="Persistent settings",
-                      help_text="Store Settings on SD card.",
+                      display_name=_("Persistent settings"),
+                      help_text=_("Store Settings on SD card."),
                       default_value=SettingsConstants.OPTION__DISABLED),
 
         SettingsEntry(category=SettingsConstants.CATEGORY__WALLET,
                       attr_name=SettingsConstants.SETTING__COORDINATORS,
-                      display_name="Coordinator software",
+                      display_name=_("Coordinator software"),
                       type=SettingsConstants.TYPE__MULTISELECT,
                       selection_options=SettingsConstants.ALL_COORDINATORS,
                       default_value=[
@@ -374,7 +400,7 @@ class SettingsDefinition:
 
         SettingsEntry(category=SettingsConstants.CATEGORY__SYSTEM,
                       attr_name=SettingsConstants.SETTING__BTC_DENOMINATION,
-                      display_name="Denomination display",
+                      display_name=_("Denomination display"),
                       type=SettingsConstants.TYPE__SELECT_1,
                       selection_options=SettingsConstants.ALL_BTC_DENOMINATIONS,
                       default_value=SettingsConstants.BTC_DENOMINATION__THRESHOLD),
@@ -383,7 +409,7 @@ class SettingsDefinition:
         # Advanced options
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__NETWORK,
-                      display_name="Bitcoin network",
+                      display_name=_("Bitcoin network"),
                       type=SettingsConstants.TYPE__SELECT_1,
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       selection_options=SettingsConstants.ALL_NETWORKS,
@@ -391,7 +417,7 @@ class SettingsDefinition:
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__QR_DENSITY,
-                      display_name="QR code density",
+                      display_name=_("QR code density"),
                       type=SettingsConstants.TYPE__SELECT_1,
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       selection_options=SettingsConstants.ALL_DENSITIES,
@@ -399,13 +425,13 @@ class SettingsDefinition:
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__XPUB_EXPORT,
-                      display_name="Xpub export",
+                      display_name=_("Xpub export"),
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       default_value=SettingsConstants.OPTION__ENABLED),
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__SIG_TYPES,
-                      display_name="Sig types",
+                      display_name=_("Sig types"),
                       type=SettingsConstants.TYPE__MULTISELECT,
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       selection_options=SettingsConstants.ALL_SIG_TYPES,
@@ -413,7 +439,7 @@ class SettingsDefinition:
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__SCRIPT_TYPES,
-                      display_name="Script types",
+                      display_name=_("Script types"),
                       type=SettingsConstants.TYPE__MULTISELECT,
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       selection_options=SettingsConstants.ALL_SCRIPT_TYPES,
@@ -421,13 +447,13 @@ class SettingsDefinition:
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__XPUB_DETAILS,
-                      display_name="Show xpub details",
+                      display_name=_("Show xpub details"),
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       default_value=SettingsConstants.OPTION__ENABLED),
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__PASSPHRASE,
-                      display_name="BIP-39 passphrase",
+                      display_name=_("BIP-39 passphrase"),
                       type=SettingsConstants.TYPE__SELECT_1,
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       selection_options=SettingsConstants.OPTIONS__ENABLED_DISABLED_REQUIRED,
@@ -435,7 +461,7 @@ class SettingsDefinition:
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__CAMERA_ROTATION,
-                      display_name="Camera rotation",
+                      display_name=_("Camera rotation"),
                       type=SettingsConstants.TYPE__SELECT_1,
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       selection_options=SettingsConstants.ALL_CAMERA_ROTATIONS,
@@ -443,31 +469,37 @@ class SettingsDefinition:
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__COMPACT_SEEDQR,
-                      display_name="CompactSeedQR",
+                      display_name=_("Compact SeedQR"),
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       default_value=SettingsConstants.OPTION__ENABLED),
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__BIP85_CHILD_SEEDS,
-                      display_name="BIP-85 child seeds",
+                      display_name=_("BIP-85 child seeds"),
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       default_value=SettingsConstants.OPTION__DISABLED),
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__PRIVACY_WARNINGS,
-                      display_name="Show privacy warnings",
+                      display_name=_("Show privacy warnings"),
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       default_value=SettingsConstants.OPTION__ENABLED),
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__DIRE_WARNINGS,
-                      display_name="Show dire warnings",
+                      display_name=_("Show dire warnings"),
+                      visibility=SettingsConstants.VISIBILITY__ADVANCED,
+                      default_value=SettingsConstants.OPTION__ENABLED),
+
+        SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
+                      attr_name=SettingsConstants.SETTING__PASSPHRASE_WARNING,
+                      display_name=_("Show passphrase warning"),
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       default_value=SettingsConstants.OPTION__ENABLED),
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__PARTNER_LOGOS,
-                      display_name="Show partner logos",
+                      display_name=_("Show partner logos"),
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       default_value=SettingsConstants.OPTION__ENABLED),
 
@@ -482,7 +514,7 @@ class SettingsDefinition:
         # "Hidden" settings with no UI interaction
         SettingsEntry(category=SettingsConstants.CATEGORY__SYSTEM,
                       attr_name=SettingsConstants.SETTING__QR_BRIGHTNESS,
-                      display_name="QR background color",
+                      display_name=_("QR background color"),
                       type=SettingsConstants.TYPE__FREE_ENTRY,
                       visibility=SettingsConstants.VISIBILITY__HIDDEN,
                       default_value=189),
@@ -503,11 +535,6 @@ class SettingsDefinition:
         for entry in cls.settings_entries:
             if entry.attr_name == attr_name:
                 return entry
-
-
-    @classmethod
-    def parse_abbreviated_ini(cls, abbreviated_ini: str) -> dict:
-        raise Exception("Not implemented, maybe not needed")
 
 
     @classmethod
