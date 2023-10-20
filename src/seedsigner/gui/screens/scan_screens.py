@@ -1,6 +1,7 @@
 import time
 
 from dataclasses import dataclass
+from gettext import gettext as _
 from PIL import Image, ImageDraw
 
 from seedsigner.gui import renderer
@@ -53,7 +54,7 @@ class ScanScreen(BaseScreen):
         # Initialize the base class
         super().__post_init__()
 
-        self.instructions_text = "< back  |  " + self.instructions_text
+        self.instructions_text = _("< back  |  ") + self.instructions_text
 
         self.camera = Camera.get_instance()
         self.camera.start_video_stream_mode(resolution=self.resolution, framerate=self.framerate, format="rgb")
@@ -87,8 +88,7 @@ class ScanScreen(BaseScreen):
         def run(self):
             from timeit import default_timer as timer
 
-            instructions_font = Fonts.get_font(GUIConstants.BODY_FONT_NAME, GUIConstants.BUTTON_FONT_SIZE)
-
+            instructions_font = Fonts.get_font(GUIConstants.get_body_font_name(), GUIConstants.get_button_font_size())
             start_time = time.time()
             num_frames = 0
             show_framerate = False  # enable for debugging / testing

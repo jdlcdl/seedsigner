@@ -1,3 +1,9 @@
+# jdlcdl branch: kdmukai/initial_multilanguage
+
+My self-directed exploration, from mid November through mid December 2022, to carry-on where kdmukai left-off this past summer, in similar style, regarding internationalization/localization of seedsigner codebase (w/ exploration focus in locale 'fr').  Note: requirements.txt has new dependencies; also, follow instructions in babel/ to build binary message catalogs.
+
+---------------
+
 # Build an offline, airgapped Bitcoin signing device for less than $50!
 
 ![Image of SeedSigners in Open Pill Enclosures](docs/img/Open_Pill_Star.JPG)![Image of SeedSigner in an Orange Pill enclosure](docs/img/Orange_Pill.JPG)

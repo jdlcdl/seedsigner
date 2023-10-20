@@ -1,3 +1,4 @@
+from gettext import gettext as _
 from embit.psbt import PSBT
 from embit import script
 from embit.networks import NETWORKS
@@ -27,6 +28,9 @@ class PSBTSelectSeedView(View):
             # Shouldn't be able to get here
             raise Exception("No PSBT currently loaded")
 
+        self.SCAN_SEED = (_("Scan a seed"), SeedSignerIconConstants.QRCODE)
+        self.TYPE_12WORD = (_("Enter 12-word seed"), FontAwesomeIconConstants.KEYBOARD)
+        self.TYPE_24WORD = (_("Enter 24-word seed"), FontAwesomeIconConstants.KEYBOARD)
         if self.controller.psbt_seed:
              if PSBTParser.has_matching_input_fingerprint(psbt=self.controller.psbt, seed=self.controller.psbt_seed, network=self.settings.get_value(SettingsConstants.SETTING__NETWORK)):
                  # skip the seed prompt if a seed was previous selected and has matching input fingerprint
@@ -48,7 +52,7 @@ class PSBTSelectSeedView(View):
 
         selected_menu_num = self.run_screen(
             ButtonListScreen,
-            title="Select Signer",
+            title=_("Select Signer"),
             is_button_text_centered=False,
             button_data=button_data
         )
@@ -88,7 +92,7 @@ class PSBTOverviewView(View):
             # The PSBTParser takes a while to read the PSBT. Run the loading screen while
             # we wait.
             from seedsigner.gui.screens.screen import LoadingScreenThread
-            self.loading_screen = LoadingScreenThread(text="Parsing PSBT...")
+            self.loading_screen = LoadingScreenThread(text=_("Parsing PSBT..."))
             self.loading_screen.start()
                 
             try:
@@ -161,9 +165,9 @@ class PSBTOverviewView(View):
 class PSBTUnsupportedScriptTypeWarningView(View):
     def run(self):
         selected_menu_num = WarningScreen(
-            status_headline="Unsupported Script Type!",
-            text="PSBT has unsupported input script type, please verify your change addresses.",
-            button_data=["Continue"],
+            status_headline=_("Unsupported Script Type!"),
+            text=_("PSBT has unsupported input script type, please verify your change addresses."),
+            button_data=[_("Continue")],
         ).display()
         
         if selected_menu_num == RET_CODE__BACK_BUTTON:
@@ -181,9 +185,10 @@ class PSBTUnsupportedScriptTypeWarningView(View):
 class PSBTNoChangeWarningView(View):
     def run(self):
         selected_menu_num = WarningScreen(
-            status_headline="Full Spend!",
-            text="This PSBT spends its entire input value. No change is coming back to your wallet.",
-            button_data=["Continue"],
+            # TRANSLATOR_NOTE: User will receive no change back; the inputs to this transaction are fully spent
+            status_headline=_("Full Spend!"),
+            text=_("This PSBT spends its entire input value. No change is coming back to your wallet."),
+            button_data=[_("Continue")],
         ).display()
 
         if selected_menu_num == RET_CODE__BACK_BUTTON:
@@ -249,14 +254,17 @@ class PSBTAddressDetailsView(View):
             # Should not be able to get here
             raise Exception("Routing error")
 
-        title = "Will Send"
+        # TRANSLATOR_NOTE: Future-tense used to indicate that this transaction will send this amount, as opposed to "Send" on its own which could be misread as an instant command (e.g. "Send Now").
+        title = _("Will Send")
         if psbt_parser.num_destinations > 1:
             title += f" (#{self.address_num + 1})"
 
+        button_data = []
         if self.address_num < psbt_parser.num_destinations - 1:
-            button_data = ["Next Recipient"]
+            button_data.append(_("Next Recipient"))
         else:
-            button_data = ["Next"]
+            # TRANSLATOR_NOTE: Short for "Next step"
+            button_data.append(_("Next"))
 
         selected_menu_num = self.run_screen(
             PSBTAddressDetailsScreen,
@@ -327,12 +335,15 @@ class PSBTChangeDetailsView(View):
         is_change_derivation_path = int(derivation_path.split("/")[-2]) == 1
         derivation_path_addr_index = int(derivation_path.split("/")[-1])
 
+        self.NEXT = _("Next")
+
         if is_change_derivation_path:
-            title = "Your Change"
-            self.VERIFY_MULTISIG = "Verify Multisig Change"
+            # TRANSLATOR_NOTE: The amount you're receiving back from the transaction
+            title = _("Your Change")
+            self.VERIFY_MULTISIG = _("Verify Multisig Change")
         else:
-            title = "Self-Transfer"
-            self.VERIFY_MULTISIG = "Verify Multisig Addr"
+            title = _("Self-Transfer")
+            self.VERIFY_MULTISIG = _("Verify Multisig Addr")
         # if psbt_parser.num_change_outputs > 1:
         #     title += f" (#{self.change_address_num + 1})"
 
@@ -351,9 +362,9 @@ class PSBTChangeDetailsView(View):
             # Single sig
             try:
                 if is_change_derivation_path:
-                    loading_screen_text = "Verifying Change..."
+                    loading_screen_text = _("Verifying Change...")
                 else:
-                    loading_screen_text = "Verifying Self-Transfer..."
+                    loading_screen_text = _("Verifying Self-Transfer...")
                 from seedsigner.gui.screens.screen import LoadingScreenThread
                 loading_screen = LoadingScreenThread(text=loading_screen_text)
                 loading_screen.start()
@@ -436,17 +447,19 @@ class PSBTAddressVerificationFailedView(View):
 
     def run(self):
         if self.is_multisig:
-            title = "Caution"
-            text = f"""PSBT's {"change" if self.is_change else "self-transfer"} address could not be verified with your multisig wallet descriptor."""
+            title = _("Caution")
+            # TRANSLATOR_NOTE: Variable is either "change" or "self-transfer".
+            text = _("PSBT's {} address could not be verified with your multisig wallet descriptor.").format(_("change") if self.is_change else _("self-transfer"))
         else:
-            title = "Suspicious PSBT"
-            text = f"""PSBT's {"change" if self.is_change else "self-transfer"} address could not be generated from your seed."""
+            title = _("Suspicious PSBT")
+            # TRANSLATOR_NOTE: Variable is either "change" or "self-transfer".
+            text = _("PSBT's {} address could not be generated from your seed.").format(_("change") if self.is_change else _("self-transfer"))
         
         DireWarningScreen(
             title=title,
-            status_headline="Address Verification Failed",
+            status_headline=_("Address Verification Failed"),
             text=text,
-            button_data=["Discard PSBT"],
+            button_data=[_("Discard PSBT")],
             show_back_button=False,
         ).display()
 
@@ -465,6 +478,7 @@ class PSBTFinalizeView(View):
     def run(self):
         psbt_parser: PSBTParser = self.controller.psbt_parser
         psbt: PSBT = self.controller.psbt
+        self.APPROVE_PSBT = _("Approve PSBT")
 
         if not psbt_parser:
             # Should not be able to get here
@@ -517,6 +531,7 @@ class PSBTSigningErrorView(View):
     
     def run(self):
         psbt_parser: PSBTParser = self.controller.psbt_parser
+        self.SELECT_DIFF_SEED = _("Select Diff Seed")
         if not psbt_parser:
             # Should not be able to get here
             return Destination(MainMenuView)
@@ -524,10 +539,10 @@ class PSBTSigningErrorView(View):
         # Just a WarningScreen here; only use DireWarningScreen for true security risks.
         selected_menu_num = self.run_screen(
             WarningScreen,
-            title="PSBT Error",
+            title=_("PSBT Error"),
             status_icon_name=SeedSignerIconConstants.WARNING,
-            status_headline="Signing Failed",
-            text="Signing with this seed did not add a valid signature.",
+            status_headline=_("Signing Failed"),
+            text=_("Signing with this seed did not add a valid signature."),
             button_data=[self.SELECT_DIFF_SEED]
         )
 

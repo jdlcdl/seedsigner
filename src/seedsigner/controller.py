@@ -2,6 +2,8 @@ import time
 import logging
 
 import traceback
+import gettext
+import os
 
 from PIL.Image import Image
 
@@ -131,6 +133,9 @@ class Controller(Singleton):
     back_stack: BackStack = None
     screensaver: 'ScreensaverScreen' = None
     toast_notification_thread: 'BaseToastOverlayManagerThread' = None
+
+    # Babel initialization
+    gettext.install('messages', localedir='seedsigner/resources/babel')
 
 
     @classmethod

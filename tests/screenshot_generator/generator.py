@@ -2,11 +2,14 @@ import embit
 import os
 import sys
 import time
+import pathlib
+import pytest
+import shutil
+
 from mock import Mock, patch, MagicMock
+
 from seedsigner.helpers import embit_utils
-
 from seedsigner.models.settings import Settings
-
 
 # Prevent importing modules w/Raspi hardware dependencies.
 # These must precede any SeedSigner imports.
@@ -35,6 +38,8 @@ from seedsigner.views.view import ErrorView, NetworkMismatchErrorView, OptionDis
 
 from .utils import ScreenshotComplete, ScreenshotRenderer
 
+# Ignore Pillow 10 DeprecationWarnings "use getbbox() or getlength() instead of getsize()"
+import warnings; warnings.warn = lambda *args, **kwargs: None
 
 
 def test_generate_screenshots(target_locale):
@@ -87,7 +92,12 @@ def test_generate_screenshots(target_locale):
     # Multisig wallet descriptor for the multisig in the above PSBT
     MULTISIG_WALLET_DESCRIPTOR = """wsh(sortedmulti(1,[22bde1a9/48h/1h/0h/2h]tpubDFfsBrmpj226ZYiRszYi2qK6iGvh2vkkghfGB2YiRUVY4rqqedHCFEgw12FwDkm7rUoVtq9wLTKc6BN2sxswvQeQgp7m8st4FP8WtP8go76/{0,1}/*,[73c5da0a/48h/1h/0h/2h]tpubDFH9dgzveyD8zTbPUFuLrGmCydNvxehyNdUXKJAQN8x4aZ4j6UZqGfnqFrD4NqyaTVGKbvEW54tsvPTK2UoSbCC1PJY8iCNiwTL3RWZEheQ/{0,1}/*))#3jhtf6yx"""
     controller.multisig_wallet_descriptor = embit.descriptor.Descriptor.from_string(MULTISIG_WALLET_DESCRIPTOR)
-    
+
+    # Parse the main `babel/messages.pot` for overall stats
+    messages_source_path = os.path.join(pathlib.Path(__file__).parent.resolve().parent.resolve().parent.resolve(), "babel", "messages.pot")
+    with open(messages_source_path, 'r') as messages_source_file:
+        num_source_messages = messages_source_file.read().count("msgid \"") - 1
+
     # Message signing data
     derivation_path = "m/84h/0h/0h/0/0"
     controller.sign_message_data = {
@@ -100,6 +110,7 @@ def test_generate_screenshots(target_locale):
     # Automatically populate all Settings options Views
     settings_views_list = []
     settings_views_list.append(settings_views.SettingsMenuView)
+
     # so we get a choice for transcribe seed qr format
     controller.settings.set_value(
         attr_name=SettingsConstants.SETTING__COMPACT_SEEDQR,
@@ -112,8 +123,8 @@ def test_generate_screenshots(target_locale):
         settings_views_list.append((settings_views.SettingsEntryUpdateSelectionView, dict(attr_name=settings_entry.attr_name), f"SettingsEntryUpdateSelectionView_{settings_entry.attr_name}"))
     
 
-    settingsqr_data_persistent = "settings::v1 name=Total_noob_mode persistent=E coords=spa,spd denom=thr network=M qr_density=M xpub_export=E sigs=ss scripts=nat xpub_details=E passphrase=E camera=0 compact_seedqr=E bip85=D priv_warn=E dire_warn=E partners=E"
-    settingsqr_data_not_persistent = "settings::v1 name=Ephemeral_noob_mode persistent=D coords=spa,spd denom=thr network=M qr_density=M xpub_export=E sigs=ss scripts=nat xpub_details=E passphrase=E camera=0 compact_seedqr=E bip85=D priv_warn=E dire_warn=E partners=E"
+    settingsqr_data_persistent = "settings::v1 name=English_noob_mode persistent=E coords=spa,spd denom=thr network=M qr_density=M xpub_export=E sigs=ss scripts=nat xpub_details=E passphrase=E camera=0 compact_seedqr=E bip85=D priv_warn=E dire_warn=E partners=E"
+    settingsqr_data_not_persistent = "settings::v1 name=Mode_débutant_éphémère persistent=D coords=spa,spd denom=thr network=M qr_density=M xpub_export=E sigs=ss scripts=nat xpub_details=E passphrase=E camera=0 compact_seedqr=E bip85=D priv_warn=E dire_warn=E partners=E locale=fr"
 
     screenshot_sections = {
         "Main Menu Views": [
@@ -235,7 +246,6 @@ def test_generate_screenshots(target_locale):
         ]
     }
 
-    readme = f"""# SeedSigner Screenshots\n"""
 
     def screencap_view(view_cls: View, view_name: str, view_args: dict={}, toast_thread: BaseToastOverlayManagerThread = None):
         screenshot_renderer.set_screenshot_filename(f"{view_name}.png")
@@ -261,41 +271,86 @@ def test_generate_screenshots(target_locale):
         finally:
             if toast_thread:
                 toast_thread.stop()
+                time.sleep(0.1) #jdlcdl
 
 
-    for section_name, screenshot_list in screenshot_sections.items():
-        subdir = section_name.lower().replace(" ", "_")
-        screenshot_renderer.set_screenshot_path(os.path.join(screenshot_root, subdir))
-        readme += "\n\n---\n\n"
-        readme += f"## {section_name}\n\n"
-        readme += """<table style="border: 0;">"""
-        readme += f"""<tr><td align="center">\n"""
-        for screenshot in screenshot_list:
-            if type(screenshot) == tuple:
-                if len(screenshot) == 2:
-                    view_cls, view_args = screenshot
+    locales = []
+    if target_locale is None:
+        locales = SettingsConstants.ALL_LOCALES
+    else:
+        locales = [locale_tuple for locale_tuple in SettingsConstants.ALL_LOCALES if locale_tuple[0] == target_locale]
+    
+    if not locales:
+        raise Exception(f"Invalid locale: {target_locale}")
+
+    for locale, display_name in locales:
+        print(f"\nLooping for locale: {locale}...")
+        Settings.get_instance().set_value(SettingsConstants.SETTING__LOCALE, value=locale)
+        screenshot_renderer.set_screenshot_path(os.path.join(screenshot_root, locale))
+
+        locale_readme = f"""# SeedSigner Screenshots: {display_name}\n"""
+
+        # Report the translation progress
+        #if locale != SettingsConstants.LOCALE__ENGLISH:
+        if locale:
+            translated_messages_path = os.path.join(pathlib.Path(__file__).parent.resolve().parent.resolve().parent.resolve(), "src", "seedsigner", "resources", "babel", locale, "LC_MESSAGES", "messages.po") 
+            with open(translated_messages_path, 'r') as translation_file:
+                locale_translations = translation_file.read()
+                num_locale_translations = locale_translations.count("msgid \"") - locale_translations.count("""msgstr ""\n\n""") - 1
+
+            if locale != "en":
+                locale_readme += f"## Translation progress: {num_locale_translations / num_source_messages:.1%}\n\n"
+                locale_readme += f"[{display_name} messages.po catalog](messages.po)\n"
+            locale_readme += "---\n\n"
+
+        for section_name, screenshot_list in screenshot_sections.items():
+            subdir = section_name.lower().replace(" ", "_")
+            screenshot_renderer.set_screenshot_path(os.path.join(screenshot_root, locale, subdir))
+            locale_readme += "\n\n---\n\n"
+            locale_readme += f"## {section_name}\n\n"
+            locale_readme += """<table style="border: 0;">"""
+            locale_readme += f"""<tr><td align="center">"""
+            for screenshot in screenshot_list:
+                if type(screenshot) == tuple:
+                    if len(screenshot) == 2:
+                        view_cls, view_args = screenshot
+                        view_name = view_cls.__name__
+                    elif len(screenshot) == 3:
+                        view_cls, view_args, view_name = screenshot
+                    elif len(screenshot) == 4:
+                        view_cls, view_args, view_name, toast_thread = screenshot
+                else:
+                    view_cls = screenshot
+                    view_args = {}
                     view_name = view_cls.__name__
-                elif len(screenshot) == 3:
-                    view_cls, view_args, view_name = screenshot
-                elif len(screenshot) == 4:
-                    view_cls, view_args, view_name, toast_thread = screenshot
-            else:
-                view_cls = screenshot
-                view_args = {}
-                view_name = view_cls.__name__
-                toast_thread = None
+                    toast_thread = None
 
-            screencap_view(view_cls, view_name, view_args, toast_thread=toast_thread)
-            readme += """  <table align="left" style="border: 1px solid gray;">"""
-            readme += f"""<tr><td align="center">{view_name}<br/><br/><img src="{subdir}/{view_name}.png"></td></tr>"""
-            readme += """</table>\n"""
+                screencap_view(view_cls, view_name, view_args, toast_thread=toast_thread)
+                locale_readme += """  <table align="left" style="border: 1px solid gray;">"""
+                locale_readme += f"""<tr><td align="center">{view_name}<br/><br/><img src="{subdir}/{view_name}.png"></td></tr>"""
+                locale_readme += """</table>\n"""
 
-        readme += "</td></tr></table>"
+            locale_readme += "</td></tr></table>"
 
-    # many screens don't work, leaving a missing image, re-run here for now
-    controller.psbt_seed = None
-    screenshot_renderer.set_screenshot_path(os.path.join(screenshot_root, "psbt_views"))
-    screencap_view(psbt_views.PSBTSelectSeedView, 'PSBTSelectSeedView', {})
+        # many screens don't work, leaving a missing image, re-run here for now
+        controller.psbt_seed = None
+        screenshot_renderer.set_screenshot_path(os.path.join(screenshot_root, locale, "psbt_views"))
+        screencap_view(psbt_views.PSBTSelectSeedView, 'PSBTSelectSeedView', {})
+
+        with open(os.path.join(screenshot_root, locale, "README.md"), 'w') as readme_file:
+            readme_file.write(locale_readme)
+
+        if locale != "en":
+            shutil.copy(translated_messages_path, os.path.join(screenshot_root, locale, "messages.po"))
+
+        print(f"Done with locale: {locale}.")
+        
+
+    # Write the main README; ensure it writes all locales, not just the one that may
+    # have been specified for this run.
+    main_readme = """# SeedSigner Screenshots \n\n"""
+    for locale, display_name in SettingsConstants.ALL_LOCALES:
+        main_readme += f"* [{display_name}]({locale}/README.md)\n"
 
     with open(os.path.join(screenshot_root, "README.md"), 'w') as readme_file:
-       readme_file.write(readme)
+        readme_file.write(main_readme)

@@ -1,3 +1,5 @@
+import os
+from gettext import gettext as _
 from PIL import Image, ImageDraw
 from threading import Lock
 

@@ -7,11 +7,12 @@ from time import time
 from dataclasses import dataclass
 from decimal import Decimal
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
-from typing import List, Tuple
+from typing import Any, List, Tuple
 
 from seedsigner.models.settings import Settings
 from seedsigner.models.settings_definition import SettingsConstants
 from seedsigner.models.singleton import Singleton
+
 
 
 # TODO: Remove all pixel hard coding
@@ -38,14 +39,33 @@ class GUIConstants:
     ICON_TOAST_FONT_SIZE = 30
     ICON_PRIMARY_SCREEN_SIZE = 50
 
-    TOP_NAV_TITLE_FONT_NAME = "OpenSans-SemiBold"
-    TOP_NAV_TITLE_FONT_SIZE = 20
+    TOP_NAV_TITLE_FONT_NAME = {
+        "default": "OpenSans-SemiBold",
+        "ar": "multilanguage/NotoSansAR-Regular",
+        "he": "multilanguage/NotoSansHE-Regular",
+        "ja": "multilanguage/NotoSansJP-Regular",
+        "kr": "multilanguage/NotoSansKR-Regular",
+        "ru": "multilanguage/NotoSans-Regular",
+    }
+    TOP_NAV_TITLE_FONT_SIZE = {
+        "default": 20,
+    }
     TOP_NAV_HEIGHT = 48
     TOP_NAV_BUTTON_SIZE = 32
 
-    BODY_FONT_NAME = "OpenSans-Regular"
-    BODY_FONT_SIZE = 17
-    BODY_FONT_MAX_SIZE = TOP_NAV_TITLE_FONT_SIZE
+    BODY_FONT_NAME = {
+        "default": "OpenSans-Regular",
+        "ar": "multilanguage/NotoSansAR-Regular",
+        "he": "multilanguage/NotoSansHE-Regular",
+        "ja": "multilanguage/NotoSansJP-Regular",
+        "kr": "multilanguage/NotoSansKR-Regular",
+        "ru": "multilanguage/NotoSans-Regular",
+    }
+    BODY_FONT_SIZE = {
+        "default": 17,
+        "ar": 16,
+    }
+    BODY_FONT_MAX_SIZE = TOP_NAV_TITLE_FONT_SIZE["default"]
     BODY_FONT_MIN_SIZE = 15
     BODY_FONT_COLOR = "#FCFCFC"
     BODY_LINE_SPACING = COMPONENT_PADDING
@@ -56,14 +76,79 @@ class GUIConstants:
     LABEL_FONT_SIZE = BODY_FONT_MIN_SIZE
     LABEL_FONT_COLOR = "#777777"
 
-    BUTTON_FONT_NAME = "OpenSans-SemiBold"
-    BUTTON_FONT_SIZE = 18
+    BUTTON_FONT_NAME = {
+        "default": "OpenSans-SemiBold",
+        "ar": "multilanguage/NotoSansAR-Regular",
+        "he": "multilanguage/NotoSansHE-Regular",
+        "ja": "multilanguage/NotoSansJP-Regular",
+        "kr": "multilanguage/NotoSansKR-Regular",
+        "ru": "multilanguage/NotoSans-Regular",
+    }
+    BUTTON_FONT_SIZE = {
+        "default": 18,
+        "ar": 16,
+        "ja": 16,
+    }
     BUTTON_FONT_COLOR = "#FCFCFC"
     BUTTON_BACKGROUND_COLOR = "#2C2C2C"
     BUTTON_HEIGHT = 32
     BUTTON_SELECTED_FONT_COLOR = BACKGROUND_COLOR
     
     NOTIFICATION_COLOR = "#00F100"
+
+
+    @staticmethod
+    def get_body_font_name():
+        locale = Settings.get_instance().get_value(SettingsConstants.SETTING__LOCALE)
+        if locale in GUIConstants.BODY_FONT_NAME:
+            return GUIConstants.BODY_FONT_NAME[locale]
+        else:
+            return GUIConstants.BODY_FONT_NAME["default"]
+
+
+    @staticmethod
+    def get_body_font_size():
+        locale = Settings.get_instance().get_value(SettingsConstants.SETTING__LOCALE)
+        if locale in GUIConstants.BODY_FONT_SIZE:
+            return GUIConstants.BODY_FONT_SIZE[locale]
+        else:
+            return GUIConstants.BODY_FONT_SIZE["default"]
+
+
+    @staticmethod
+    def get_top_nav_title_font_name():
+        locale = Settings.get_instance().get_value(SettingsConstants.SETTING__LOCALE)
+        if locale in GUIConstants.TOP_NAV_TITLE_FONT_NAME:
+            return GUIConstants.TOP_NAV_TITLE_FONT_NAME[locale]
+        else:
+            return GUIConstants.TOP_NAV_TITLE_FONT_NAME["default"]
+
+
+    @staticmethod
+    def get_top_nav_title_font_size():
+        locale = Settings.get_instance().get_value(SettingsConstants.SETTING__LOCALE)
+        if locale in GUIConstants.TOP_NAV_TITLE_FONT_SIZE:
+            return GUIConstants.TOP_NAV_TITLE_FONT_SIZE[locale]
+        else:
+            return GUIConstants.TOP_NAV_TITLE_FONT_SIZE["default"]
+
+
+    @staticmethod
+    def get_button_font_name():
+        locale = Settings.get_instance().get_value(SettingsConstants.SETTING__LOCALE)
+        if locale in GUIConstants.BUTTON_FONT_NAME:
+            return GUIConstants.BUTTON_FONT_NAME[locale]
+        else:
+            return GUIConstants.BUTTON_FONT_NAME["default"]
+
+
+    @staticmethod
+    def get_button_font_size():
+        locale = Settings.get_instance().get_value(SettingsConstants.SETTING__LOCALE)
+        if locale in GUIConstants.BUTTON_FONT_SIZE:
+            return GUIConstants.BUTTON_FONT_SIZE[locale]
+        else:
+            return GUIConstants.BUTTON_FONT_SIZE["default"]
 
 
 
@@ -198,7 +283,11 @@ def load_image(image_name: str) -> Image.Image:
 
 
 class Fonts(Singleton):
-    font_path = os.path.join(pathlib.Path(__file__).parent.resolve(), "..", "resources", "fonts")
+    font_path = os.path.join(
+        pathlib.Path(__file__).parent.resolve().parent.resolve(),
+        "resources",
+        "fonts"
+    )
     fonts = {}
 
     @classmethod
@@ -209,13 +298,13 @@ class Fonts(Singleton):
         
         if font_name in [GUIConstants.ICON_FONT_NAME__FONT_AWESOME, GUIConstants.ICON_FONT_NAME__SEEDSIGNER]:
             file_extension = "otf"
-        
+
         if size not in cls.fonts[font_name]:
             try:
                 cls.fonts[font_name][size] = ImageFont.truetype(os.path.join(cls.font_path, f"{font_name}.{file_extension}"), size)
             except OSError as e:
                 if "cannot open resource" in str(e):
-                    raise Exception(f"Font {font_name}.ttf not found: {repr(e)}")
+                    raise Exception(f"Font {font_name + '.' + file_extension + ':' + str(size)} not found: {repr(e)}")
                 else:
                     raise e
 
@@ -234,7 +323,7 @@ class BaseComponent:
     canvas: Image.Image = None
 
     def __post_init__(self):
-        from seedsigner.gui import Renderer
+        from seedsigner.gui.renderer import Renderer
         self.renderer: Renderer = Renderer.get_instance()
         self.canvas_width = self.renderer.canvas_width
         self.canvas_height = self.renderer.canvas_height
@@ -279,8 +368,8 @@ class TextArea(BaseComponent):
     screen_y: int = 0
     min_text_x: int = 0  # Text can not start at x any less than this
     background_color: str = GUIConstants.BACKGROUND_COLOR
-    font_name: str = GUIConstants.BODY_FONT_NAME
-    font_size: int = GUIConstants.BODY_FONT_SIZE
+    font_name: str = None
+    font_size: int = None
     font_color: str = GUIConstants.BODY_FONT_COLOR
     edge_padding: int = GUIConstants.EDGE_PADDING
     is_text_centered: bool = True
@@ -291,6 +380,11 @@ class TextArea(BaseComponent):
 
 
     def __post_init__(self):
+        if not self.font_name:
+            self.font_name = GUIConstants.get_body_font_name()
+        if not self.font_size:
+            self.font_size = GUIConstants.get_body_font_size()
+
         super().__post_init__()
 
         if not self.width:
@@ -350,7 +444,7 @@ class TextArea(BaseComponent):
         else:
             if total_text_height > self.height:
                 if not self.allow_text_overflow:
-                    raise TextDoesNotFitException(f"Text cannot fit in target rect with this font/size\n\ttotal_text_height: {total_text_height} | self.height: {self.height}")
+                    pass #raise TextDoesNotFitException(f"Text cannot fit in target rect with this font/size\n\ttotal_text_height: {total_text_height} | self.height: {self.height}")
                 else:
                     # Just let it render off the edge, but preserve the top portion
                     pass
@@ -439,7 +533,7 @@ class Icon(BaseComponent):
         if SeedSignerIconConstants.MIN_VALUE <= self.icon_name and self.icon_name <= SeedSignerIconConstants.MAX_VALUE:
             self.icon_font = Fonts.get_font(GUIConstants.ICON_FONT_NAME__SEEDSIGNER, self.icon_size, file_extension="otf")
         else:
-            self.icon_font = Fonts.get_font(GUIConstants.ICON_FONT_NAME__FONT_AWESOME, self.icon_size, file_extension="otf")
+            self.icon_font = Fonts.get_font(GUIConstants.ICON_FONT_NAME__FONT_AWESOME, self.icon_size)
         
         # Set width/height based on exact pixels that are rendered
         (left, top, self.width, bottom) = self.icon_font.getbbox(self.icon_name, anchor="ls")
@@ -467,16 +561,20 @@ class IconTextLine(BaseComponent):
     icon_size: int = GUIConstants.ICON_FONT_SIZE
     icon_color: str = GUIConstants.BODY_FONT_COLOR
     label_text: str = None
-    value_text: str = "73c5da0a"
-    font_name: str = GUIConstants.BODY_FONT_NAME
-    font_size: int = GUIConstants.BODY_FONT_SIZE
+    value_text: str = ""
+    font_name: str = None
+    font_size: int = None
     is_text_centered: bool = False
     auto_line_break: bool = False
-    allow_text_overflow: bool = False
+    allow_text_overflow: bool = True
     screen_x: int = 0
     screen_y: int = 0
 
     def __post_init__(self):
+        if not self.font_name:
+            self.font_name = GUIConstants.get_body_font_name()
+        if not self.font_size:
+            self.font_size = GUIConstants.get_body_font_size()
         super().__post_init__()
 
         if self.height is not None and self.label_text:
@@ -504,7 +602,7 @@ class IconTextLine(BaseComponent):
                 image_draw=self.image_draw,
                 canvas=self.canvas,
                 text=self.label_text,
-                font_size=GUIConstants.BODY_FONT_SIZE - 2,
+                font_size=GUIConstants.get_body_font_size() - 2,
                 font_color=GUIConstants.LABEL_FONT_COLOR,
                 edge_padding=0,
                 is_text_centered=self.is_text_centered if not self.icon_name else False,
@@ -781,9 +879,9 @@ class BtcAmount(BaseComponent):
         elif network == SettingsConstants.REGTEST:
             btc_color = GUIConstants.REGTEST_COLOR
         
-        digit_font = Fonts.get_font(font_name=GUIConstants.BODY_FONT_NAME, size=self.font_size)
-        smaller_digit_font = Fonts.get_font(font_name=GUIConstants.BODY_FONT_NAME, size=self.font_size - 2)
-        unit_font_size = GUIConstants.BUTTON_FONT_SIZE + 2
+        digit_font = Fonts.get_font(font_name=GUIConstants.get_body_font_name(), size=self.font_size)
+        smaller_digit_font = Fonts.get_font(font_name=GUIConstants.get_body_font_name(), size=self.font_size - 2)
+        unit_font_size = GUIConstants.get_button_font_size() + 2
 
         # Render to a temp surface
         self.paste_image = Image.new(mode="RGB", size=(self.canvas_width, self.icon_size), color=GUIConstants.BACKGROUND_COLOR)
@@ -907,7 +1005,7 @@ class BtcAmount(BaseComponent):
             cur_x += text_width - int(GUIConstants.COMPONENT_PADDING/2)
 
             # Draw the pipe separator
-            pipe_font = Fonts.get_font(font_name=GUIConstants.BODY_FONT_NAME, size=self.icon_size - 4)
+            pipe_font = Fonts.get_font(font_name=GUIConstants.get_body_font_name(), size=self.icon_size - 4)
             (left, top, text_width, bottom) = pipe_font.getbbox("|", anchor="ls")
             draw.text(
                 xy=(
@@ -938,7 +1036,7 @@ class BtcAmount(BaseComponent):
             unit_text = sats_unit
 
         # Draw the unit
-        unit_font = Fonts.get_font(font_name=GUIConstants.BODY_FONT_NAME, size=unit_font_size)
+        unit_font = Fonts.get_font(font_name=GUIConstants.get_body_font_name(), size=unit_font_size)
         (left, top, unit_text_width, bottom) = unit_font.getbbox(unit_text, anchor="ls")
         unit_font_height = -1 * top
 
@@ -946,7 +1044,7 @@ class BtcAmount(BaseComponent):
             image_draw=draw,
             canvas=self.paste_image,
             text=f" {unit_text}",
-            font_name=GUIConstants.BODY_FONT_NAME,
+            font_name=GUIConstants.get_body_font_name(),
             font_size=unit_font_size,
             font_color=GUIConstants.BODY_FONT_COLOR,
             supersampling_factor=2,
@@ -999,8 +1097,8 @@ class Button(BaseComponent):
     text_y_offset: int = 0
     background_color: str = GUIConstants.BUTTON_BACKGROUND_COLOR
     selected_color: str = GUIConstants.ACCENT_COLOR
-    font_name: str = GUIConstants.BUTTON_FONT_NAME
-    font_size: int = GUIConstants.BUTTON_FONT_SIZE
+    font_name: str = None
+    font_size: int = None
     font_color: str = GUIConstants.BUTTON_FONT_COLOR
     selected_font_color: str = GUIConstants.BUTTON_SELECTED_FONT_COLOR
     outline_color: str = None
@@ -1010,6 +1108,12 @@ class Button(BaseComponent):
 
 
     def __post_init__(self):
+        if not self.font_name:
+            self.font_name = GUIConstants.get_button_font_name()
+        
+        if not self.font_size:
+            self.font_size = GUIConstants.get_button_font_size()
+        
         super().__post_init__()
 
         if not self.width:
@@ -1198,8 +1302,8 @@ class TopNav(BaseComponent):
     background_color: str = GUIConstants.BACKGROUND_COLOR
     icon_name: str = None
     icon_color: str = GUIConstants.BODY_FONT_COLOR
-    font_name: str = GUIConstants.TOP_NAV_TITLE_FONT_NAME
-    font_size: int = GUIConstants.TOP_NAV_TITLE_FONT_SIZE
+    font_name: str = GUIConstants.get_top_nav_title_font_name()
+    font_size: int = GUIConstants.get_top_nav_title_font_size()
     font_color: str = GUIConstants.BODY_FONT_COLOR
     show_back_button: bool = True
     show_power_button: bool = False
@@ -1207,11 +1311,16 @@ class TopNav(BaseComponent):
 
 
     def __post_init__(self):
+        if not self.font_name:
+            self.font_name = GUIConstants.get_top_nav_title_font_name()
+        
+        if not self.font_size:
+            self.font_size = GUIConstants.get_top_nav_title_font_size()
+            print(f"self.font_size: {self.font_size}")
+
         super().__post_init__()
         if not self.width:
             self.width = self.canvas_width
-
-        self.font = Fonts.get_font(self.font_name, self.font_size)
 
         if self.show_back_button:
             self.left_button = IconButton(
@@ -1332,8 +1441,8 @@ def calc_bezier_curve(p1: Tuple[int,int], p2: Tuple[int,int], p3: Tuple[int,int]
 
 def reflow_text_for_width(text: str,
                           width: int,
-                          font_name=GUIConstants.BODY_FONT_NAME,
-                          font_size=GUIConstants.BODY_FONT_SIZE,
+                          font_name=GUIConstants.get_body_font_name(),
+                          font_size=GUIConstants.get_body_font_size(),
                           allow_text_overflow: bool=False) -> list[dict]:
     """
     Reflows text to fit within `width` by breaking long lines up.
@@ -1416,8 +1525,8 @@ def reflow_text_for_width(text: str,
 def reflow_text_into_pages(text: str,
                            width: int,
                            height: int,
-                           font_name=GUIConstants.BODY_FONT_NAME,
-                           font_size=GUIConstants.BODY_FONT_SIZE,
+                           font_name=GUIConstants.get_body_font_name(),
+                           font_size=GUIConstants.get_body_font_size(),
                            line_spacer: int = GUIConstants.BODY_LINE_SPACING,
                            allow_text_overflow: bool=False) -> list[str]:
     """

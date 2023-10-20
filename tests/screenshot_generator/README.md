@@ -2,6 +2,7 @@
 
 From the project root, run:
 ```
+pytest tests/screenshot_generator/generator.py --locale en
 pytest tests/screenshot_generator/generator.py
 ```
 

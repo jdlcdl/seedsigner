@@ -2,6 +2,7 @@ import os
 import random
 import time
 
+from gettext import gettext as _
 from PIL import Image
 
 from seedsigner.gui.components import Fonts, GUIConstants, load_image
@@ -52,7 +53,7 @@ class OpeningSplashScreen(LogoScreen):
             self.renderer.show_image()
 
         # Display version num below SeedSigner logo
-        font = Fonts.get_font(GUIConstants.BODY_FONT_NAME, GUIConstants.TOP_NAV_TITLE_FONT_SIZE)
+        font = Fonts.get_font(GUIConstants.get_body_font_name(), GUIConstants.get_top_nav_title_font_size())
         version = f"v{controller.VERSION}"
         (left, top, version_tw, version_th) = font.getbbox(version, anchor="lt")
 
@@ -68,8 +69,9 @@ class OpeningSplashScreen(LogoScreen):
 
             # Set up the partner logo
             partner_logo: Image.Image = self.partner_logos[self.get_random_partner()]
-            font = Fonts.get_font(GUIConstants.TOP_NAV_TITLE_FONT_NAME, GUIConstants.BODY_FONT_SIZE)
-            sponsor_text = "With support from:"
+            font = Fonts.get_font(GUIConstants.get_top_nav_title_font_name(), GUIConstants.get_body_font_size())
+            # TRANSLATOR_NOTE: This is on the opening splash screen, displayed above the HRF logo
+            sponsor_text = _("With support from:")
             (left, top, tw, th) = font.getbbox(sponsor_text, anchor="lt")
 
             x = int((self.renderer.canvas_width) / 2)

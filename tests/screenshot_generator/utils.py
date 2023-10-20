@@ -3,10 +3,8 @@ from PIL import Image, ImageDraw
 from seedsigner.gui.renderer import Renderer
 
 
-
 class ScreenshotComplete(Exception):
     pass
-
 
 
 class ScreenshotRenderer(Renderer):
