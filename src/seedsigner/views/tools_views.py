@@ -459,10 +459,10 @@ class ToolsAddressExplorerSelectSourceView(View):
 
     def run(self):
         seeds = self.controller.storage.seeds
-        self.SCAN_SEED = _("Scan a seed", SeedSignerIconConstants.QRCODE)
-        self.SCAN_DESCRIPTOR = _("Scan wallet descriptor", SeedSignerIconConstants.QRCODE)
-        self.TYPE_12WORD = _("Enter 12-word seed", FontAwesomeIconConstants.KEYBOARD)
-        self.TYPE_24WORD = _("Enter 24-word seed", FontAwesomeIconConstants.KEYBOARD)
+        self.SCAN_SEED = (_("Scan a seed"), SeedSignerIconConstants.QRCODE)
+        self.SCAN_DESCRIPTOR = (_("Scan wallet descriptor"), SeedSignerIconConstants.QRCODE)
+        self.TYPE_12WORD = (_("Enter 12-word seed"), FontAwesomeIconConstants.KEYBOARD)
+        self.TYPE_24WORD = (_("Enter 24-word seed"), FontAwesomeIconConstants.KEYBOARD)
         button_data = []
         for seed in seeds:
             button_str = seed.get_fingerprint(self.settings.get_value(SettingsConstants.SETTING__NETWORK))
