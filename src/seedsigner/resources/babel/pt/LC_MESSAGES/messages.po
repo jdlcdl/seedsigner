@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-10-20 16:57-0400\n"
+"POT-Creation-Date: 2024-02-23 18:47-0400\n"
 "PO-Revision-Date: 2022-04-29 13:50+0000\n"
 "Last-Translator: Dom Azeredo, 2022\n"
 "Language: pt\n"
@@ -343,7 +343,7 @@ msgid "Optionally scan your transcribed SeedQR to confirm that it reads back cor
 msgstr "Opcionalmente, escaneie sua SeedQR desenhada e confirme se ela é lida corretamente."
 
 #: src/seedsigner/gui/screens/seed_screens.py
-#: src/seedsigner/views/seed_views.py
+#: src/seedsigner/views/seed_views.py src/seedsigner/views/tools_views.py
 msgid "Verify Address"
 msgstr "Verificar Endereço"
 
@@ -733,14 +733,17 @@ msgid "QR background color"
 msgstr "Cor de fundo do QR "
 
 #: src/seedsigner/views/psbt_views.py src/seedsigner/views/seed_views.py
+#: src/seedsigner/views/tools_views.py
 msgid "Scan a seed"
 msgstr "Ler Seed"
 
 #: src/seedsigner/views/psbt_views.py src/seedsigner/views/seed_views.py
+#: src/seedsigner/views/tools_views.py
 msgid "Enter 12-word seed"
 msgstr "Digitar 12 palavras"
 
 #: src/seedsigner/views/psbt_views.py src/seedsigner/views/seed_views.py
+#: src/seedsigner/views/tools_views.py
 msgid "Enter 24-word seed"
 msgstr "Digitar 24 palavras"
 
@@ -1063,6 +1066,10 @@ msgid "SeedQR Format"
 msgstr "Formato da SeedQR"
 
 #: src/seedsigner/views/seed_views.py
+msgid "SeedQR is your private key!"
+msgstr ""
+
+#: src/seedsigner/views/seed_views.py
 msgid "Never photograph or scan it into a device that connects to the internet."
 msgstr ""
 
@@ -1214,6 +1221,10 @@ msgstr ""
 #: src/seedsigner/views/tools_views.py
 msgid "Load seed"
 msgstr "Adicionar Seed"
+
+#: src/seedsigner/views/tools_views.py
+msgid "Scan wallet descriptor"
+msgstr ""
 
 #. label for addresses where others send us incoming payments
 #: src/seedsigner/views/tools_views.py

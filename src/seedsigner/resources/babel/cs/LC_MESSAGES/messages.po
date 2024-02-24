@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-10-20 16:57-0400\n"
+"POT-Creation-Date: 2024-02-23 18:47-0400\n"
 "PO-Revision-Date: 2022-04-29 13:50+0000\n"
 "Last-Translator: Plasmonic Resonance, 2022\n"
 "Language: cs\n"
@@ -346,7 +346,7 @@ msgid "Optionally scan your transcribed SeedQR to confirm that it reads back cor
 msgstr "Volitelně naskenujte SeedQR pro potvrzení, že je načítán správně."
 
 #: src/seedsigner/gui/screens/seed_screens.py
-#: src/seedsigner/views/seed_views.py
+#: src/seedsigner/views/seed_views.py src/seedsigner/views/tools_views.py
 msgid "Verify Address"
 msgstr "Ověřit adresu"
 
@@ -737,14 +737,17 @@ msgid "QR background color"
 msgstr "barva pozadí QR"
 
 #: src/seedsigner/views/psbt_views.py src/seedsigner/views/seed_views.py
+#: src/seedsigner/views/tools_views.py
 msgid "Scan a seed"
 msgstr "Naskenovat seed"
 
 #: src/seedsigner/views/psbt_views.py src/seedsigner/views/seed_views.py
+#: src/seedsigner/views/tools_views.py
 msgid "Enter 12-word seed"
 msgstr "Vložit seed o 12 slovech"
 
 #: src/seedsigner/views/psbt_views.py src/seedsigner/views/seed_views.py
+#: src/seedsigner/views/tools_views.py
 msgid "Enter 24-word seed"
 msgstr "Vložit seed o 24 slovech"
 
@@ -1067,6 +1070,10 @@ msgid "SeedQR Format"
 msgstr "Formát SeedQR"
 
 #: src/seedsigner/views/seed_views.py
+msgid "SeedQR is your private key!"
+msgstr ""
+
+#: src/seedsigner/views/seed_views.py
 msgid "Never photograph or scan it into a device that connects to the internet."
 msgstr ""
 
@@ -1218,6 +1225,10 @@ msgstr ""
 #: src/seedsigner/views/tools_views.py
 msgid "Load seed"
 msgstr "Nahrát seed"
+
+#: src/seedsigner/views/tools_views.py
+msgid "Scan wallet descriptor"
+msgstr ""
 
 #. label for addresses where others send us incoming payments
 #: src/seedsigner/views/tools_views.py
