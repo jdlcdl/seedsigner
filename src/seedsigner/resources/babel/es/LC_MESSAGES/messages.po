@@ -13,7 +13,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-10-09 11:36-0400\n"
+"POT-Creation-Date: 2024-02-23 18:47-0400\n"
 "PO-Revision-Date: 2022-04-29 13:50+0000\n"
 "Last-Translator: Bitcoin Hornet, 2022\n"
 "Language: es\n"
@@ -22,7 +22,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.10.3\n"
+"Generated-By: Babel 2.10.1\n"
 
 #. The abbreviated label for the special key <del> on a standard keyboard.
 #: src/seedsigner/gui/keyboard.py
@@ -347,12 +347,9 @@ msgid "Optionally scan your transcribed SeedQR to confirm that it reads back cor
 msgstr "Opcionalmente puedes escanear tu SeedQR y confirmar que se relee correctamente."
 
 #: src/seedsigner/gui/screens/seed_screens.py
-#: src/seedsigner/views/seed_views.py
-#: src/seedsigner/views/tools_views.py
+#: src/seedsigner/views/seed_views.py src/seedsigner/views/tools_views.py
 msgid "Verify Address"
 msgstr "Comprobar Dirección"
-
-
 
 #. Inserts the nth address number (e.g. "Checking address 7")
 #: src/seedsigner/gui/screens/seed_screens.py
@@ -741,14 +738,17 @@ msgid "QR background color"
 msgstr "Color de fondo del QR"
 
 #: src/seedsigner/views/psbt_views.py src/seedsigner/views/seed_views.py
+#: src/seedsigner/views/tools_views.py
 msgid "Scan a seed"
 msgstr "Escanear semilla"
 
 #: src/seedsigner/views/psbt_views.py src/seedsigner/views/seed_views.py
+#: src/seedsigner/views/tools_views.py
 msgid "Enter 12-word seed"
 msgstr "Teclea 12 palabras"
 
 #: src/seedsigner/views/psbt_views.py src/seedsigner/views/seed_views.py
+#: src/seedsigner/views/tools_views.py
 msgid "Enter 24-word seed"
 msgstr "Teclea 24 palabras"
 
@@ -951,6 +951,7 @@ msgstr "Escanear PSBT"
 #: src/seedsigner/views/seed_views.py
 msgid "Verify Addr"
 msgstr "Verificar Dirección"
+
 #: src/seedsigner/views/seed_views.py
 msgid "BIP-85 Child Seed"
 msgstr "Semilla Hija BIP-85"
@@ -1070,6 +1071,10 @@ msgstr "Compacto: 25x25"
 #: src/seedsigner/views/seed_views.py
 msgid "SeedQR Format"
 msgstr "Formato SeedQR"
+
+#: src/seedsigner/views/seed_views.py
+msgid "SeedQR is your private key!"
+msgstr "SeedQR es tu clave privada!"
 
 #: src/seedsigner/views/seed_views.py
 msgid "Never photograph or scan it into a device that connects to the internet."
@@ -1224,6 +1229,10 @@ msgstr "Calc. Última Palabra"
 msgid "Load seed"
 msgstr "Cargar semilla"
 
+#: src/seedsigner/views/tools_views.py
+msgid "Scan wallet descriptor"
+msgstr "Escanear descriptor"
+
 #. label for addresses where others send us incoming payments
 #: src/seedsigner/views/tools_views.py
 msgid "Receive Addresses"
@@ -1325,26 +1334,6 @@ msgstr ""
 "retira la MicroSD\n"
 "antes de continuar."
 
-#: src/seedsigner/gui/screens/tools_screens.py
-msgid "< back  |  click joystick"
-msgstr "< volver | clic joystick"
-
-#: src/seedsigner/views/seed_views.py
-msgid "SeedQR is your private key!"
-msgstr "SeedQR es tu clave privada!"
-
-#: src/seedsigner/models/settings_definition.py
-msgid "Threshold at 0.01"
-msgstr "Límite a 0.01"
-
-#: src/seedsigner/models/settings_definition.py
-msgid "BTC | sats hybrid"
-msgstr "Híbrido: BTC | Sats "
-
-#: src/seedsigner/views/tools_views.py
-msgid "Scan wallet descriptor"
-msgstr "Escanear descriptor"
-
 #~ msgid "{}..."
 #~ msgstr "{}..."
 
@@ -1380,8 +1369,6 @@ msgstr "Escanear descriptor"
 
 #~ msgid "Sats-only"
 #~ msgstr "Sats-Solamente"
-
-
 
 #~ msgid "Scan"
 #~ msgstr ""
@@ -1428,8 +1415,6 @@ msgstr "Escanear descriptor"
 #~ msgid "changes seed:"
 #~ msgstr "cambia la semilla:"
 
-          
-
 #~ msgid "MicroSD card is removed"
 #~ msgstr ""
 
@@ -1443,7 +1428,12 @@ msgstr "Escanear descriptor"
 #~ "Frases de contraseña BIP-39 cambian la semilla, resultando en nuevos xpubs, billeteras, etc.\n"
 #~ "¡Asegúrate de saber lo que estás haciendo!"
 
+#~ msgid "< back  |  click joystick"
+#~ msgstr "< volver | clic joystick"
 
+#~ msgid "Threshold at 0.01"
+#~ msgstr "Límite a 0.01"
 
-
+#~ msgid "BTC | sats hybrid"
+#~ msgstr "Híbrido: BTC | Sats "
 
