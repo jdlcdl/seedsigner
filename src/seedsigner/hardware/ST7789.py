@@ -16,6 +16,7 @@ class ST7789(object):
         self._dc = 22
         self._rst = 13
         self._bl = 18
+        self._bl_lit = True
 
         GPIO.setmode(GPIO.BOARD)
         GPIO.setwarnings(False)
@@ -166,4 +167,13 @@ class ST7789(object):
         _buffer = [0xff]*(self.width * self.height * 2)
         self.SetWindows ( 0, 0, self.width, self.height)
         GPIO.output(self._dc,GPIO.HIGH)
+        for i in range(0,len(_buffer),4096):
+            self._spi.writebytes(_buffer[i:i+4096])
         self._spi.writebytes2(_buffer)	
+
+    def toggle_backlight(self):
+        if self._bl_lit:
+            GPIO.output(self._bl, GPIO.LOW)
+        else:
+            GPIO.output(self._bl, GPIO.HIGH)
+        self._bl_lit = not self._bl_lit

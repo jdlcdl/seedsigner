@@ -72,6 +72,13 @@ class SettingsConstants:
         (CAMERA_ROTATION__270, "270°"),
     ]
 
+    SCREENSAVER_BRANDING = "logo"
+    SCREENSAVER_BACKLIGHT = "bl"
+    ALL_SCREENSAVERS = [
+        (SCREENSAVER_BRANDING, "SeedSigner"),
+        (SCREENSAVER_BACKLIGHT, "Blank screen"),
+    ]
+
     # QR code constants
     DENSITY__LOW = "L"
     DENSITY__MEDIUM = "M"
@@ -159,6 +166,7 @@ class SettingsConstants:
     SETTING__XPUB_DETAILS = "xpub_details"
     SETTING__PASSPHRASE = "passphrase"
     SETTING__CAMERA_ROTATION = "camera_rotation"
+    SETTING__SCREENSAVER = "screensaver"
     SETTING__COMPACT_SEEDQR = "compact_seedqr"
     SETTING__BIP85_CHILD_SEEDS = "bip85_child_seeds"
     SETTING__ELECTRUM_SEEDS = "electrum_seeds"
@@ -491,6 +499,14 @@ class SettingsDefinition:
                       display_name="Show privacy warnings",
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       default_value=SettingsConstants.OPTION__ENABLED),
+
+        SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
+                      attr_name=SettingsConstants.SETTING__SCREENSAVER,
+                      display_name="Screensaver",
+                      type=SettingsConstants.TYPE__SELECT_1,
+                      visibility=SettingsConstants.VISIBILITY__ADVANCED,
+                      selection_options=SettingsConstants.ALL_SCREENSAVERS,
+                      default_value=SettingsConstants.SCREENSAVER_BRANDING),
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__DIRE_WARNINGS,
