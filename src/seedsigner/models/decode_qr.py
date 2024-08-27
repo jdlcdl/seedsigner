@@ -120,11 +120,14 @@ class DecodeQR:
             qr_str = data
 
         if self.qr_type in [QRType.PSBT__UR2, QRType.OUTPUT__UR, QRType.ACCOUNT__UR, QRType.BYTES__UR]:
-            self.decoder.receive_part(qr_str)
+            added_part = self.decoder.receive_part(qr_str)
             if self.decoder.is_complete():
                 self.complete = True
                 return DecodeQRStatus.COMPLETE
-            return DecodeQRStatus.PART_COMPLETE # segment added to ur2 decoder
+            if added_part:
+                return DecodeQRStatus.PART_COMPLETE
+            else:
+                return DecodeQRStatus.PART_EXISTING
 
         else:
             # All other formats use the same method signature
@@ -219,12 +222,12 @@ class DecodeQR:
                 return self.decoder.get_wallet_descriptor()
 
 
-    def get_percent_complete(self) -> int:
+    def get_percent_complete(self, weight_mixed_frames: bool = False) -> int:
         if not self.decoder:
             return 0
 
         if self.qr_type in [QRType.PSBT__UR2, QRType.OUTPUT__UR, QRType.ACCOUNT__UR, QRType.BYTES__UR]:
-            return int(self.decoder.estimated_percent_complete() * 100)
+            return int(self.decoder.estimated_percent_complete(weight_mixed_frames=weight_mixed_frames) * 100)
 
         elif self.qr_type in [QRType.PSBT__SPECTER]:
             if self.decoder.total_segments == None:
@@ -260,6 +263,7 @@ class DecodeQR:
             QRType.PSBT__BASE64,
             QRType.PSBT__BASE43,
         ]
+
 
     @property
     def is_seed(self):
@@ -305,7 +309,7 @@ class DecodeQR:
 
 
     @staticmethod
-    def extract_qr_data(image, is_binary:bool = False) -> str:
+    def extract_qr_data(image, is_binary:bool = False) -> str | None:
         if image is None:
             return None
 
@@ -337,10 +341,10 @@ class DecodeQR:
             # PSBT
             if re.search("^UR:CRYPTO-PSBT/", s, re.IGNORECASE):
                 return QRType.PSBT__UR2
-                
+
             elif re.search("^UR:CRYPTO-OUTPUT/", s, re.IGNORECASE):
                 return QRType.OUTPUT__UR
-                
+
             elif re.search("^UR:CRYPTO-ACCOUNT/", s, re.IGNORECASE):
                 return QRType.ACCOUNT__UR
 
@@ -362,10 +366,10 @@ class DecodeQR:
             elif re.search(r'^\{\"label\".*\"descriptor\"\:.*', desc_str, re.IGNORECASE):
                 # if json starting with label and contains descriptor, assume specter wallet json
                 return QRType.WALLET__SPECTER
-            
+
             elif "multisig setup file" in s.lower():
                 return QRType.WALLET__CONFIGFILE
-            
+
             elif "sortedmulti" in s:
                 return QRType.WALLET__GENERIC
 
@@ -378,7 +382,7 @@ class DecodeQR:
                 return QRType.BITCOIN_ADDRESS
 
             # message signing
-            elif DecodeQR.is_sign_message(s):
+            elif s.startswith("signmessage"):
                 return QRType.SIGN_MESSAGE
 
             # config data
@@ -392,7 +396,7 @@ class DecodeQR:
                 _4LETTER_WORDLIST = [word[:4].strip() for word in wordlist]
             except:
                 _4LETTER_WORDLIST = []
-            
+
             if all(x in wordlist for x in s.strip().split(" ")):
                 # checks if all words in list are in bip39 word list
                 return QRType.SEED__MNEMONIC
@@ -408,7 +412,7 @@ class DecodeQR:
             # Probably this isn't meant to be string data; check if it's valid byte data
             # below.
             pass
-        
+
         # Is it byte data?
         # 32 bytes for 24-word CompactSeedQR; 16 bytes for 12-word CompactSeedQR
         if len(s) == 32 or len(s) == 16:
@@ -500,11 +504,6 @@ class DecodeQR:
             return True
         else:
             return False
-
-
-    @staticmethod
-    def is_sign_message(s):
-        return type(s) == str and s.startswith("signmessage")
 
 
     @staticmethod
@@ -908,7 +907,7 @@ class SignMessageQrDecoder(BaseSingleFrameQrDecoder):
 
         # TODO: support formats other than ascii?
         if fmt != "ascii":
-            print(f"Sign message: Unsupported format: {fmt}")
+            logger.info(f"Sign message: Unsupported format: {fmt}")
             return DecodeQRStatus.INVALID
 
         self.complete = True
@@ -954,11 +953,12 @@ class BitcoinAddressQrDecoder(BaseSingleFrameQrDecoder):
                     self.address_type = (SettingsConstants.LEGACY_P2PKH, SettingsConstants.TESTNET)
 
                 elif r == "3":
-                    # Nested Segwit Single Sig (P2WPKH in P2SH) or Multisig (P2WSH in P2SH); mainnet
+                    # Nested segwit single sig (p2sh-p2wpkh), nested segwit multisig (p2sh-p2wsh), or legacy multisig (p2sh); mainnet
+                    # TODO: Would be more correct to use a P2SH constant
                     self.address_type = (SettingsConstants.NESTED_SEGWIT, SettingsConstants.MAINNET)
 
                 elif r == "2":
-                    # Nested Segwit Single Sig (P2WPKH in P2SH) or Multisig (P2WSH in P2SH); testnet
+                    # Nested segwit single sig (p2sh-p2wpkh), nested segwit multisig (p2sh-p2wsh), or legacy multisig (p2sh); testnet / regtest
                     self.address_type = (SettingsConstants.NESTED_SEGWIT, SettingsConstants.TESTNET)
 
                 elif r == "bc1q":
@@ -1078,7 +1078,7 @@ class GenericWalletQrDecoder(BaseSingleFrameQrDecoder):
             self.complete = True
             return DecodeQRStatus.COMPLETE
         except Exception as e:
-            print(repr(e))
+            logger.info(repr(e), exc_info=True)
         return DecodeQRStatus.INVALID
     
 

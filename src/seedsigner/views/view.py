@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Type
 
 from seedsigner.gui.components import FontAwesomeIconConstants, SeedSignerIconConstants
@@ -287,7 +287,9 @@ class PowerOffView(View):
 
 
 
+@dataclass
 class NotYetImplementedView(View):
+    text: str = "This is still on our to-do list!"
     """
         Temporary View to use during dev.
     """
@@ -296,7 +298,7 @@ class NotYetImplementedView(View):
             WarningScreen,
             title="Work In Progress",
             status_headline="Not Yet Implemented",
-            text="This is still on our to-do list!",
+            text=self.text,
             button_data=["Back to Main Menu"],
         )
 
@@ -311,7 +313,7 @@ class ErrorView(View):
     status_headline: str = None
     text: str = None
     button_text: str = None
-    next_destination: Destination = Destination(MainMenuView, clear_history=True)
+    next_destination: Destination = field(default_factory=lambda: Destination(MainMenuView, clear_history=True))
 
 
     def run(self):

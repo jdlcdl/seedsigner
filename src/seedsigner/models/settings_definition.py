@@ -118,14 +118,15 @@ class SettingsConstants:
         (MULTISIG, "Multisig"),
     ]
 
-    LEGACY_P2PKH = "leg"  # Intentionally excluded from ALL_SCRIPT_TYPES
+    LEGACY_P2PKH = "leg"
     NATIVE_SEGWIT = "nat"
     NESTED_SEGWIT = "nes"
     TAPROOT = "tr"
     CUSTOM_DERIVATION = "cus"
     ALL_SCRIPT_TYPES = [
         (NATIVE_SEGWIT, "Native Segwit"),
-        (NESTED_SEGWIT, "Nested Segwit (legacy)"),
+        (NESTED_SEGWIT, "Nested Segwit"),
+        (LEGACY_P2PKH, "Legacy"),
         (TAPROOT, "Taproot"),
         (CUSTOM_DERIVATION, "Custom Derivation"),
     ]
@@ -168,6 +169,7 @@ class SettingsConstants:
     SETTING__SCREENSAVER = "screensaver"
     SETTING__COMPACT_SEEDQR = "compact_seedqr"
     SETTING__BIP85_CHILD_SEEDS = "bip85_child_seeds"
+    SETTING__ELECTRUM_SEEDS = "electrum_seeds"
     SETTING__MESSAGE_SIGNING = "message_signing"
     SETTING__PRIVACY_WARNINGS = "privacy_warnings"
     SETTING__DIRE_WARNINGS = "dire_warnings"
@@ -205,6 +207,17 @@ class SettingsConstants:
         TYPE__ENABLED_DISABLED_PROMPT,
         TYPE__ENABLED_DISABLED_PROMPT_REQUIRED,
     ]
+
+    # Electrum seed constants
+    ELECTRUM_SEED_STANDARD = "01"
+    ELECTRUM_SEED_SEGWIT = "100"
+    ELECTRUM_SEED_2FA = "101"
+    ELECTRUM_PBKDF2_ROUNDS=2048
+
+    # Label strings
+    LABEL__BIP39_PASSPHRASE = "BIP-39 Passphrase"
+    LABEL__CUSTOM_EXTENSION = "Custom Extension"   # Terminology used by Electrum seeds
+
 
 
 @dataclass
@@ -428,7 +441,7 @@ class SettingsDefinition:
                       type=SettingsConstants.TYPE__MULTISELECT,
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       selection_options=SettingsConstants.ALL_SCRIPT_TYPES,
-                      default_value=[SettingsConstants.NATIVE_SEGWIT, SettingsConstants.NESTED_SEGWIT]),
+                      default_value=[SettingsConstants.NATIVE_SEGWIT, SettingsConstants.NESTED_SEGWIT, SettingsConstants.TAPROOT]),
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__XPUB_DETAILS,
@@ -463,6 +476,14 @@ class SettingsDefinition:
                       attr_name=SettingsConstants.SETTING__BIP85_CHILD_SEEDS,
                       abbreviated_name="bip85",
                       display_name="BIP-85 child seeds",
+                      visibility=SettingsConstants.VISIBILITY__ADVANCED,
+                      default_value=SettingsConstants.OPTION__DISABLED),
+
+        SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
+                      attr_name=SettingsConstants.SETTING__ELECTRUM_SEEDS,
+                      abbreviated_name="electrum",
+                      display_name="Electrum seeds",
+                      help_text="Native Segwit only",
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       default_value=SettingsConstants.OPTION__DISABLED),
 

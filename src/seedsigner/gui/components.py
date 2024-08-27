@@ -1,3 +1,4 @@
+import logging
 import math
 import os
 import pathlib
@@ -12,6 +13,8 @@ from typing import List, Tuple
 from seedsigner.models.settings import Settings
 from seedsigner.models.settings_definition import SettingsConstants
 from seedsigner.models.singleton import Singleton
+
+logger = logging.getLogger(__name__)
 
 
 # TODO: Remove all pixel hard coding
@@ -29,6 +32,8 @@ class GUIConstants:
     BITCOIN_ORANGE = "#FF9416"
     TESTNET_COLOR = "#00F100"
     REGTEST_COLOR = "#00CAF1"
+    GREEN_INDICATOR_COLOR = "#00FF00"
+    INACTIVE_COLOR = "#414141"
 
     ICON_FONT_NAME__FONT_AWESOME = "Font_Awesome_6_Free-Solid-900"
     ICON_FONT_NAME__SEEDSIGNER = "seedsigner-icons"
@@ -610,7 +615,8 @@ class FormattedAddress(BaseComponent):
         self.accent_font = Fonts.get_font(GUIConstants.FIXED_WIDTH_EMPHASIS_FONT_NAME, self.font_size)
 
         # Fixed width font means we only have to measure one max-height character
-        char_width, char_height = self.font.getsize("Q")
+        left, top, right, bottom  = self.font.getbbox("Q")
+        char_width, char_height = right - left, bottom - top
 
         n = 7
         display_str = f"{self.address[:n]} {self.address[n:-1*n]} {self.address[-1*n:]}"
@@ -733,7 +739,7 @@ class FormattedAddress(BaseComponent):
                     ))
 
                 remaining_display_str = remaining_display_str[max_chars_per_line:]
-                cur_y += char_height
+                cur_y += char_height + GUIConstants.BODY_LINE_SPACING
         
         self.height = cur_y
     
@@ -1436,7 +1442,7 @@ def reflow_text_into_pages(text: str,
     lines = []
     for line_dict in reflowed_lines_dicts:
         lines.append(line_dict["text"])
-        print(f"""{line_dict["text_width"]:3}: {line_dict["text"]}""")
+        logging.info(f"""{line_dict["text_width"]:3}: {line_dict["text"]}""")
 
     font = Fonts.get_font(font_name=font_name, size=font_size)
     # Measure the font's height above baseline and how for below it certain characters

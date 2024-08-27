@@ -4,11 +4,10 @@ from embit.networks import NETWORKS
 from seedsigner.controller import Controller
 
 from seedsigner.gui.components import FontAwesomeIconConstants, SeedSignerIconConstants
-from seedsigner.models.encode_qr import EncodeQR
+from seedsigner.models.encode_qr import UrPsbtQrEncoder
 from seedsigner.models.psbt_parser import PSBTParser
-from seedsigner.models.qr_type import QRType
 from seedsigner.models.settings import SettingsConstants
-from seedsigner.gui.screens.psbt_screens import PSBTOverviewScreen, PSBTMathScreen, PSBTAddressDetailsScreen, PSBTChangeDetailsScreen, PSBTFinalizeScreen
+from seedsigner.gui.screens.psbt_screens import PSBTOpReturnScreen, PSBTOverviewScreen, PSBTMathScreen, PSBTAddressDetailsScreen, PSBTChangeDetailsScreen, PSBTFinalizeScreen
 from seedsigner.gui.screens.screen import (RET_CODE__BACK_BUTTON, ButtonListScreen, WarningScreen, DireWarningScreen, QRDisplayScreen)
 from seedsigner.views.view import BackStackView, MainMenuView, NotYetImplementedView, View, Destination
 
@@ -18,6 +17,7 @@ class PSBTSelectSeedView(View):
     SCAN_SEED = ("Scan a seed", SeedSignerIconConstants.QRCODE)
     TYPE_12WORD = ("Enter 12-word seed", FontAwesomeIconConstants.KEYBOARD)
     TYPE_24WORD = ("Enter 24-word seed", FontAwesomeIconConstants.KEYBOARD)
+    TYPE_ELECTRUM = ("Enter Electrum seed", FontAwesomeIconConstants.KEYBOARD)
 
 
     def run(self):
@@ -45,6 +45,8 @@ class PSBTSelectSeedView(View):
         button_data.append(self.SCAN_SEED)
         button_data.append(self.TYPE_12WORD)
         button_data.append(self.TYPE_24WORD)
+        if self.settings.get_value(SettingsConstants.SETTING__ELECTRUM_SEEDS) == SettingsConstants.OPTION__ENABLED:
+            button_data.append(self.TYPE_ELECTRUM)
 
         selected_menu_num = self.run_screen(
             ButtonListScreen,
@@ -75,6 +77,10 @@ class PSBTSelectSeedView(View):
             else:
                 self.controller.storage.init_pending_mnemonic(num_words=24)
             return Destination(SeedMnemonicEntryView)
+
+        elif button_data[selected_menu_num] == self.TYPE_ELECTRUM:
+            from seedsigner.views.seed_views import SeedElectrumMnemonicStartView
+            return Destination(SeedElectrumMnemonicStartView)
 
 
 
@@ -138,7 +144,8 @@ class PSBTOverviewView(View):
             num_inputs=psbt_parser.num_inputs,
             num_self_transfer_outputs=num_self_transfer_outputs,
             num_change_outputs=num_change_outputs,
-            destination_addresses=psbt_parser.destination_addresses
+            destination_addresses=psbt_parser.destination_addresses,
+            has_op_return=psbt_parser.op_return_data is not None,
         )
 
         if selected_menu_num == RET_CODE__BACK_BUTTON:
@@ -277,6 +284,9 @@ class PSBTAddressDetailsView(View):
             # Move on to display change
             return Destination(PSBTChangeDetailsView, view_args={"change_address_num": 0})
 
+        elif psbt_parser.op_return_data:
+            return Destination(PSBTOpReturnView)
+
         else:
             # There's no change output to verify. Move on to sign the PSBT.
             return Destination(PSBTFinalizeView)
@@ -285,6 +295,7 @@ class PSBTAddressDetailsView(View):
 
 class PSBTChangeDetailsView(View):
     NEXT = "Next"
+    SKIP_VERIFICATION = "Skip Verification"
     VERIFY_MULTISIG = "Verify Multisig Change"
 
 
@@ -345,7 +356,7 @@ class PSBTChangeDetailsView(View):
 
             else:
                 # Have the Screen offer to load in the multisig descriptor.            
-                button_data = [self.VERIFY_MULTISIG, self.NEXT]
+                button_data = [self.VERIFY_MULTISIG, self.SKIP_VERIFICATION]
 
         else:
             # Single sig
@@ -413,9 +424,13 @@ class PSBTChangeDetailsView(View):
         if selected_menu_num == RET_CODE__BACK_BUTTON:
             return Destination(BackStackView)
 
-        elif button_data[selected_menu_num] == self.NEXT:
+        elif button_data[selected_menu_num] == self.NEXT or button_data[selected_menu_num] == self.SKIP_VERIFICATION:
             if self.change_address_num < psbt_parser.num_change_outputs - 1:
                 return Destination(PSBTChangeDetailsView, view_args={"change_address_num": self.change_address_num + 1})
+
+            elif psbt_parser.op_return_data:
+                return Destination(PSBTOpReturnView)
+
             else:
                 # There's no more change to verify. Move on to sign the PSBT.
                 return Destination(PSBTFinalizeView)
@@ -453,6 +468,34 @@ class PSBTAddressVerificationFailedView(View):
         # We're done with this PSBT. Route back to MainMenuView which always
         #   clears all ephemeral data (except in-memory seeds).
         return Destination(MainMenuView, clear_history=True)
+
+
+
+class PSBTOpReturnView(View):
+    """
+        Shows the OP_RETURN data
+    """
+    def run(self):
+        psbt_parser: PSBTParser = self.controller.psbt_parser
+
+        if not psbt_parser:
+            # Should not be able to get here
+            raise Exception("Routing error")
+
+        title = "OP_RETURN"
+        button_data = ["Next"]
+
+        selected_menu_num = self.run_screen(
+            PSBTOpReturnScreen,
+            title=title,
+            button_data=button_data,
+            op_return_data=psbt_parser.op_return_data,
+        )
+        
+        if selected_menu_num == RET_CODE__BACK_BUTTON:
+            return Destination(BackStackView)
+
+        return Destination(PSBTFinalizeView)
 
 
 
@@ -498,11 +541,9 @@ class PSBTFinalizeView(View):
 
 class PSBTSignedQRDisplayView(View):
     def run(self):
-        qr_encoder = EncodeQR(
+        qr_encoder = UrPsbtQrEncoder(
             psbt=self.controller.psbt,
-            qr_type=QRType.PSBT__UR2,  # All coordinators (as of 2022-08) use this format
             qr_density=self.settings.get_value(SettingsConstants.SETTING__QR_DENSITY),
-            wordlist_language_code=self.settings.get_value(SettingsConstants.SETTING__WORDLIST_LANGUAGE),
         )
         self.run_screen(QRDisplayScreen, qr_encoder=qr_encoder)
 
