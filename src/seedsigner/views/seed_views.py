@@ -966,8 +966,7 @@ class SeedExportXpubQRDisplayView(View):
             self.qr_encoder = SpecterXPubQrEncoder(**encoder_args)
 
         elif coordinator in [SettingsConstants.COORDINATOR__BLUE_WALLET,
-                             SettingsConstants.COORDINATOR__KEEPER,
-                             SettingsConstants.COORDINATOR__NUNCHUK]:
+                             SettingsConstants.COORDINATOR__KEEPER]:
             self.qr_encoder = StaticXpubQrEncoder(**encoder_args)
 
         else:
