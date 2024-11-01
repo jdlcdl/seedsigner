@@ -25,16 +25,10 @@ RET_CODE__POWER_BUTTON = 1001
 
 @dataclass
 class BaseScreen(BaseComponent):
-    disable_inputs: bool = False
-
-
     def __post_init__(self):
         super().__post_init__()
         
-        if not self.disable_inputs:
-            # For testing or rendering screen previews off the device when hardware
-            # support is not available.
-            self.hw_inputs = HardwareButtons.get_instance()
+        self.hw_inputs = HardwareButtons.get_instance()
 
         # Implementation classes can add their own BaseThread to run in parallel with the
         # main execution thread.

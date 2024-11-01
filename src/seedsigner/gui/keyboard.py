@@ -29,42 +29,42 @@ class Keyboard:
     COMPACT_KEY_FONT = "compact"
 
     # TRANSLATOR_NOTE: The abbreviated label for the special key <del> on a standard keyboard.
-    babel_extract_food = _("del")
+    del_label = _("del")
     KEY_BACKSPACE = {
         "code": "DEL",
-        "letter": "del",
+        "letter": del_label,
         "font": COMPACT_KEY_FONT,
         "size": 2,
     }
     # TRANSLATOR_NOTE: The abbreviated label for the special key <space> on a standard keyboard.
-    babel_extract_food = _("space")
+    space_label = _("space")
     KEY_SPACE = {
         "code": "SPACE",
-        "letter": "space",
+        "letter": space_label,
         "font": COMPACT_KEY_FONT,
         "size": 1,
     }
     KEY_SPACE_2 = {
         "code": "SPACE",
-        "letter": "space",
+        "letter": space_label,
         "font": COMPACT_KEY_FONT,
         "size": 2,
     }
     KEY_SPACE_3 = {
         "code": "SPACE",
-        "letter": "space",
+        "letter": space_label,
         "font": COMPACT_KEY_FONT,
         "size": 3,
     }
     KEY_SPACE_4 = {
         "code": "SPACE",
-        "letter": "space",
+        "letter": space_label,
         "font": COMPACT_KEY_FONT,
         "size": 4,
     }
     KEY_SPACE_5 = {
         "code": "SPACE",
-        "letter": "space",
+        "letter": space_label,
         "font": COMPACT_KEY_FONT,
         "size": 5,
     }

@@ -111,7 +111,6 @@ def test_generate_screenshots(target_locale):
         controller.storage.seeds.append(seed_12b)
         controller.storage.seeds.append(seed_24)
         controller.storage.set_pending_seed(seed_24_w_passphrase)
-        UnhandledExceptionViewFood = ["IndexError", "line 1, in some_buggy_code.py", "list index out of range"]
 
         # Pending mnemonic for ToolsCalcFinalWordShowFinalWordView
         controller.storage.init_pending_mnemonic(num_words=12)
@@ -295,7 +294,7 @@ def test_generate_screenshots(target_locale):
             ],
             "Misc Error Views": [
                 NotYetImplementedView,
-                (UnhandledExceptionView, dict(error=UnhandledExceptionViewFood)),
+                (UnhandledExceptionView, dict(error=["IndexError", "line 1, in some_buggy_code.py", "list index out of range"])),
                 NetworkMismatchErrorView,
                 (OptionDisabledView, dict(settings_attr=SettingsConstants.SETTING__MESSAGE_SIGNING)),
                 (ErrorView, dict(

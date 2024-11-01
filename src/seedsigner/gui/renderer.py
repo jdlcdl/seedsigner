@@ -1,9 +1,6 @@
-import os
-from gettext import gettext as _
 from PIL import Image, ImageDraw
 from threading import Lock
 
-from seedsigner.gui.components import Fonts, GUIConstants
 from seedsigner.hardware.ST7789 import ST7789
 from seedsigner.models.singleton import ConfigurableSingleton
 
