@@ -154,7 +154,8 @@ class PSBTOverviewScreen(ButtonListScreen):
             destination_column.append(_("fee"))
 
             if self.has_op_return:
-                destination_column.append("OP_RETURN")
+                # TRANSLATOR_NOTE: Technical term, should probably NOT be translated in most languages
+                destination_column.append(_("OP_RETURN"))
 
             if self.num_change_outputs > 0:
                 for i in range(0, self.num_change_outputs):
@@ -731,8 +732,10 @@ class PSBTOpReturnScreen(ButtonListScreen):
                 text += (decoded_str[i*chars_per_line:(i+1)*chars_per_line]) + "\n"
             text = text[:-1]
 
+            # TRANSLATOR_NOTE: Shown when displaying OP_RETURN as non-human-readable hexadecimal data
+            hex_label = _("raw hex data")
             label = TextArea(
-                text="raw hex data",
+                text=hex_label,
                 font_color=GUIConstants.LABEL_FONT_COLOR,
                 font_size=GUIConstants.LABEL_FONT_SIZE,
                 screen_y=self.top_nav.height,

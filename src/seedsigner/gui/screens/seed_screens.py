@@ -433,7 +433,6 @@ class SeedFinalizeScreen(ButtonListScreen):
 
 @dataclass
 class SeedOptionsScreen(ButtonListScreen):
-    # Customize defaults
     fingerprint: str = None
     has_passphrase: bool = False
 

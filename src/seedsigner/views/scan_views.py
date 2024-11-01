@@ -62,10 +62,11 @@ class ScanView(View):
                 # current flow.
                 # Report QR types in more human-readable text (e.g. QRType
                 # `seed__compactseedqr` as "seed: compactseedqr").
+                # TODO: cleanup l10n presentation
                 return Destination(ErrorView, view_args=dict(
                     title="Error",
                     status_headline=_("Wrong QR Type"),
-                    text=self.invalid_qr_type_message + f""", received "{self.decoder.qr_type.replace("__", ": ").replace("_", " ")}\" format""",
+                    text=_(self.invalid_qr_type_message) + f""", received "{self.decoder.qr_type.replace("__", ": ").replace("_", " ")}\" format""",
                     button_text="Back",
                     next_destination=Destination(BackStackView, skip_current_view=True),
                 ))

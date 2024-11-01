@@ -309,12 +309,11 @@ class DonateScreen(BaseTopNavScreen):
 @dataclass
 class SettingsQRConfirmationScreen(ButtonListScreen):
     config_name: str = None
-    title: str = "Settings QR"
-    status_message: str = "Settings updated..."
+    title: str = _("Settings QR")
+    status_message: str = _("Settings updated...")
     is_bottom_list: bool = True
 
     def __post_init__(self):
-        self.title = _("Settings QR")
         # Customize defaults
         self.button_data = [_("Home")]
         self.show_back_button = False
@@ -323,7 +322,7 @@ class SettingsQRConfirmationScreen(ButtonListScreen):
         start_y = self.top_nav.height + 20
         if self.config_name:
             self.config_name_textarea = TextArea(
-                text=f'"{self.config_name}"',
+                text=f'"{self.config_name}"',  # User-supplied string (from SettingsQR); don't wrap to translate
                 is_text_centered=True,
                 auto_line_break=True,
                 screen_y=start_y
@@ -332,7 +331,7 @@ class SettingsQRConfirmationScreen(ButtonListScreen):
             start_y = self.config_name_textarea.screen_y + 50
         
         self.components.append(TextArea(
-            text=self.status_message,
+            text=_(self.status_message),
             is_text_centered=True,
             auto_line_break=True,
             screen_y=start_y

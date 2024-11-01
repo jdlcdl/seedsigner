@@ -342,8 +342,8 @@ def test_generate_screenshots(target_locale):
                 time.sleep(0.1) #jdlcdl
 
 
-    # Parse the main `babel/messages.pot` for overall stats
-    messages_source_path = os.path.join(pathlib.Path(__file__).parent.resolve().parent.resolve().parent.resolve(), "babel", "messages.pot")
+    # Parse the main `l10n/messages.pot` for overall stats
+    messages_source_path = os.path.join(pathlib.Path(__file__).parent.resolve().parent.resolve().parent.resolve(), "l10n", "messages.pot")
     with open(messages_source_path, 'r') as messages_source_file:
         num_source_messages = messages_source_file.read().count("msgid \"") - 1
 

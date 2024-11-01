@@ -182,17 +182,14 @@ class Destination:
 #
 #########################################################################################
 class MainMenuView(View):
-    SCAN = ("Scan", SeedSignerIconConstants.SCAN)
-    SEEDS = ("Seeds", SeedSignerIconConstants.SEEDS)
-    TOOLS = ("Tools", SeedSignerIconConstants.TOOLS)
-    SETTINGS = ("Settings", SeedSignerIconConstants.SETTINGS)
+    SCAN = (_("Scan"), SeedSignerIconConstants.SCAN)
+    SEEDS = (_("Seeds"), SeedSignerIconConstants.SEEDS)
+    TOOLS = (_("Tools"), SeedSignerIconConstants.TOOLS)
+    SETTINGS = (_("Settings"), SeedSignerIconConstants.SETTINGS)
 
     def run(self):
-        self.SCAN = (_("Scan"), SeedSignerIconConstants.SCAN)
-        self.SEEDS = (_("Seeds"), SeedSignerIconConstants.SEEDS)
-        self.TOOLS = (_("Tools"), SeedSignerIconConstants.TOOLS)
-        self.SETTINGS = (_("Settings"), SeedSignerIconConstants.SETTINGS)
         from seedsigner.gui.screens.screen import MainMenuScreen
+
         button_data = [self.SCAN, self.SEEDS, self.TOOLS, self.SETTINGS]
         selected_menu_num = self.run_screen(
             MainMenuScreen,
@@ -222,12 +219,10 @@ class MainMenuView(View):
 
 
 class PowerOptionsView(View):
-    RESET = ("Restart", SeedSignerIconConstants.RESTART)
-    POWER_OFF = ("Power Off", SeedSignerIconConstants.POWER)
+    RESET = (_("Restart"), SeedSignerIconConstants.RESTART)
+    POWER_OFF = (_("Power Off"), SeedSignerIconConstants.POWER)
 
     def run(self):
-        self.RESET = (_("Restart"), SeedSignerIconConstants.RESTART)
-        self.POWER_OFF = (_("Power Off"), SeedSignerIconConstants.POWER)
         button_data = [self.RESET, self.POWER_OFF]
         selected_menu_num = self.run_screen(
             LargeButtonScreen,
@@ -321,7 +316,7 @@ class NotYetImplementedView(View):
 
 @dataclass
 class ErrorView(View):
-    title: str = "Error"
+    title: str = _("Error")
     show_back_button: bool = True
     status_headline: str = None
     text: str = None
@@ -330,7 +325,6 @@ class ErrorView(View):
 
 
     def run(self):
-        self.title = _("Error")
         self.run_screen(
             WarningScreen,
             title=self.title,
@@ -346,16 +340,14 @@ class ErrorView(View):
 
 @dataclass
 class NetworkMismatchErrorView(ErrorView):
-    title: str = "Network Mismatch"
+    title: str = _("Network Mismatch")
     show_back_button: bool = False
-    button_text: str = "Change Setting"
+    button_text: str = _("Change Setting")
     next_destination: Destination = None
 
 
     def __post_init__(self):
         super().__post_init__()
-        self.title = _("Network Mismatch")
-        self.button_text = _("Change Setting")
         if not self.text:
             # TRANSLATOR_NOTE: Inserts mainnet/testnet/regtest
             self.text = _("Current network setting ({}) doesn't match current action.").format(
@@ -377,6 +369,8 @@ class UnhandledExceptionView(View):
         self.run_screen(
             DireWarningScreen,
             title=_("System Error"),
+            status_headline=self.error[0],
+            text=self.error[1] + "\n" + self.error[2],
             allow_text_overflow=True,  # Fit what we can, let the rest go off the edges
         )
         

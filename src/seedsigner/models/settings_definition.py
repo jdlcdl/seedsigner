@@ -57,6 +57,7 @@ class SettingsConstants:
     LOCALE__PORTUGUESE = "pt"
     LOCALE__RUSSIAN = "ru"
     LOCALE__SPANISH = "es"
+    # Do not wrap for translation; always present each language in its native form
     ALL_LOCALES = [
         # (LOCALE__ARABIC, "Arabic"),
         (LOCALE__CZECH, "čeština"),
@@ -76,10 +77,10 @@ class SettingsConstants:
     BTC_DENOMINATION__THRESHOLD = "thr"
     BTC_DENOMINATION__BTCSATSHYBRID = "hyb"
     ALL_BTC_DENOMINATIONS = [
-        (BTC_DENOMINATION__BTC, "BTC"),
-        (BTC_DENOMINATION__SATS, "sats"),
-        (BTC_DENOMINATION__THRESHOLD, "Threshold at 0.01"),
-        (BTC_DENOMINATION__BTCSATSHYBRID, "BTC | sats hybrid"),
+        (BTC_DENOMINATION__BTC, _("BTC")),
+        (BTC_DENOMINATION__SATS, _("sats")),
+        (BTC_DENOMINATION__THRESHOLD, _("Threshold at 0.01")),
+        (BTC_DENOMINATION__BTCSATSHYBRID, _("BTC | sats hybrid")),
     ]
 
     CAMERA_ROTATION__0 = 0
@@ -97,10 +98,16 @@ class SettingsConstants:
     DENSITY__LOW = "L"
     DENSITY__MEDIUM = "M"
     DENSITY__HIGH = "H"
+    # TRANSLATOR_NOTE: QR code density option: Low, Medium, High
+    density_low = _("Low")
+    # TRANSLATOR_NOTE: QR code density option: Low, Medium, High
+    density_medium = _("Medium")
+    # TRANSLATOR_NOTE: QR code density option: Low, Medium, High
+    density_high = _("High")
     ALL_DENSITIES = [
-        (DENSITY__LOW, _("Low")),
-        (DENSITY__MEDIUM, _("Medium")),
-        (DENSITY__HIGH, _("High")),
+        (DENSITY__LOW, density_low),
+        (DENSITY__MEDIUM, density_medium),
+        (DENSITY__HIGH, density_high),
     ]
 
     # Seed-related constants
@@ -115,6 +122,7 @@ class SettingsConstants:
 
     @classmethod
     def map_network_to_embit(cls, network) -> str:
+        # Note these are `embit` constants; do not wrap for translation
         if network == SettingsConstants.MAINNET:
             return "main"
         elif network == SettingsConstants.TESTNET:
@@ -138,11 +146,11 @@ class SettingsConstants:
     TAPROOT = "tr"
     CUSTOM_DERIVATION = "cus"
     ALL_SCRIPT_TYPES = [
-        (NATIVE_SEGWIT, "Native Segwit"),
-        (NESTED_SEGWIT, "Nested Segwit"),
-        (LEGACY_P2PKH, "Legacy"),
-        (TAPROOT, "Taproot"),
-        (CUSTOM_DERIVATION, "Custom Derivation"),
+        (NATIVE_SEGWIT, _("Native Segwit")),
+        (NESTED_SEGWIT, _("Nested Segwit")),
+        (LEGACY_P2PKH, _("Legacy")),
+        (TAPROOT, _("Taproot")),
+        (CUSTOM_DERIVATION, _("Custom Derivation")),
     ]
 
     WORDLIST_LANGUAGE__ENGLISH = "en"
@@ -166,6 +174,7 @@ class SettingsConstants:
 
     
     # Individual SettingsEntry attr_names
+    # Note: attr_names are internal constants; do not wrap for translation
     SETTING__LOCALE = "locale"
     SETTING__WORDLIST_LANGUAGE = "wordlist_language"
     SETTING__PERSISTENT_SETTINGS = "persistent_settings"
@@ -228,8 +237,10 @@ class SettingsConstants:
     ELECTRUM_PBKDF2_ROUNDS=2048
 
     # Label strings
-    LABEL__BIP39_PASSPHRASE = "BIP-39 Passphrase"
-    LABEL__CUSTOM_EXTENSION = "Custom Extension"   # Terminology used by Electrum seeds
+    LABEL__BIP39_PASSPHRASE = _("BIP-39 Passphrase")
+    # TRANSLATOR_NOTE: Terminology used by Electrum seeds; equivalent to bip39 passphrase
+    custom_extension = _("Custom Extension")
+    LABEL__CUSTOM_EXTENSION = custom_extension
 
 
 
@@ -368,8 +379,8 @@ class SettingsDefinition:
 
         SettingsEntry(category=SettingsConstants.CATEGORY__SYSTEM,
                       attr_name=SettingsConstants.SETTING__LOCALE,
-                      display_name=_("Language"),
                       abbreviated_name="lang",
+                      display_name=_("Language"),
                       type=SettingsConstants.TYPE__SELECT_1,
                       selection_options=SettingsConstants.ALL_LOCALES,
                       default_value=SettingsConstants.LOCALE__ENGLISH),
@@ -494,7 +505,7 @@ class SettingsDefinition:
                       attr_name=SettingsConstants.SETTING__ELECTRUM_SEEDS,
                       abbreviated_name="electrum",
                       display_name="Electrum seeds",
-                      help_text="Native Segwit only",
+                      help_text=_("Native Segwit only"),
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       default_value=SettingsConstants.OPTION__DISABLED),
 

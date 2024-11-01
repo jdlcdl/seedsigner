@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: seedsigner 0.7.0\n"
+"Project-Id-Version: seedsigner 0.8.5\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2024-10-11 14:02-0500\n"
+"POT-Creation-Date: 2024-11-01 16:48-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -32,6 +32,7 @@ msgid "btc"
 msgstr ""
 
 #: src/seedsigner/gui/components.py src/seedsigner/gui/screens/psbt_screens.py
+#: src/seedsigner/models/settings_definition.py
 msgid "sats"
 msgstr ""
 
@@ -113,6 +114,11 @@ msgstr ""
 msgid "fee"
 msgstr ""
 
+#. Technical term, should probably NOT be translated in most languages
+#: src/seedsigner/gui/screens/psbt_screens.py
+msgid "OP_RETURN"
+msgstr ""
+
 #. Label for a change output in the PSBT Overview flow diagram
 #. Used in a sentence describing the address type (change or receive)
 #: src/seedsigner/gui/screens/psbt_screens.py
@@ -166,6 +172,11 @@ msgstr ""
 msgid "Address verified!"
 msgstr ""
 
+#. Shown when displaying OP_RETURN as non-human-readable hexadecimal data
+#: src/seedsigner/gui/screens/psbt_screens.py
+msgid "raw hex data"
+msgstr ""
+
 #: src/seedsigner/gui/screens/psbt_screens.py
 msgid "Sign PSBT"
 msgstr ""
@@ -175,11 +186,13 @@ msgid "Click to approve this transaction"
 msgstr ""
 
 #: src/seedsigner/gui/screens/scan_screens.py
-msgid "< back  |  "
+#: src/seedsigner/gui/screens/tools_screens.py
+msgid "back"
 msgstr ""
 
+#. Inserts the percentage value of the animated QR scan progress
 #: src/seedsigner/gui/screens/scan_screens.py
-msgid "{}% Complete"
+msgid "{}%"
 msgstr ""
 
 #. Increase QR code screen brightness
@@ -233,6 +246,10 @@ msgstr ""
 
 #: src/seedsigner/gui/screens/screen.py
 msgid "Please wait about 30 seconds before disconnecting power."
+msgstr ""
+
+#: src/seedsigner/gui/screens/screen.py
+msgid "Just Unplug It"
 msgstr ""
 
 #: src/seedsigner/gui/screens/screen.py
@@ -310,6 +327,7 @@ msgid "Xpub"
 msgstr ""
 
 #: src/seedsigner/gui/screens/seed_screens.py
+#: src/seedsigner/models/settings_definition.py
 #: src/seedsigner/views/seed_views.py
 msgid "BIP-39 Passphrase"
 msgstr ""
@@ -468,14 +486,26 @@ msgid "Settings QR"
 msgstr ""
 
 #: src/seedsigner/gui/screens/settings_screens.py
+msgid "Settings updated..."
+msgstr ""
+
+#: src/seedsigner/gui/screens/settings_screens.py
 #: src/seedsigner/views/settings_views.py src/seedsigner/views/view.py
 msgid "Home"
 msgstr ""
 
-#. Instructions when reviewing an image; "reshoot" must point left, "accept"
-#. must point right
 #: src/seedsigner/gui/screens/tools_screens.py
-msgid " < reshoot  |  accept > "
+msgid "click joystick"
+msgstr ""
+
+#. A prompt to the user to either accept or reshoot the image
+#: src/seedsigner/gui/screens/tools_screens.py
+msgid "reshoot"
+msgstr ""
+
+#. A prompt to the user to either accept or reshoot the image
+#: src/seedsigner/gui/screens/tools_screens.py
+msgid "accept"
 msgstr ""
 
 #. current roll number vs total rolls (e.g. roll 7 of 50)
@@ -510,7 +540,7 @@ msgstr ""
 msgid "Tails = 0"
 msgstr ""
 
-#. A labeled presentation of a user-supplied value
+#. The additional entropy the user supplied (e.g. coin flips)
 #: src/seedsigner/gui/screens/tools_screens.py
 msgid "Your input: \"{}\""
 msgstr ""
@@ -563,6 +593,18 @@ msgid "Required"
 msgstr ""
 
 #: src/seedsigner/models/settings_definition.py
+msgid "BTC"
+msgstr ""
+
+#: src/seedsigner/models/settings_definition.py
+msgid "Threshold at 0.01"
+msgstr ""
+
+#: src/seedsigner/models/settings_definition.py
+msgid "BTC | sats hybrid"
+msgstr ""
+
+#: src/seedsigner/models/settings_definition.py
 msgid "0°"
 msgstr ""
 
@@ -578,14 +620,17 @@ msgstr ""
 msgid "270°"
 msgstr ""
 
+#. QR code density option: Low, Medium, High
 #: src/seedsigner/models/settings_definition.py
 msgid "Low"
 msgstr ""
 
+#. QR code density option: Low, Medium, High
 #: src/seedsigner/models/settings_definition.py
 msgid "Medium"
 msgstr ""
 
+#. QR code density option: Low, Medium, High
 #: src/seedsigner/models/settings_definition.py
 msgid "High"
 msgstr ""
@@ -620,7 +665,11 @@ msgid "Native Segwit"
 msgstr ""
 
 #: src/seedsigner/models/settings_definition.py
-msgid "Nested Segwit (legacy)"
+msgid "Nested Segwit"
+msgstr ""
+
+#: src/seedsigner/models/settings_definition.py
+msgid "Legacy"
 msgstr ""
 
 #: src/seedsigner/models/settings_definition.py
@@ -629,6 +678,11 @@ msgstr ""
 
 #: src/seedsigner/models/settings_definition.py
 msgid "Custom Derivation"
+msgstr ""
+
+#. Terminology used by Electrum seeds; equivalent to bip39 passphrase
+#: src/seedsigner/models/settings_definition.py
+msgid "Custom Extension"
 msgstr ""
 
 #: src/seedsigner/models/settings_definition.py
@@ -692,6 +746,10 @@ msgid "BIP-85 child seeds"
 msgstr ""
 
 #: src/seedsigner/models/settings_definition.py
+msgid "Native Segwit only"
+msgstr ""
+
+#: src/seedsigner/models/settings_definition.py
 msgid "Message signing"
 msgstr ""
 
@@ -728,6 +786,17 @@ msgstr ""
 #: src/seedsigner/views/psbt_views.py src/seedsigner/views/seed_views.py
 #: src/seedsigner/views/tools_views.py
 msgid "Enter 24-word seed"
+msgstr ""
+
+#: src/seedsigner/views/psbt_views.py src/seedsigner/views/seed_views.py
+#: src/seedsigner/views/tools_views.py
+msgid "Enter Electrum seed"
+msgstr ""
+
+#. Inserts fingerprint w/"?" to indicate that this seed can't sign the current
+#. PSBT
+#: src/seedsigner/views/psbt_views.py
+msgid "{} (?)"
 msgstr ""
 
 #: src/seedsigner/views/psbt_views.py
@@ -775,13 +844,17 @@ msgstr ""
 msgid "Next Recipient"
 msgstr ""
 
-#. The amount you're receiving back from the transaction
 #: src/seedsigner/views/psbt_views.py
-msgid "Your Change"
+msgid "Skip Verification"
 msgstr ""
 
 #: src/seedsigner/views/psbt_views.py
 msgid "Verify Multisig Change"
+msgstr ""
+
+#. The amount you're receiving back from the transaction
+#: src/seedsigner/views/psbt_views.py
+msgid "Your Change"
 msgstr ""
 
 #: src/seedsigner/views/psbt_views.py
@@ -972,6 +1045,18 @@ msgid "Edit passphrase"
 msgstr ""
 
 #: src/seedsigner/views/seed_views.py
+msgid "Discard passphrase"
+msgstr ""
+
+#: src/seedsigner/views/seed_views.py
+msgid "Discard passphrase?"
+msgstr ""
+
+#: src/seedsigner/views/seed_views.py
+msgid "Your current passphrase entry will be erased"
+msgstr ""
+
+#: src/seedsigner/views/seed_views.py
 msgid "Keep Seed"
 msgstr ""
 
@@ -982,6 +1067,14 @@ msgstr ""
 
 #: src/seedsigner/views/seed_views.py
 msgid "Discard Seed?"
+msgstr ""
+
+#: src/seedsigner/views/seed_views.py
+msgid "Electrum warning"
+msgstr ""
+
+#: src/seedsigner/views/seed_views.py
+msgid "Some features are disabled for Electrum seeds."
 msgstr ""
 
 #: src/seedsigner/views/seed_views.py
@@ -1157,10 +1250,6 @@ msgstr ""
 msgid "Sig type can't be auto-detected from this address. Please specify:"
 msgstr ""
 
-#: src/seedsigner/views/seed_views.py
-msgid "Can't validate a single sig addr without specifying a seed"
-msgstr ""
-
 #. Option when scanning for a matching address; skips ten addresses ahead
 #: src/seedsigner/views/seed_views.py
 msgid "Skip 10"
@@ -1168,6 +1257,10 @@ msgstr ""
 
 #: src/seedsigner/views/seed_views.py
 msgid "Cancel"
+msgstr ""
+
+#: src/seedsigner/views/seed_views.py
+msgid "Can't validate a single sig addr without specifying a seed"
 msgstr ""
 
 #: src/seedsigner/views/seed_views.py
@@ -1202,13 +1295,13 @@ msgstr ""
 msgid "Return to PSBT"
 msgstr ""
 
-#: src/seedsigner/views/seed_views.py
-msgid "Signing messages for custom derivation paths not supported"
-msgstr ""
-
 #. Inserts mainnet/testnet/regtest and derivation path
 #: src/seedsigner/views/seed_views.py
 msgid "Current network setting ({}) doesn't match {}"
+msgstr ""
+
+#: src/seedsigner/views/seed_views.py
+msgid "Signing messages for custom derivation paths not supported"
 msgstr ""
 
 #: src/seedsigner/views/settings_views.py
@@ -1255,12 +1348,14 @@ msgstr ""
 msgid "Mnemonic Length?"
 msgstr ""
 
+#. Inserts the number of dice rolls needed for a 12-word mnemonic
 #: src/seedsigner/views/tools_views.py
-msgid "12 words (50 rolls)"
+msgid "12 words ({} rolls)"
 msgstr ""
 
+#. Inserts the number of dice rolls needed for a 24-word mnemonic
 #: src/seedsigner/views/tools_views.py
-msgid "24 words (99 rolls)"
+msgid "24 words ({} rolls)"
 msgstr ""
 
 #: src/seedsigner/views/tools_views.py
@@ -1352,15 +1447,15 @@ msgid "Reset / Power"
 msgstr ""
 
 #: src/seedsigner/views/view.py
+msgid "This is still on our to-do list!"
+msgstr ""
+
+#: src/seedsigner/views/view.py
 msgid "Work In Progress"
 msgstr ""
 
 #: src/seedsigner/views/view.py
 msgid "Not Yet Implemented"
-msgstr ""
-
-#: src/seedsigner/views/view.py
-msgid "This is still on our to-do list!"
 msgstr ""
 
 #: src/seedsigner/views/view.py

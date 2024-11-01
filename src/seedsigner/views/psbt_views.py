@@ -15,11 +15,10 @@ from seedsigner.views.view import BackStackView, MainMenuView, NotYetImplemented
 
 
 class PSBTSelectSeedView(View):
-    # TODO: Class-level attrs vs dynamic gettext calls
-    SCAN_SEED = ("Scan a seed", SeedSignerIconConstants.QRCODE)
-    TYPE_12WORD = ("Enter 12-word seed", FontAwesomeIconConstants.KEYBOARD)
-    TYPE_24WORD = ("Enter 24-word seed", FontAwesomeIconConstants.KEYBOARD)
-    TYPE_ELECTRUM = ("Enter Electrum seed", FontAwesomeIconConstants.KEYBOARD)
+    SCAN_SEED = (_("Scan a seed"), SeedSignerIconConstants.QRCODE)
+    TYPE_12WORD = (_("Enter 12-word seed"), FontAwesomeIconConstants.KEYBOARD)
+    TYPE_24WORD = (_("Enter 24-word seed"), FontAwesomeIconConstants.KEYBOARD)
+    TYPE_ELECTRUM = (_("Enter Electrum seed"), FontAwesomeIconConstants.KEYBOARD)
 
 
     def run(self):
@@ -29,9 +28,6 @@ class PSBTSelectSeedView(View):
             # Shouldn't be able to get here
             raise Exception("No PSBT currently loaded")
 
-        self.SCAN_SEED = (_("Scan a seed"), SeedSignerIconConstants.QRCODE)
-        self.TYPE_12WORD = (_("Enter 12-word seed"), FontAwesomeIconConstants.KEYBOARD)
-        self.TYPE_24WORD = (_("Enter 24-word seed"), FontAwesomeIconConstants.KEYBOARD)
         if self.controller.psbt_seed:
              if PSBTParser.has_matching_input_fingerprint(psbt=self.controller.psbt, seed=self.controller.psbt_seed, network=self.settings.get_value(SettingsConstants.SETTING__NETWORK)):
                  # skip the seed prompt if a seed was previous selected and has matching input fingerprint
@@ -43,7 +39,8 @@ class PSBTSelectSeedView(View):
             button_str = seed.get_fingerprint(self.settings.get_value(SettingsConstants.SETTING__NETWORK))
             if not PSBTParser.has_matching_input_fingerprint(psbt=self.controller.psbt, seed=seed, network=self.settings.get_value(SettingsConstants.SETTING__NETWORK)):
                 # Doesn't look like this seed can sign the current PSBT
-                button_str += " (?)"
+                # TRANSLATOR_NOTE: Inserts fingerprint w/"?" to indicate that this seed can't sign the current PSBT
+                button_str = _("{} (?)").format(button_str)
 
             button_data.append((button_str, SeedSignerIconConstants.FINGERPRINT))
 
@@ -303,9 +300,9 @@ class PSBTAddressDetailsView(View):
 
 
 class PSBTChangeDetailsView(View):
-    NEXT = "Next"
-    SKIP_VERIFICATION = "Skip Verification"
-    VERIFY_MULTISIG = "Verify Multisig Change"
+    NEXT = _("Next")
+    SKIP_VERIFICATION = _("Skip Verification")
+    VERIFY_MULTISIG = _("Verify Multisig Change")
 
 
     def __init__(self, change_address_num):
@@ -347,12 +344,9 @@ class PSBTChangeDetailsView(View):
         is_change_derivation_path = int(derivation_path.split("/")[-2]) == 1
         derivation_path_addr_index = int(derivation_path.split("/")[-1])
 
-        self.NEXT = _("Next")
-
         if is_change_derivation_path:
             # TRANSLATOR_NOTE: The amount you're receiving back from the transaction
             title = _("Your Change")
-            self.VERIFY_MULTISIG = _("Verify Multisig Change")
         else:
             title = _("Self-Transfer")
             self.VERIFY_MULTISIG = _("Verify Multisig Addr")
@@ -569,11 +563,10 @@ class PSBTSignedQRDisplayView(View):
 
 
 class PSBTSigningErrorView(View):
-    SELECT_DIFF_SEED = "Select Diff Seed"
+    SELECT_DIFF_SEED = _("Select Diff Seed")
     
     def run(self):
         psbt_parser: PSBTParser = self.controller.psbt_parser
-        self.SELECT_DIFF_SEED = _("Select Diff Seed")
         if not psbt_parser:
             # Should not be able to get here
             return Destination(MainMenuView)

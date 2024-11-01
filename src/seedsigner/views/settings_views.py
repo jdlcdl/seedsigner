@@ -16,8 +16,8 @@ from .view import View, Destination, BackStackView, MainMenuView
 
 
 class SettingsMenuView(View):
-    IO_TEST = "I/O test"
-    DONATE = "Donate"
+    IO_TEST = _("I/O test")
+    DONATE = _("Donate")
 
     def __init__(self, visibility: str = SettingsConstants.VISIBILITY__GENERAL, selected_attr: str = None, initial_scroll: int = 0):
         super().__init__()
@@ -29,13 +29,10 @@ class SettingsMenuView(View):
 
 
     def run(self):
-        self.IO_TEST = _("I/O test")
-        self.DONATE = _("Donate")
-
         settings_entries = SettingsDefinition.get_settings_entries(
             visibility=self.visibility
         )
-        button_data=[_(e.display_name) for e in settings_entries]
+        button_data=[e.display_name for e in settings_entries]
 
         selected_button = 0
         if self.selected_attr:
@@ -121,7 +118,7 @@ class SettingsEntryUpdateSelectionView(View):
                 value, display_name = value
             else:
                 display_name = value
-            button_data.append(_(display_name))
+            button_data.append(display_name)
 
             if (type(initial_value) == list and value in initial_value) or value == initial_value:
                 checked_buttons.append(i)

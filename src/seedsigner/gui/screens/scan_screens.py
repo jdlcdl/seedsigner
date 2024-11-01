@@ -57,7 +57,8 @@ class ScanScreen(BaseScreen):
         # Initialize the base class
         super().__post_init__()
 
-        self.instructions_text = _("< back  |  ") + self.instructions_text
+        # TODO: Arrange this with UI elements rather than text
+        self.instructions_text = "< " + _("back") + "  |  " + _(self.instructions_text)
 
         self.camera = Camera.get_instance()
         self.camera.start_video_stream_mode(resolution=self.resolution, framerate=self.framerate, format="rgb")
@@ -209,7 +210,6 @@ class ScanScreen(BaseScreen):
                             draw.text(
                                 xy=(rectangle.width - GUIConstants.EDGE_PADDING, int(rectangle.height / 2)),
                                 text=text,
-                                # text=f"100%",
                                 fill=GUIConstants.BODY_FONT_COLOR,
                                 font=instructions_font,
                                 anchor="rm",  # right-justified, middle

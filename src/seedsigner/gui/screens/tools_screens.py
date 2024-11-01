@@ -75,7 +75,7 @@ class ToolsImageEntropyLivePreviewScreen(BaseScreen):
                     int(self.renderer.canvas_width/2),
                     self.renderer.canvas_height - GUIConstants.EDGE_PADDING
                 ),
-                text="< back  |  click joystick",
+                text="< " + _("back") + "  |  " + _("click joystick"),  # TODO: Render with UI elements instead of text
                 fill=GUIConstants.BODY_FONT_COLOR,
                 font=instructions_font,
                 stroke_width=4,
@@ -100,13 +100,18 @@ class ToolsImageEntropyFinalImageScreen(BaseScreen):
         instructions_font = Fonts.get_font(GUIConstants.get_body_font_name(), GUIConstants.get_button_font_size())
 
         self.renderer.canvas.paste(self.final_image)
+
+        # TRANSLATOR_NOTE: A prompt to the user to either accept or reshoot the image
+        reshoot = _("reshoot")
+
+        # TRANSLATOR_NOTE: A prompt to the user to either accept or reshoot the image
+        accept = _("accept")
         self.renderer.draw.text(
             xy=(
                 int(self.renderer.canvas_width/2),
                 self.renderer.canvas_height - GUIConstants.EDGE_PADDING
             ),
-            # TRANSLATOR_NOTE: Instructions when reviewing an image; "reshoot" must point left, "accept" must point right
-            text=_(" < reshoot  |  accept > "),
+            text=" < " + reshoot + "  |  " + accept + " > ",
             fill=GUIConstants.BODY_FONT_COLOR,
             font=instructions_font,
             stroke_width=4,
@@ -253,9 +258,10 @@ class ToolsCalcFinalWordScreen(ButtonListScreen):
             # significant n bits always rendered in same column)
             discard_selected_bits = "_" * (len(self.checksum_bits))
 
+        # TRANSLATOR_NOTE: The additional entropy the user supplied (e.g. coin flips)
+        your_input = _('Your input: "{}"').format(selection_text)
         self.components.append(TextArea(
-            # TRANSLATOR_NOTE: A labeled presentation of a user-supplied value
-            text=_('Your input: "{}"').format(selection_text),
+            text=your_input,
             screen_y=self.top_nav.height + GUIConstants.COMPONENT_PADDING - 2,  # Nudge to last line doesn't get too close to "Next" button
             height_ignores_below_baseline=True,  # Keep the next line (bits display) snugged up, regardless of text rendering below the baseline
         ))

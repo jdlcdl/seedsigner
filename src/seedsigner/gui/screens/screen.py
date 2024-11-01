@@ -1,6 +1,6 @@
 import time
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from gettext import gettext as _
 from PIL import Image, ImageDraw, ImageColor
 from typing import Any, List, Tuple
@@ -206,7 +206,7 @@ class BaseTopNavScreen(BaseScreen):
         self.top_nav = TopNav(
             icon_name=self.top_nav_icon_name,
             icon_color=self.top_nav_icon_color,
-            text=self.title,
+            text=_(self.title),  # Wrap here for just-in-time translations
             font_size=self.title_font_size,
             width=self.canvas_width,
             height=GUIConstants.TOP_NAV_HEIGHT,
@@ -323,7 +323,7 @@ class ButtonListScreen(BaseTopNavScreen):
                     (button_label, icon_name, icon_color, button_label_color, right_icon_name) = button_label
 
             button_kwargs = dict(
-                text=button_label,
+                text=_(button_label),  # Wrap here for just-in-time translations
                 icon_name=icon_name,
                 icon_color=icon_color if icon_color else GUIConstants.BUTTON_FONT_COLOR,
                 is_icon_inline=True,
@@ -565,7 +565,7 @@ class LargeButtonScreen(BaseTopNavScreen):
                 button_start_x = GUIConstants.EDGE_PADDING + button_width + GUIConstants.COMPONENT_PADDING
 
             button_args = {
-                "text": button_label,
+                "text": _(button_label),  # Wrap here for just-in-time translations
                 "screen_x": button_start_x,
                 "screen_y": button_start_y,
                 "width": button_width,
@@ -855,24 +855,19 @@ class QRDisplayScreen(BaseScreen):
 
 @dataclass
 class LargeIconStatusScreen(ButtonListScreen):
-    title: str = None
+    title: str = _("Success!")
     status_icon_name: str = SeedSignerIconConstants.SUCCESS
     status_icon_size: int = GUIConstants.ICON_PRIMARY_SCREEN_SIZE
     status_color: str = GUIConstants.SUCCESS_COLOR
     status_headline: str = None
     text: str = ""                          # The body text of the screen
     text_edge_padding: int = GUIConstants.EDGE_PADDING
-    button_data: list = None
+    button_data: list = field(default_factory=lambda: [_("OK")])
     allow_text_overflow: bool = False
 
 
     def __post_init__(self):
-        if not self.title:
-            self.title = _("Success!")
-
-        self.is_bottom_list: bool = True
-        if not self.button_data:
-            self.button_data = [_("OK")]
+        self.is_bottom_list = True
         super().__post_init__()
 
         self.status_icon = Icon(
@@ -887,7 +882,7 @@ class LargeIconStatusScreen(ButtonListScreen):
         next_y = self.status_icon.screen_y + self.status_icon.height + int(GUIConstants.COMPONENT_PADDING/2)
         if self.status_headline:
             self.warning_headline_textarea = TextArea(
-                text=self.status_headline,
+                text=_(self.status_headline),  # Wrap here for just-in-time translations
                 width=self.canvas_width,
                 screen_y=next_y,
                 font_color=self.status_color,
@@ -897,7 +892,7 @@ class LargeIconStatusScreen(ButtonListScreen):
 
         self.components.append(TextArea(
             height=self.buttons[0].screen_y - next_y,
-            text=self.text,
+            text=_(self.text),
             width=self.canvas_width,
             edge_padding=self.text_edge_padding,  # Don't render all the way up to the far left/right edges
             screen_y=next_y,
@@ -983,35 +978,18 @@ class WarningEdgesMixin:
 
 @dataclass
 class WarningScreen(WarningEdgesMixin, LargeIconStatusScreen):
-    title: str = None
+    title: str = _("Caution")
     status_icon_name: str = SeedSignerIconConstants.WARNING
     status_color: str = "yellow"
-    status_headline: str = "Privacy Leak!"     # The colored text under the alert icon
-
-    def __post_init__(self):
-        if not self.title:
-            self.title = _("Caution")
-
-        if not self.status_headline:
-            self.status_headline = _("Privacy Leak!")
-        
-        if not self.button_data:
-            self.button_data = [_("I Understand")]
-
-        super().__post_init__()
+    status_headline: str = _("Privacy Leak!")     # The colored text under the alert icon
+    button_data: list = field(default_factory=lambda: [_("I Understand")])
 
 
 
 @dataclass
 class DireWarningScreen(WarningScreen):
-    status_headline: str = "Classified Info!"     # The colored text under the alert icon
+    status_headline: str = _("Classified Info!")     # The colored text under the alert icon
     status_color: str = GUIConstants.DIRE_WARNING_COLOR
-
-    def __post_init__(self):
-        if not self.status_headline:
-            self.status_headline = _("Classified Info!")
-        
-        super().__post_init__()
 
 
 
@@ -1048,13 +1026,12 @@ class PowerOffScreen(BaseTopNavScreen):
 @dataclass
 class PowerOffNotRequiredScreen(BaseTopNavScreen):
     def __post_init__(self):
-        self.title = "Just Unplug It"
+        self.title = _("Just Unplug It")
         self.show_back_button = True
         super().__post_init__()
 
-        text = _("It is safe to disconnect power at any time.")
         self.components.append(TextArea(
-            text=text,
+            text=_("It is safe to disconnect power at any time."),
             screen_y=self.top_nav.height,
             height=self.canvas_height - self.top_nav.height,
         ))
