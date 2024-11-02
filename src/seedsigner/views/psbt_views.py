@@ -1,14 +1,8 @@
 from gettext import gettext as _
-from embit.psbt import PSBT
-from embit import script
-from embit.networks import NETWORKS
-from seedsigner.controller import Controller
 
-from seedsigner.gui.components import FontAwesomeIconConstants, SeedSignerIconConstants
-from seedsigner.models.encode_qr import UrPsbtQrEncoder
 from seedsigner.models.psbt_parser import PSBTParser
 from seedsigner.models.settings import SettingsConstants
-from seedsigner.gui.screens.psbt_screens import PSBTOpReturnScreen, PSBTOverviewScreen, PSBTMathScreen, PSBTAddressDetailsScreen, PSBTChangeDetailsScreen, PSBTFinalizeScreen
+from seedsigner.gui.components import FontAwesomeIconConstants, SeedSignerIconConstants
 from seedsigner.gui.screens.screen import (RET_CODE__BACK_BUTTON, ButtonListScreen, WarningScreen, DireWarningScreen, QRDisplayScreen)
 from seedsigner.views.view import BackStackView, MainMenuView, NotYetImplementedView, View, Destination
 
@@ -22,6 +16,8 @@ class PSBTSelectSeedView(View):
 
 
     def run(self):
+        from seedsigner.controller import Controller
+
         # Note: we can't just autoroute to the PSBT Overview because we might have a
         # multisig where we want to sign with more than one key on this device.
         if not self.controller.psbt:
@@ -111,6 +107,7 @@ class PSBTOverviewView(View):
 
 
     def run(self):
+        from seedsigner.gui.screens.psbt_screens import PSBTOverviewScreen
         psbt_parser = self.controller.psbt_parser
 
         change_data = psbt_parser.change_data
@@ -217,6 +214,7 @@ class PSBTMathView(View):
         + change value
     """
     def run(self):
+        from seedsigner.gui.screens.psbt_screens import PSBTMathScreen
         psbt_parser: PSBTParser = self.controller.psbt_parser
         if not psbt_parser:
             # Should not be able to get here
@@ -253,6 +251,7 @@ class PSBTAddressDetailsView(View):
 
 
     def run(self):
+        from seedsigner.gui.screens.psbt_screens import PSBTAddressDetailsScreen
         psbt_parser: PSBTParser = self.controller.psbt_parser
 
         if not psbt_parser:
@@ -311,6 +310,7 @@ class PSBTChangeDetailsView(View):
 
 
     def run(self):
+        from seedsigner.gui.screens.psbt_screens import PSBTChangeDetailsScreen
         psbt_parser: PSBTParser = self.controller.psbt_parser
 
         if not psbt_parser:
@@ -367,6 +367,9 @@ class PSBTChangeDetailsView(View):
         else:
             # Single sig
             try:
+                from embit import script
+                from embit.networks import NETWORKS
+
                 if is_change_derivation_path:
                     loading_screen_text = _("Verifying Change...")
                 else:
@@ -442,6 +445,7 @@ class PSBTChangeDetailsView(View):
                 return Destination(PSBTFinalizeView)
             
         elif button_data[selected_menu_num] == self.VERIFY_MULTISIG:
+            from seedsigner.controller import Controller
             from seedsigner.views.seed_views import LoadMultisigWalletDescriptorView
             self.controller.resume_main_flow = Controller.FLOW__PSBT
             return Destination(LoadMultisigWalletDescriptorView)
@@ -484,6 +488,7 @@ class PSBTOpReturnView(View):
         Shows the OP_RETURN data
     """
     def run(self):
+        from seedsigner.gui.screens.psbt_screens import PSBTOpReturnScreen
         psbt_parser: PSBTParser = self.controller.psbt_parser
 
         if not psbt_parser:
@@ -514,6 +519,9 @@ class PSBTFinalizeView(View):
 
     
     def run(self):
+        from embit.psbt import PSBT
+        from seedsigner.gui.screens.psbt_screens import PSBTFinalizeScreen
+
         psbt_parser: PSBTParser = self.controller.psbt_parser
         psbt: PSBT = self.controller.psbt
         self.APPROVE_PSBT = _("Approve PSBT")
@@ -550,6 +558,8 @@ class PSBTFinalizeView(View):
 
 class PSBTSignedQRDisplayView(View):
     def run(self):
+        from seedsigner.models.encode_qr import UrPsbtQrEncoder
+
         qr_encoder = UrPsbtQrEncoder(
             psbt=self.controller.psbt,
             qr_density=self.settings.get_value(SettingsConstants.SETTING__QR_DENSITY),

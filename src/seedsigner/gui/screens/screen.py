@@ -9,7 +9,6 @@ from seedsigner.gui.components import (GUIConstants,
     BaseComponent, Button, Icon, IconButton, LargeIconButton,
     SeedSignerIconConstants, TopNav, TextArea, load_image)
 from seedsigner.gui.keyboard import Keyboard, TextEntryDisplay
-from seedsigner.gui.renderer import Renderer
 from seedsigner.hardware.buttons import HardwareButtonsConstants, HardwareButtons
 from seedsigner.models.encode_qr import BaseQrEncoder
 from seedsigner.models.settings import SettingsConstants
@@ -125,6 +124,7 @@ class LoadingScreenThread(BaseThread):
 
 
     def run(self):
+        from seedsigner.gui.renderer import Renderer
         renderer: Renderer = Renderer.get_instance()
 
         center_image = load_image("btc_logo_60x60.png")
@@ -181,7 +181,7 @@ class LoadingScreenThread(BaseThread):
                     width=GUIConstants.COMPONENT_PADDING
                 )
 
-                renderer.show_image(is_background_thread=True)
+                renderer.show_image()
             position += arc_sweep
 
 
@@ -675,12 +675,12 @@ class QRDisplayScreen(BaseScreen):
     qr_encoder: BaseQrEncoder = None
 
     class QRDisplayThread(BaseThread):
-        def __init__(self, qr_encoder: BaseQrEncoder, qr_brightness: ThreadsafeCounter, renderer: Renderer,
-                     tips_start_time: ThreadsafeCounter):
+        def __init__(self, qr_encoder: BaseQrEncoder, qr_brightness: ThreadsafeCounter, tips_start_time: ThreadsafeCounter):
+            from seedsigner.gui.renderer import Renderer
             super().__init__()
             self.qr_encoder = qr_encoder
             self.qr_brightness = qr_brightness
-            self.renderer = renderer
+            self.renderer = Renderer.get_instance()
             self.tips_start_time = tips_start_time
 
 
@@ -807,7 +807,6 @@ class QRDisplayScreen(BaseScreen):
         self.threads.append(QRDisplayScreen.QRDisplayThread(
             qr_encoder=self.qr_encoder,
             qr_brightness=self.qr_brightness,
-            renderer=self.renderer,
             tips_start_time=self.tips_start_time
         ))
 

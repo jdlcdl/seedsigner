@@ -1,8 +1,6 @@
 import logging
 import time
 import traceback
-import gettext
-import os
 
 from embit.descriptor import Descriptor
 from embit.psbt import PSBT
@@ -140,9 +138,6 @@ class Controller(Singleton):
     screensaver: ScreensaverScreen = None
     toast_notification_thread: BaseToastOverlayManagerThread = None
 
-    # Multilanguage / Localization (l10n) initialization
-    gettext.install('messages', localedir='seedsigner/resources/seedsigner-translations/l10n')
-
 
     @classmethod
     def get_instance(cls):
@@ -155,17 +150,7 @@ class Controller(Singleton):
 
 
     @classmethod
-    def configure_instance(cls, disable_hardware=False):
-        """
-            - `disable_hardware` is only meant to be used by the test suite so that it
-            can keep re-initializing a Controller in however many tests it needs to. But
-            this is only possible if the hardware isn't already being reserved. Without
-            this you get:
-
-            RuntimeError: Conflicting edge detection already enabled for this GPIO channel
-
-            each time you try to re-initialize a Controller.
-        """
+    def configure_instance(cls):
         from seedsigner.gui.renderer import Renderer
         from seedsigner.hardware.microsd import MicroSD
 

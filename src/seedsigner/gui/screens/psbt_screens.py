@@ -5,14 +5,13 @@ from dataclasses import dataclass
 from gettext import gettext as _
 from gettext import ngettext
 from PIL import Image, ImageDraw, ImageFilter
-from typing import List
 
+from seedsigner.gui.components import (BtcAmount, Icon, FontAwesomeIconConstants, IconTextLine, FormattedAddress, GUIConstants, Fonts, SeedSignerIconConstants, TextArea,
+    calc_bezier_curve, linear_interp)
 from seedsigner.gui.renderer import Renderer
 from seedsigner.models.threads import BaseThread
 
-from .screen import ButtonListScreen, WarningScreen
-from ..components import (BtcAmount, Button, Icon, FontAwesomeIconConstants, IconTextLine, FormattedAddress, GUIConstants, Fonts, SeedSignerIconConstants, TextArea,
-    calc_bezier_curve, linear_interp)
+from .screen import ButtonListScreen
 
 
 
@@ -24,7 +23,7 @@ class PSBTOverviewScreen(ButtonListScreen):
     num_inputs: int = 0
     num_self_transfer_outputs: int = 0
     num_change_outputs: int = 0
-    destination_addresses: List[str] = None
+    destination_addresses: list[str] = None
     has_op_return: bool = False
     
 

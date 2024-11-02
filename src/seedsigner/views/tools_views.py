@@ -1,22 +1,13 @@
-from dataclasses import dataclass
 import hashlib
 import logging
 import os
 import time
 
 from gettext import gettext as _
-from embit.descriptor import Descriptor
-from PIL import Image
-from PIL.ImageOps import autocontrast
 
-from seedsigner.controller import Controller
 from seedsigner.gui.components import FontAwesomeIconConstants, GUIConstants, SeedSignerIconConstants
-from seedsigner.gui.screens import (RET_CODE__BACK_BUTTON, ButtonListScreen, WarningScreen)
-from seedsigner.gui.screens.tools_screens import (ToolsCalcFinalWordDoneScreen, ToolsCalcFinalWordFinalizePromptScreen,
-    ToolsCalcFinalWordScreen, ToolsCoinFlipEntryScreen, ToolsDiceEntropyEntryScreen, ToolsImageEntropyFinalImageScreen,
-    ToolsImageEntropyLivePreviewScreen, ToolsAddressExplorerAddressTypeScreen)
-from seedsigner.helpers import embit_utils, mnemonic_generation
-from seedsigner.models.encode_qr import GenericStaticQrEncoder
+from seedsigner.gui.screens import RET_CODE__BACK_BUTTON, ButtonListScreen
+from seedsigner.helpers import mnemonic_generation
 from seedsigner.models.seed import Seed
 from seedsigner.models.settings_definition import SettingsConstants
 from seedsigner.views.seed_views import SeedDiscardView, SeedFinalizeView, SeedMnemonicEntryView, SeedOptionsView, SeedWordsWarningView, SeedExportXpubScriptTypeView
@@ -24,6 +15,7 @@ from seedsigner.views.seed_views import SeedDiscardView, SeedFinalizeView, SeedM
 from .view import View, Destination, BackStackView
 
 logger = logging.getLogger(__name__)
+
 
 
 class ToolsMenuView(View):
@@ -69,6 +61,7 @@ class ToolsMenuView(View):
 ****************************************************************************"""
 class ToolsImageEntropyLivePreviewView(View):
     def run(self):
+        from seedsigner.gui.screens.tools_screens import ToolsImageEntropyLivePreviewScreen
         self.controller.image_entropy_preview_frames = None
         ret = ToolsImageEntropyLivePreviewScreen().display()
 
@@ -82,6 +75,9 @@ class ToolsImageEntropyLivePreviewView(View):
 
 class ToolsImageEntropyFinalImageView(View):
     def run(self):
+        from PIL import Image
+        from PIL.ImageOps import autocontrast
+        from seedsigner.gui.screens.tools_screens import ToolsImageEntropyFinalImageScreen
         if not self.controller.image_entropy_final_image:
             from seedsigner.hardware.camera import Camera
             # Take the final full-res image
@@ -224,6 +220,7 @@ class ToolsDiceEntropyEntryView(View):
     
 
     def run(self):
+        from seedsigner.gui.screens.tools_screens import ToolsDiceEntropyEntryScreen
         ret = ToolsDiceEntropyEntryScreen(
             return_after_n_chars=self.total_rolls,
         ).display()
@@ -288,6 +285,7 @@ class ToolsCalcFinalWordFinalizePromptView(View):
     ZEROS = _("Finalize with zeros")
 
     def run(self):
+        from seedsigner.gui.screens.tools_screens import ToolsCalcFinalWordFinalizePromptScreen
         mnemonic = self.controller.storage.pending_mnemonic
         mnemonic_length = len(mnemonic)
         if mnemonic_length == 12:
@@ -324,6 +322,7 @@ class ToolsCalcFinalWordFinalizePromptView(View):
 
 class ToolsCalcFinalWordCoinFlipsView(View):
     def run(self):
+        from seedsigner.gui.screens.tools_screens import ToolsCoinFlipEntryScreen
         mnemonic_length = len(self.controller.storage.pending_mnemonic)
 
         if mnemonic_length == 12:
@@ -398,6 +397,7 @@ class ToolsCalcFinalWordShowFinalWordView(View):
 
 
     def run(self):
+        from seedsigner.gui.screens.tools_screens import ToolsCalcFinalWordScreen
         button_data = [self.NEXT]
         selected_menu_num = self.run_screen(
             ToolsCalcFinalWordScreen,
@@ -423,6 +423,7 @@ class ToolsCalcFinalWordDoneView(View):
     DISCARD = (_("Discard"), None, None, "red")
 
     def run(self):
+        from seedsigner.gui.screens.tools_screens import ToolsCalcFinalWordDoneScreen
         mnemonic = self.controller.storage.pending_mnemonic
         mnemonic_word_length = len(mnemonic)
         final_word = mnemonic[-1]
@@ -460,6 +461,8 @@ class ToolsAddressExplorerSelectSourceView(View):
     TYPE_ELECTRUM = (_("Enter Electrum seed"), FontAwesomeIconConstants.KEYBOARD)
 
     def run(self):
+        from seedsigner.controller import Controller
+
         seeds = self.controller.storage.seeds
         button_data = []
         for seed in seeds:
@@ -558,6 +561,7 @@ class ToolsAddressExplorerAddressTypeView(View):
             elif seed_derivation_override:
                 derivation_path = seed_derivation_override
             else:
+                from seedsigner.helpers import embit_utils
                 derivation_path = embit_utils.get_standard_derivation_path(
                     network=self.settings.get_value(SettingsConstants.SETTING__NETWORK),
                     wallet_type=SettingsConstants.SINGLE_SIG,
@@ -574,6 +578,7 @@ class ToolsAddressExplorerAddressTypeView(View):
 
 
     def run(self):
+        from seedsigner.gui.screens.tools_screens import ToolsAddressExplorerAddressTypeScreen
         data = self.controller.address_explorer_data
 
         wallet_descriptor_display_name = None
@@ -638,6 +643,7 @@ class ToolsAddressExplorerAddressListView(View):
         else:
             try:
                 from seedsigner.gui.screens.screen import LoadingScreenThread
+                from seedsigner.helpers import embit_utils
                 # TRANSLATOR_NOTE: a status message that our payment addresses are being calculated
                 self.loading_screen = LoadingScreenThread(text=_("Calculating addrs..."))
                 self.loading_screen.start()
@@ -658,6 +664,7 @@ class ToolsAddressExplorerAddressListView(View):
                         raise Exception(_("Custom Derivation address explorer not yet implemented"))
 
                 elif "wallet_descriptor" in data:
+                    from embit.descriptor import Descriptor
                     descriptor: Descriptor = data["wallet_descriptor"]
                     if descriptor.is_basic_multisig:
                         for i in range(self.start_index, self.start_index + addrs_per_screen):
@@ -726,6 +733,8 @@ class ToolsAddressExplorerAddressView(View):
     
     def run(self):
         from seedsigner.gui.screens.screen import QRDisplayScreen
+        from seedsigner.models.encode_qr import GenericStaticQrEncoder
+
         qr_encoder = GenericStaticQrEncoder(data=self.address)
         self.run_screen(
             QRDisplayScreen,

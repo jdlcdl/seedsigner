@@ -1,17 +1,13 @@
-from gettext import gettext as _
 import logging
-from seedsigner.gui.components import SeedSignerIconConstants
-from seedsigner.hardware.microsd import MicroSD
-
-from .view import View, Destination, MainMenuView
+from gettext import gettext as _
 
 from seedsigner.gui.components import SeedSignerIconConstants
 from seedsigner.gui.screens import (RET_CODE__BACK_BUTTON, ButtonListScreen, settings_screens)
 from seedsigner.models.settings import Settings, SettingsConstants, SettingsDefinition
 
-logger = logging.getLogger(__name__)
+from .view import View, Destination, MainMenuView
 
-from .view import View, Destination, BackStackView, MainMenuView
+logger = logging.getLogger(__name__)
 
 
 
@@ -194,6 +190,7 @@ class SettingsEntryUpdateSelectionView(View):
 
 class SettingsIngestSettingsQRView(View):
     def __init__(self, data: str):
+        from seedsigner.hardware.microsd import MicroSD
         super().__init__()
 
         # May raise an Exception which will bubble up to the Controller to display to the

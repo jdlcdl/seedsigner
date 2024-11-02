@@ -4,7 +4,6 @@ import random
 import time
 
 from gettext import gettext as _
-from PIL import Image
 
 from seedsigner.gui.components import Fonts, GUIConstants, load_image
 from seedsigner.gui.screens.screen import BaseScreen
@@ -37,6 +36,7 @@ class LogoScreen(BaseScreen):
 
 class OpeningSplashScreen(LogoScreen):
     def start(self):
+        from PIL import Image
         from seedsigner.controller import Controller
         controller = Controller.get_instance()
 
@@ -95,6 +95,7 @@ class OpeningSplashScreen(LogoScreen):
 
 class ScreensaverScreen(LogoScreen):
     def __init__(self, buttons):
+        from PIL import Image
         super().__init__()
 
         self.buttons = buttons

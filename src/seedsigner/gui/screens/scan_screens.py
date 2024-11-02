@@ -5,13 +5,11 @@ from gettext import gettext as _
 from PIL import Image, ImageDraw
 
 from seedsigner.gui import renderer
-from seedsigner.hardware.buttons import HardwareButtonsConstants
-from seedsigner.hardware.camera import Camera
-from seedsigner.models.decode_qr import DecodeQR, DecodeQRStatus
+from seedsigner.gui.components import GUIConstants, Fonts
+from seedsigner.models.decode_qr import DecodeQR
 from seedsigner.models.threads import BaseThread, ThreadsafeCounter
 
 from .screen import BaseScreen
-from ..components import GUIConstants, Fonts, SeedSignerIconConstants
 
 
 
@@ -78,8 +76,10 @@ class ScanScreen(BaseScreen):
 
 
     class LivePreviewThread(BaseThread):
-        def __init__(self, camera: Camera, decoder: DecodeQR, renderer: renderer.Renderer, instructions_text: str, render_rect: tuple[int,int,int,int], frame_decode_status: ThreadsafeCounter, frames_decoded_counter: ThreadsafeCounter):
-            self.camera = camera
+        def __init__(self, decoder: DecodeQR, renderer: renderer.Renderer, instructions_text: str, render_rect: tuple[int,int,int,int], frame_decode_status: ThreadsafeCounter, frames_decoded_counter: ThreadsafeCounter):
+            from seedsigner.hardware.camera import Camera
+
+            self.camera = Camera.get_instance()
             self.decoder = decoder
             self.renderer = renderer
             self.instructions_text = instructions_text
@@ -252,6 +252,9 @@ class ScanScreen(BaseScreen):
             Screen. Once interaction starts, the display updates have to be managed in
             _run(). The live preview is an extra-complex case.
         """
+        from seedsigner.hardware.buttons import HardwareButtonsConstants
+        from seedsigner.models.decode_qr import DecodeQRStatus
+
         num_frames = 0
         start_time = time.time()
         while True:

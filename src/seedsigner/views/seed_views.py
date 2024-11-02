@@ -1,33 +1,25 @@
 import logging
-import embit
 import random
 import time
 
 from binascii import hexlify
-from embit import bip39
-from embit.descriptor import Descriptor
-from embit.networks import NETWORKS
 from gettext import gettext as _
-from typing import List
 
-from seedsigner.controller import Controller
+from embit.descriptor import Descriptor
+
 from seedsigner.gui.components import FontAwesomeIconConstants, SeedSignerIconConstants
-from seedsigner.helpers import embit_utils
 from seedsigner.gui.screens import (RET_CODE__BACK_BUTTON, ButtonListScreen,
     WarningScreen, DireWarningScreen, seed_screens)
-from seedsigner.gui.screens.screen import LargeIconStatusScreen, QRDisplayScreen
-from seedsigner.helpers import embit_utils
-from seedsigner.models.decode_qr import DecodeQR
 from seedsigner.models.encode_qr import CompactSeedQrEncoder, GenericStaticQrEncoder, SeedQrEncoder, SpecterXPubQrEncoder, StaticXpubQrEncoder, UrXpubQrEncoder
-from seedsigner.models.psbt_parser import PSBTParser
 from seedsigner.models.qr_type import QRType
-from seedsigner.models.seed import InvalidSeedException, Seed
+from seedsigner.models.seed import Seed
 from seedsigner.models.settings import Settings, SettingsConstants
 from seedsigner.models.settings_definition import SettingsDefinition
 from seedsigner.models.threads import BaseThread, ThreadsafeCounter
 from seedsigner.views.view import NotYetImplementedView, OptionDisabledView, View, Destination, BackStackView, MainMenuView
 
 logger = logging.getLogger(__name__)
+
 
 
 class SeedsMenuView(View):
@@ -84,12 +76,16 @@ class SeedSelectSeedView(View):
     TYPE_ELECTRUM = (_("Enter Electrum seed"), FontAwesomeIconConstants.KEYBOARD)
 
 
-    def __init__(self, flow: str = Controller.FLOW__VERIFY_SINGLESIG_ADDR):
+    def __init__(self, flow: str = None):
+        from seedsigner.controller import Controller
         super().__init__()
+        if not flow:
+            flow = Controller.FLOW__VERIFY_SINGLESIG_ADDR
         self.flow = flow
 
 
     def run(self):
+        from seedsigner.controller import Controller
         seeds = self.controller.storage.seeds
 
         if self.flow == Controller.FLOW__VERIFY_SINGLESIG_ADDR:
@@ -267,6 +263,7 @@ class SeedMnemonicEntryView(View):
             )
         else:
             # Attempt to finalize the mnemonic
+            from seedsigner.models.seed import InvalidSeedException
             try:
                 self.controller.storage.convert_pending_mnemonic_to_pending_seed()
             except InvalidSeedException:
@@ -282,7 +279,7 @@ class SeedMnemonicInvalidView(View):
 
     def __init__(self):
         super().__init__()
-        self.mnemonic: List[str] = self.controller.storage.pending_mnemonic
+        self.mnemonic: list[str] = self.controller.storage.pending_mnemonic
 
 
     def run(self):
@@ -538,6 +535,7 @@ class SeedOptionsView(View):
 
 
     def run(self):
+        from seedsigner.controller import Controller
         from seedsigner.views.psbt_views import PSBTOverviewView
 
         if self.controller.unverified_address:
@@ -557,6 +555,7 @@ class SeedOptionsView(View):
             return Destination(SeedSignMessageConfirmMessageView, skip_current_view=True)
 
         if self.controller.psbt:
+            from seedsigner.models.psbt_parser import PSBTParser
             if PSBTParser.has_matching_input_fingerprint(self.controller.psbt, self.seed, network=self.settings.get_value(SettingsConstants.SETTING__NETWORK)):
                 if self.controller.resume_main_flow and self.controller.resume_main_flow == Controller.FLOW__PSBT:
                     # Re-route us directly back to the start of the PSBT flow
@@ -708,6 +707,7 @@ class SeedExportXpubScriptTypeView(View):
 
 
     def run(self):
+        from seedsigner.controller import Controller
         from .tools_views import ToolsAddressExplorerAddressTypeView
         args = {"seed_num": self.seed_num, "sig_type": self.sig_type}
 
@@ -777,6 +777,7 @@ class SeedExportXpubCustomDerivationView(View):
 
 
     def run(self):
+        from seedsigner.controller import Controller
         ret = self.run_screen(
             seed_screens.SeedExportXpubCustomDerivationScreen,
             initial_value=self.custom_derivation_path,
@@ -911,6 +912,7 @@ class SeedExportXpubDetailsView(View):
         elif seed_derivation_override:
             derivation_path = seed_derivation_override
         else:
+            from seedsigner.helpers import embit_utils
             derivation_path = embit_utils.get_standard_derivation_path(
                 network=self.settings.get_value(SettingsConstants.SETTING__NETWORK),
                 wallet_type=self.sig_type,
@@ -928,13 +930,15 @@ class SeedExportXpubDetailsView(View):
             self.loading_screen.start()
 
             try:
+                from embit.bip32 import HDKey
+                from embit.networks import NETWORKS
                 embit_network = NETWORKS[SettingsConstants.map_network_to_embit(self.settings.get_value(SettingsConstants.SETTING__NETWORK))]
                 version = self.seed.detect_version(
                     derivation_path,
                     self.settings.get_value(SettingsConstants.SETTING__NETWORK),
                     self.sig_type
                 )
-                root = embit.bip32.HDKey.from_seed(
+                root = HDKey.from_seed(
                     self.seed.seed_bytes,
                     version=embit_network["xprv"]
                 )
@@ -995,6 +999,7 @@ class SeedExportXpubQRDisplayView(View):
 
 
     def run(self):
+        from seedsigner.gui.screens.screen import QRDisplayScreen
         self.run_screen(
             QRDisplayScreen,
             qr_encoder=self.qr_encoder
@@ -1249,7 +1254,7 @@ class SeedWordsBackupTestPromptView(View):
 
 
 class SeedWordsBackupTestView(View):
-    def __init__(self, seed_num: int, bip85_data: dict = None, confirmed_list: List[bool] = None, cur_index: int = None):
+    def __init__(self, seed_num: int, bip85_data: dict = None, confirmed_list: list[bool] = None, cur_index: int = None):
         super().__init__()
         self.seed_num = seed_num
         if self.seed_num is None:
@@ -1271,6 +1276,8 @@ class SeedWordsBackupTestView(View):
 
 
     def run(self):
+        from embit import bip39
+
         if self.cur_index is None:
             self.cur_index = int(random.random() * len(self.mnemonic_list))
             while self.cur_index in self.confirmed_list:
@@ -1328,7 +1335,7 @@ class SeedWordsBackupTestMistakeView(View):
     REVIEW = _("Review Seed Words")
     RETRY = _("Try Again")
 
-    def __init__(self, seed_num: int, bip85_data: dict = None, cur_index: int = None, wrong_word: str = None, confirmed_list: List[bool] = None):
+    def __init__(self, seed_num: int, bip85_data: dict = None, cur_index: int = None, wrong_word: str = None, confirmed_list: list[bool] = None):
         super().__init__()
         self.seed_num = seed_num
         self.bip85_data = bip85_data
@@ -1379,6 +1386,7 @@ class SeedWordsBackupTestSuccessView(View):
         self.seed_num = seed_num
 
     def run(self):
+        from seedsigner.gui.screens.screen import LargeIconStatusScreen
         LargeIconStatusScreen(
             title=_("Backup Verified"),
             show_back_button=False,
@@ -1608,6 +1616,7 @@ class SeedTranscribeSeedQRConfirmScanView(View):
 
     def run(self):
         from seedsigner.gui.screens.scan_screens import ScanScreen
+        from seedsigner.models.decode_qr import DecodeQR
 
         # Run the live preview and QR code capture process
         # TODO: Does this belong in its own BaseThread?
@@ -1634,6 +1643,7 @@ class SeedTranscribeSeedQRConfirmScanView(View):
                     return Destination(BackStackView, skip_current_view=True)
                 
                 else:
+                    from seedsigner.gui.screens.screen import LargeIconStatusScreen
                     LargeIconStatusScreen(
                         title=_("Confirm SeedQR"),
                         status_headline=_("Success!"),
@@ -1672,6 +1682,7 @@ class AddressVerificationStartView(View):
 
 
     def run(self):
+        from seedsigner.helpers import embit_utils
         if self.controller.unverified_address["script_type"] == SettingsConstants.LEGACY_P2PKH:
             # Legacy P2PKH addresses are always singlesig
             sig_type = SettingsConstants.SINGLE_SIG
@@ -1689,6 +1700,7 @@ class AddressVerificationStartView(View):
                     # Can jump straight to the brute-force verification View
                     destination = Destination(SeedAddressVerificationView, skip_current_view=True)
                 else:
+                    from seedsigner.controller import Controller
                     self.controller.resume_main_flow = Controller.FLOW__VERIFY_MULTISIG_ADDR
                     destination = Destination(LoadMultisigWalletDescriptorView, skip_current_view=True)
 
@@ -1718,6 +1730,8 @@ class AddressVerificationSigTypeView(View):
     MULTISIG = _("Multisig")
 
     def run(self):
+        from seedsigner.helpers import embit_utils
+        from seedsigner.controller import Controller
         button_data = [self.SINGLE_SIG, self.MULTISIG]
         selected_menu_num = self.run_screen(
             seed_screens.AddressVerificationSigTypeScreen,
@@ -1909,6 +1923,7 @@ class SeedAddressVerificationView(View):
  
 
         def run(self):
+            from seedsigner.helpers import embit_utils
             while self.keep_running:
                 if self.threadsafe_counter.cur_count % 10 == 0:
                     logger.info(f"Incremented to {self.threadsafe_counter.cur_count}")
@@ -1949,6 +1964,7 @@ class AddressVerificationSuccessView(View):
     
 
     def run(self):
+        from seedsigner.gui.screens.screen import LargeIconStatusScreen
         address = self.controller.unverified_address["address"]
         sig_type = self.controller.unverified_address["sig_type"]
         verified_index = self.controller.unverified_address["verified_index"]
@@ -2000,6 +2016,7 @@ class LoadMultisigWalletDescriptorView(View):
             return Destination(ScanWalletDescriptorView)
 
         elif button_data[selected_menu_num] == self.CANCEL:
+            from seedsigner.controller import Controller
             if self.controller.resume_main_flow == Controller.FLOW__PSBT:
                 return Destination(BackStackView)
             else:
@@ -2026,6 +2043,7 @@ class MultisigWalletDescriptorView(View):
 
         button_data = [self.OK]
         if self.controller.resume_main_flow:
+            from seedsigner.controller import Controller
             if self.controller.resume_main_flow == Controller.FLOW__PSBT:
                 button_data = [self.RETURN]
             elif self.controller.resume_main_flow == Controller.FLOW__VERIFY_MULTISIG_ADDR and self.controller.unverified_address:
@@ -2074,6 +2092,7 @@ class SeedSignMessageStartView(View):
     load a seed first.
     """
     def __init__(self, derivation_path: str, message: str):
+        from seedsigner.helpers import embit_utils
         super().__init__()
         self.derivation_path = derivation_path
         self.message = message
@@ -2119,6 +2138,7 @@ class SeedSignMessageStartView(View):
             # We already know which seed we're signing with
             self.set_redirect(Destination(SeedSignMessageConfirmMessageView, skip_current_view=True))
         else:
+            from seedsigner.controller import Controller
             self.set_redirect(Destination(SeedSelectSeedView, view_args=dict(flow=Controller.FLOW__SIGN_MESSAGE), skip_current_view=True))
 
 
@@ -2159,6 +2179,7 @@ class SeedSignMessageConfirmMessageView(View):
 
 class SeedSignMessageConfirmAddressView(View):
     def __init__(self):
+        from seedsigner.helpers import embit_utils
         super().__init__()
         data = self.controller.sign_message_data
         seed_num = data.get("seed_num")
@@ -2220,6 +2241,7 @@ class SeedSignMessageSignedMessageQRView(View):
     Displays the signed message as a QR code.
     """
     def __init__(self):
+        from seedsigner.helpers import embit_utils
         super().__init__()
         data = self.controller.sign_message_data
 
@@ -2232,6 +2254,7 @@ class SeedSignMessageSignedMessageQRView(View):
 
 
     def run(self):
+        from seedsigner.gui.screens.screen import QRDisplayScreen
         qr_encoder = GenericStaticQrEncoder(data=self.signed_message)
         
         self.run_screen(

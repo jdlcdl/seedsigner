@@ -3,16 +3,11 @@ import re
 
 from gettext import gettext as _
 
-from embit.descriptor import Descriptor
-
-from seedsigner.gui.screens.screen import RET_CODE__BACK_BUTTON
-from seedsigner.models.decode_qr import DecodeQR
-from seedsigner.models.seed import Seed
 from seedsigner.models.settings import SettingsConstants
-from seedsigner.views.settings_views import SettingsIngestSettingsQRView
-from seedsigner.views.view import BackStackView, ErrorView, MainMenuView, NotYetImplementedView, OptionDisabledView, View, Destination
+from seedsigner.views.view import BackStackView, ErrorView, MainMenuView, NotYetImplementedView, View, Destination
 
 logger = logging.getLogger(__name__)
+
 
 
 class ScanView(View):
@@ -29,6 +24,8 @@ class ScanView(View):
 
 
     def __init__(self):
+        from seedsigner.models.decode_qr import DecodeQR
+
         super().__init__()
         # Define the decoder here to make it available to child classes' is_valid_qr_type
         # checks and so we can inject data into it in the test suite's `before_run()`.
@@ -80,6 +77,7 @@ class ScanView(View):
                 else:
                     # Found a valid mnemonic seed! All new seeds should be considered
                     #   pending (might set a passphrase, SeedXOR, etc) until finalized.
+                    from seedsigner.models.seed import Seed
                     from .seed_views import SeedFinalizeView
                     self.controller.storage.set_pending_seed(
                         Seed(mnemonic=seed_mnemonic, wordlist_language_code=self.wordlist_language_code)
@@ -98,10 +96,12 @@ class ScanView(View):
                 return Destination(PSBTSelectSeedView, skip_current_view=True)
 
             elif self.decoder.is_settings:
+                from seedsigner.views.settings_views import SettingsIngestSettingsQRView
                 data = self.decoder.get_settings_data()
                 return Destination(SettingsIngestSettingsQRView, view_args=dict(data=data))
             
             elif self.decoder.is_wallet_descriptor:
+                from embit.descriptor import Descriptor
                 from seedsigner.views.seed_views import MultisigWalletDescriptorView
                 descriptor_str = self.decoder.get_wallet_descriptor()
 
