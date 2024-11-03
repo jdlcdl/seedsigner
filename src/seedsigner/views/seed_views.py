@@ -1975,7 +1975,7 @@ class AddressVerificationSuccessView(View):
         receive_text = _("receive")
 
         # TRANSLATOR_NOTE: Address verification success message (e.g. "bc1qabc = seed 12345678's receive address #0.")
-        text = _("{} = {}'s {} address #{}.""").format(
+        text = _("{} = {}'s {} address #{}.").format(
             address[:7],
             source,
             change_text if verified_index_is_change else receive_text,
