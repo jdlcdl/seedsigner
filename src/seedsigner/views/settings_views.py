@@ -3,6 +3,7 @@ from gettext import gettext as _
 
 from seedsigner.gui.components import SeedSignerIconConstants
 from seedsigner.gui.screens import (RET_CODE__BACK_BUTTON, ButtonListScreen, settings_screens)
+from seedsigner.gui.screens.screen import ButtonOption
 from seedsigner.models.settings import Settings, SettingsConstants, SettingsDefinition
 
 from .view import View, Destination, MainMenuView
@@ -12,8 +13,8 @@ logger = logging.getLogger(__name__)
 
 
 class SettingsMenuView(View):
-    IO_TEST = _("I/O test")
-    DONATE = _("Donate")
+    IO_TEST = ButtonOption("I/O test")
+    DONATE = ButtonOption("Donate")
 
     def __init__(self, visibility: str = SettingsConstants.VISIBILITY__GENERAL, selected_attr: str = None, initial_scroll: int = 0):
         super().__init__()
@@ -28,7 +29,7 @@ class SettingsMenuView(View):
         settings_entries = SettingsDefinition.get_settings_entries(
             visibility=self.visibility
         )
-        button_data=[e.display_name for e in settings_entries]
+        button_data=[ButtonOption(e.display_name) for e in settings_entries]
 
         selected_button = 0
         if self.selected_attr:
@@ -41,7 +42,7 @@ class SettingsMenuView(View):
             title = _("Settings")
 
             # Set up the next nested level of menuing
-            button_data.append((_("Advanced"), None, None, None, SeedSignerIconConstants.CHEVRON_RIGHT))
+            button_data.append(ButtonOption("Advanced", right_icon_name=SeedSignerIconConstants.CHEVRON_RIGHT))
             next_destination = Destination(SettingsMenuView, view_args={"visibility": SettingsConstants.VISIBILITY__ADVANCED})
 
             button_data.append(self.IO_TEST)
@@ -114,7 +115,7 @@ class SettingsEntryUpdateSelectionView(View):
                 value, display_name = value
             else:
                 display_name = value
-            button_data.append(display_name)
+            button_data.append(ButtonOption(display_name))
 
             if (type(initial_value) == list and value in initial_value) or value == initial_value:
                 checked_buttons.append(i)
@@ -211,7 +212,6 @@ class SettingsIngestSettingsQRView(View):
             SettingsQRConfirmationScreen,
             title=_("Settings QR"),
             config_name=self.config_name,
-            button_data=[_("Home")],
             status_message=self.status_message,
         )
 

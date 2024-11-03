@@ -5,6 +5,7 @@ from gettext import gettext as _
 from PIL import Image, ImageDraw, ImageColor
 from typing import Any, List, Tuple
 
+from seedsigner.helpers.l10n import mark_for_translation as _mft
 from seedsigner.gui.components import (GUIConstants,
     BaseComponent, Button, Icon, IconButton, LargeIconButton,
     SeedSignerIconConstants, TopNav, TextArea, load_image)
@@ -253,8 +254,22 @@ class BaseTopNavScreen(BaseScreen):
 
 
 @dataclass
+class ButtonOption:
+    """
+    Note: The babel config in setup.cfg will extract the `button_label` string for translation
+    """
+    button_label: str
+    icon_name: str = None
+    icon_color: str = None
+    right_icon_name: str = None
+    button_label_color: str = None
+    return_data: Any = None
+
+
+
+@dataclass
 class ButtonListScreen(BaseTopNavScreen):
-    button_data: list = None                  # list can be a mix of str or tuple(label: str, icon_name: str)
+    button_data: list[ButtonOption] = None
     selected_button: int = 0
     is_button_text_centered: bool = True
     is_bottom_list: bool = False
@@ -295,26 +310,38 @@ class ButtonListScreen(BaseTopNavScreen):
             self.has_scroll_arrows = True
 
         self.buttons: List[Button] = []
-        for i, button_label in enumerate(self.button_data):
+        for i, button_option in enumerate(self.button_data):
             icon_name = None
             icon_color = None
             right_icon_name = None
             button_label_color = None
 
-            # TODO: Define an actual class for button_data?
-            if type(button_label) == tuple:
-                if len(button_label) == 2:
-                    (button_label, icon_name) = button_label
-                    icon_color = GUIConstants.BUTTON_FONT_COLOR
+            if type(button_option) == ButtonOption:
+                button_label = button_option.button_label
+                icon_name = button_option.icon_name
+                icon_color = button_option.icon_color
+                right_icon_name = button_option.right_icon_name
+                button_label_color = button_option.button_label_color
+            
+            else:
+                raise Exception("Refactor needed!")
 
-                elif len(button_label) == 3:
-                    (button_label, icon_name, icon_color) = button_label
+            # # TODO: Complete refactor away from str|tuple to ButtonOption
+            # elif type(button_option) == str:
+            #     button_label = button_option
+            # elif type(button_option) == tuple:
+            #     if len(button_option) == 2:
+            #         (button_label, icon_name) = button_option
+            #         icon_color = GUIConstants.BUTTON_FONT_COLOR
 
-                elif len(button_label) == 4:
-                    (button_label, icon_name, icon_color, button_label_color) = button_label
+            #     elif len(button_option) == 3:
+            #         (button_label, icon_name, icon_color) = button_option
 
-                elif len(button_label) == 5:
-                    (button_label, icon_name, icon_color, button_label_color, right_icon_name) = button_label
+            #     elif len(button_option) == 4:
+            #         (button_label, icon_name, icon_color, button_label_color) = button_option
+
+            #     elif len(button_option) == 5:
+            #         (button_label, icon_name, icon_color, button_label_color, right_icon_name) = button_option
 
             button_kwargs = dict(
                 text=_(button_label),  # Wrap here for just-in-time translations
@@ -547,11 +574,20 @@ class LargeButtonScreen(BaseTopNavScreen):
             button_start_y = self.top_nav.height + int((self.canvas_height - (self.top_nav.height + GUIConstants.COMPONENT_PADDING) - (2 * button_height) - GUIConstants.COMPONENT_PADDING) / 2)
 
         self.buttons = []
-        for i, button_label in enumerate(self.button_data):
-            if type(button_label) == tuple:
-                (button_label, icon_name) = button_label
+        for i, button_option in enumerate(self.button_data):
+            if type(button_option) == ButtonOption:
+                button_label = button_option.button_label
+                icon_name = button_option.icon_name
             else:
-                icon_name = None
+                raise Exception("Refactor needed!")
+
+            # elif type(button_option) == str:
+            #     button_label = button_option
+            #     icon_name = None
+            # elif type(button_option) == tuple:
+            #     (button_label, icon_name) = button_option
+            # else:
+            #     print(type(button_option))
 
             if i % 2 == 0:
                 button_start_x = GUIConstants.EDGE_PADDING
@@ -848,18 +884,20 @@ class QRDisplayScreen(BaseScreen):
 
 @dataclass
 class LargeIconStatusScreen(ButtonListScreen):
-    title: str = _("Success!")
+    title: str = _mft("Success!")
     status_icon_name: str = SeedSignerIconConstants.SUCCESS
     status_icon_size: int = GUIConstants.ICON_PRIMARY_SCREEN_SIZE
     status_color: str = GUIConstants.SUCCESS_COLOR
     status_headline: str = None
     text: str = ""                          # The body text of the screen
     text_edge_padding: int = GUIConstants.EDGE_PADDING
-    button_data: list = field(default_factory=lambda: [_("OK")])
+    button_data: list = None
     allow_text_overflow: bool = False
 
 
     def __post_init__(self):
+        if not self.button_data:
+            self.button_data = [ButtonOption("OK")]
         self.is_bottom_list = True
         super().__post_init__()
 
@@ -971,17 +1009,17 @@ class WarningEdgesMixin:
 
 @dataclass
 class WarningScreen(WarningEdgesMixin, LargeIconStatusScreen):
-    title: str = _("Caution")
+    title: str = _mft("Caution")
     status_icon_name: str = SeedSignerIconConstants.WARNING
     status_color: str = "yellow"
-    status_headline: str = _("Privacy Leak!")     # The colored text under the alert icon
-    button_data: list = field(default_factory=lambda: [_("I Understand")])
+    status_headline: str = _mft("Privacy Leak!")     # The colored text under the alert icon
+    button_data: list = field(default_factory=lambda: [ButtonOption("I Understand")])
 
 
 
 @dataclass
 class DireWarningScreen(WarningScreen):
-    status_headline: str = _("Classified Info!")     # The colored text under the alert icon
+    status_headline: str = _mft("Classified Info!")     # The colored text under the alert icon
     status_color: str = GUIConstants.DIRE_WARNING_COLOR
 
 

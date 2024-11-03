@@ -5,9 +5,10 @@ from gettext import gettext as _
 from PIL.ImageOps import autocontrast
 from typing import List
 
+from seedsigner.helpers.l10n import mark_for_translation as _mft
 from seedsigner.gui.components import Button, CheckboxButton, CheckedSelectionButton, FontAwesomeIconConstants, Fonts, GUIConstants, Icon, IconButton, IconTextLine, TextArea
 from seedsigner.gui.screens.scan_screens import ScanScreen
-from seedsigner.gui.screens.screen import BaseScreen, BaseTopNavScreen, ButtonListScreen
+from seedsigner.gui.screens.screen import BaseScreen, BaseTopNavScreen, ButtonListScreen, ButtonOption
 from seedsigner.hardware.buttons import HardwareButtonsConstants
 from seedsigner.hardware.camera import Camera
 from seedsigner.models.settings import SettingsConstants
@@ -309,13 +310,13 @@ class DonateScreen(BaseTopNavScreen):
 @dataclass
 class SettingsQRConfirmationScreen(ButtonListScreen):
     config_name: str = None
-    title: str = _("Settings QR")
-    status_message: str = _("Settings updated...")
+    title: str = _mft("Settings QR")
+    status_message: str = _mft("Settings updated...")
     is_bottom_list: bool = True
 
     def __post_init__(self):
         # Customize defaults
-        self.button_data = [_("Home")]
+        self.button_data = [ButtonOption("Home")]
         self.show_back_button = False
         super().__post_init__()
 

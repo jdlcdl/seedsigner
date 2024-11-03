@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: seedsigner 0.8.5\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2024-11-02 12:38-0500\n"
+"POT-Creation-Date: 2024-11-02 16:48-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -151,9 +151,6 @@ msgstr[1] ""
 msgid "{} change"
 msgstr ""
 
-#. First variable is either "Multisig" or the fingerprint for single sig;
-#. Second is "Change" or "Addr" (change vs receive addr); Third is the address
-#. index number (e.g. your #4 receive addr).
 #: src/seedsigner/gui/screens/psbt_screens.py
 #: src/seedsigner/models/settings_definition.py
 #: src/seedsigner/views/seed_views.py
@@ -164,6 +161,7 @@ msgstr ""
 msgid "Change"
 msgstr ""
 
+#. Abbreviation for receive address
 #: src/seedsigner/gui/screens/psbt_screens.py
 msgid "Addr"
 msgstr ""
@@ -263,6 +261,7 @@ msgstr ""
 #. a label for the shortened Key-id of a BIP-32 master HD wallet
 #: src/seedsigner/gui/screens/seed_screens.py
 #: src/seedsigner/gui/screens/tools_screens.py
+#: src/seedsigner/views/seed_views.py
 msgid "fingerprint"
 msgstr ""
 
@@ -817,7 +816,7 @@ msgid ""
 "addresses."
 msgstr ""
 
-#: src/seedsigner/views/psbt_views.py src/seedsigner/views/view.py
+#: src/seedsigner/views/psbt_views.py
 msgid "Continue"
 msgstr ""
 
@@ -1295,11 +1294,6 @@ msgstr ""
 msgid "Return to PSBT"
 msgstr ""
 
-#. Inserts mainnet/testnet/regtest and derivation path
-#: src/seedsigner/views/seed_views.py
-msgid "Current network setting ({}) doesn't match {}"
-msgstr ""
-
 #: src/seedsigner/views/seed_views.py
 msgid "Signing messages for custom derivation paths not supported"
 msgstr ""
@@ -1470,9 +1464,9 @@ msgstr ""
 msgid "Change Setting"
 msgstr ""
 
-#. Inserts mainnet/testnet/regtest
+#. Inserts mainnet/testnet/regtest and derivation path
 #: src/seedsigner/views/view.py
-msgid "Current network setting ({}) doesn't match current action."
+msgid "Current network setting ({}) doesn't match {}."
 msgstr ""
 
 #: src/seedsigner/views/view.py
@@ -1491,16 +1485,5 @@ msgstr ""
 
 #: src/seedsigner/views/view.py
 msgid "Option Disabled"
-msgstr ""
-
-#: src/seedsigner/views/view.py
-msgid "Security Tip"
-msgstr ""
-
-#: src/seedsigner/views/view.py
-msgid ""
-"For maximum security,\n"
-"remove the MicroSD card\n"
-"before continuing."
 msgstr ""
 

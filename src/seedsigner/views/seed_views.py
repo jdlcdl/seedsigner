@@ -10,6 +10,7 @@ from embit.descriptor import Descriptor
 from seedsigner.gui.components import FontAwesomeIconConstants, SeedSignerIconConstants
 from seedsigner.gui.screens import (RET_CODE__BACK_BUTTON, ButtonListScreen,
     WarningScreen, DireWarningScreen, seed_screens)
+from seedsigner.gui.screens.screen import ButtonOption
 from seedsigner.models.encode_qr import CompactSeedQrEncoder, GenericStaticQrEncoder, SeedQrEncoder, SpecterXPubQrEncoder, StaticXpubQrEncoder, UrXpubQrEncoder
 from seedsigner.models.qr_type import QRType
 from seedsigner.models.seed import Seed
@@ -23,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class SeedsMenuView(View):
-    LOAD = "Load a seed"
+    LOAD = ButtonOption("Load a seed")
 
     def __init__(self):
         super().__init__()
@@ -41,8 +42,8 @@ class SeedsMenuView(View):
 
         button_data = []
         for seed in self.seeds:
-            button_data.append((seed["fingerprint"], SeedSignerIconConstants.FINGERPRINT))
-        button_data.append(_("Load a seed"))
+            button_data.append(ButtonOption(seed["fingerprint"], SeedSignerIconConstants.FINGERPRINT))
+        button_data.append(self.LOAD)
 
         selected_menu_num = self.run_screen(
             ButtonListScreen,
@@ -54,7 +55,7 @@ class SeedsMenuView(View):
         if len(self.seeds) > 0 and selected_menu_num < len(self.seeds):
             return Destination(SeedOptionsView, view_args={"seed_num": selected_menu_num})
 
-        elif selected_menu_num == len(self.seeds):
+        elif button_data[selected_menu_num] == self.LOAD:
             return Destination(LoadSeedView)
 
         elif selected_menu_num == RET_CODE__BACK_BUTTON:
@@ -70,10 +71,10 @@ class SeedSelectSeedView(View):
     * `flow`: indicates which user flow is in progress during seed selection (e.g.
                 verify single sig addr or sign message).
     """
-    SCAN_SEED = (_("Scan a seed"), SeedSignerIconConstants.QRCODE)
-    TYPE_12WORD = (_("Enter 12-word seed"), FontAwesomeIconConstants.KEYBOARD)
-    TYPE_24WORD = (_("Enter 24-word seed"), FontAwesomeIconConstants.KEYBOARD)
-    TYPE_ELECTRUM = (_("Enter Electrum seed"), FontAwesomeIconConstants.KEYBOARD)
+    SCAN_SEED = ButtonOption("Scan a seed", SeedSignerIconConstants.QRCODE)
+    TYPE_12WORD = ButtonOption("Enter 12-word seed", FontAwesomeIconConstants.KEYBOARD)
+    TYPE_24WORD = ButtonOption("Enter 24-word seed", FontAwesomeIconConstants.KEYBOARD)
+    TYPE_ELECTRUM = ButtonOption("Enter Electrum seed", FontAwesomeIconConstants.KEYBOARD)
 
 
     def __init__(self, flow: str = None):
@@ -108,11 +109,7 @@ class SeedSelectSeedView(View):
         button_data = []
         for seed in seeds:
             button_str = seed.get_fingerprint(self.settings.get_value(SettingsConstants.SETTING__NETWORK))
-            
-            if seed.passphrase is not None:
-                # TODO: Include lock icon on right side of button
-                pass
-            button_data.append((button_str, SeedSignerIconConstants.FINGERPRINT, "blue"))
+            button_data.append(ButtonOption(button_str, SeedSignerIconConstants.FINGERPRINT, icon_color="blue"))
         
         button_data.append(self.SCAN_SEED)
         button_data.append(self.TYPE_12WORD)
@@ -165,11 +162,11 @@ class SeedSelectSeedView(View):
     Loading seeds, passphrases, etc
 ****************************************************************************"""
 class LoadSeedView(View):
-    SEED_QR = (_("Scan a SeedQR"), SeedSignerIconConstants.QRCODE)
-    TYPE_12WORD = (_("Enter 12-word seed"), FontAwesomeIconConstants.KEYBOARD)
-    TYPE_24WORD = (_("Enter 24-word seed"), FontAwesomeIconConstants.KEYBOARD)
-    TYPE_ELECTRUM = (_("Enter Electrum seed"), FontAwesomeIconConstants.KEYBOARD)
-    CREATE = (_(" Create a seed"), SeedSignerIconConstants.PLUS)
+    SEED_QR = ButtonOption("Scan a SeedQR", SeedSignerIconConstants.QRCODE)
+    TYPE_12WORD = ButtonOption("Enter 12-word seed", FontAwesomeIconConstants.KEYBOARD)
+    TYPE_24WORD = ButtonOption("Enter 24-word seed", FontAwesomeIconConstants.KEYBOARD)
+    TYPE_ELECTRUM = ButtonOption("Enter Electrum seed", FontAwesomeIconConstants.KEYBOARD)
+    CREATE = ButtonOption(" Create a seed", SeedSignerIconConstants.PLUS)
 
     def run(self):
         button_data = [
@@ -274,8 +271,8 @@ class SeedMnemonicEntryView(View):
 
 
 class SeedMnemonicInvalidView(View):
-    EDIT = _("Review & Edit")
-    DISCARD = (_("Discard"), None, None, "red")
+    EDIT = ButtonOption("Review & Edit")
+    DISCARD = ButtonOption("Discard", button_label_color="red")
 
     def __init__(self):
         super().__init__()
@@ -303,8 +300,8 @@ class SeedMnemonicInvalidView(View):
 
 
 class SeedFinalizeView(View):
-    FINALIZE = _("Done")
-    PASSPHRASE = _("BIP-39 Passphrase")
+    FINALIZE = ButtonOption("Done")
+    PASSPHRASE = ButtonOption("BIP-39 Passphrase")
 
     def __init__(self):
         super().__init__()
@@ -327,9 +324,9 @@ class SeedFinalizeView(View):
 
     def run(self):
         button_data = [self.FINALIZE]
-        passphrase_button = self.seed.passphrase_label
+        self.PASSPHRASE.button_label = self.seed.passphrase_label
         if self.settings.get_value(SettingsConstants.SETTING__PASSPHRASE) != SettingsConstants.OPTION__DISABLED:
-            button_data.append(passphrase_button)
+            button_data.append(self.PASSPHRASE)
 
         selected_menu_num = self.run_screen(
             seed_screens.SeedFinalizeScreen,
@@ -341,7 +338,7 @@ class SeedFinalizeView(View):
             seed_num = self.controller.storage.finalize_pending_seed()
             return Destination(SeedOptionsView, view_args={"seed_num": seed_num}, clear_history=True)
 
-        elif button_data[selected_menu_num] == passphrase_button:
+        elif button_data[selected_menu_num] == self.PASSPHRASE:
             return Destination(SeedAddPassphraseView)
 
         elif selected_menu_num == RET_CODE__BACK_BUTTON:
@@ -377,8 +374,8 @@ class SeedAddPassphraseView(View):
 
 
 class SeedAddPassphraseExitDialogView(View):
-    EDIT = _("Edit passphrase")
-    DISCARD = (_("Discard passphrase"), None, None, "red")
+    EDIT = ButtonOption("Edit passphrase")
+    DISCARD = ButtonOption("Discard passphrase", button_label_color="red")
 
     def __init__(self):
         super().__init__()
@@ -410,8 +407,8 @@ class SeedReviewPassphraseView(View):
     """
         Display the completed passphrase back to the user.
     """
-    EDIT = _("Edit passphrase")
-    DONE = _("Done")
+    EDIT = ButtonOption("Edit passphrase")
+    DONE = ButtonOption("Done")
 
     def __init__(self):
         super().__init__()
@@ -450,8 +447,8 @@ class SeedReviewPassphraseView(View):
 
             
 class SeedDiscardView(View):
-    KEEP = _("Keep Seed")
-    DISCARD = (_("Discard"), None, None, "red")
+    KEEP = ButtonOption("Keep Seed")
+    DISCARD = ButtonOption("Discard", button_label_color="red")
 
     def __init__(self, seed_num: int = None):
         super().__init__()
@@ -518,14 +515,14 @@ class SeedElectrumMnemonicStartView(View):
     Views for actions on individual seeds:
 ****************************************************************************"""
 class SeedOptionsView(View):
-    SCAN_PSBT = (_("Scan PSBT"), SeedSignerIconConstants.QRCODE)
-    VERIFY_ADDRESS = _("Verify Addr")
-    EXPORT_XPUB = _("Export Xpub")
-    EXPLORER = _("Address Explorer")
-    SIGN_MESSAGE = _("Sign Message")
-    BACKUP = (_("Backup Seed"), None, None, None, SeedSignerIconConstants.CHEVRON_RIGHT)
-    BIP85_CHILD_SEED = _("BIP-85 Child Seed")
-    DISCARD = (_("Discard Seed"), None, None, "red")
+    SCAN_PSBT = ButtonOption("Scan PSBT", SeedSignerIconConstants.QRCODE)
+    VERIFY_ADDRESS = ButtonOption("Verify Addr")
+    EXPORT_XPUB = ButtonOption("Export Xpub")
+    EXPLORER = ButtonOption("Address Explorer")
+    SIGN_MESSAGE = ButtonOption("Sign Message")
+    BACKUP = ButtonOption("Backup Seed", right_icon_name=SeedSignerIconConstants.CHEVRON_RIGHT)
+    BIP85_CHILD_SEED = ButtonOption("BIP-85 Child Seed")
+    DISCARD = ButtonOption("Discard Seed", button_label_color="red")
 
 
     def __init__(self, seed_num: int):
@@ -630,8 +627,8 @@ class SeedOptionsView(View):
 
 
 class SeedBackupView(View):
-    VIEW_WORDS = _("View Seed Words")
-    EXPORT_SEEDQR = _("Export as SeedQR")
+    VIEW_WORDS = ButtonOption("View Seed Words")
+    EXPORT_SEEDQR = ButtonOption("Export as SeedQR")
 
     def __init__(self, seed_num):
         super().__init__()
@@ -667,8 +664,8 @@ class SeedBackupView(View):
     Export Xpub flow
 ****************************************************************************"""
 class SeedExportXpubSigTypeView(View):
-    SINGLE_SIG = _("Single Sig")
-    MULTISIG = _("Multisig")
+    SINGLE_SIG = ButtonOption("Single Sig", return_data=SettingsConstants.SINGLE_SIG)
+    MULTISIG = ButtonOption("Multisig", return_data=SettingsConstants.MULTISIG)
 
     def __init__(self, seed_num: int):
         super().__init__()
@@ -680,7 +677,7 @@ class SeedExportXpubSigTypeView(View):
             # Nothing to select; skip this screen
             return Destination(SeedExportXpubScriptTypeView, view_args={"seed_num": self.seed_num, "sig_type": self.settings.get_value(SettingsConstants.SETTING__SIG_TYPES)[0]}, skip_current_view=True)
 
-        button_data=[self.SINGLE_SIG, self.MULTISIG]
+        button_data = [self.SINGLE_SIG, self.MULTISIG]
 
         selected_menu_num = self.run_screen(
             ButtonListScreen,
@@ -691,11 +688,7 @@ class SeedExportXpubSigTypeView(View):
         if selected_menu_num == RET_CODE__BACK_BUTTON:
             return Destination(BackStackView)
 
-        if button_data[selected_menu_num] == self.SINGLE_SIG:
-            return Destination(SeedExportXpubScriptTypeView, view_args={"seed_num": self.seed_num, "sig_type": SettingsConstants.SINGLE_SIG})
-
-        elif button_data[selected_menu_num] == self.MULTISIG:
-            return Destination(SeedExportXpubScriptTypeView, view_args={"seed_num": self.seed_num, "sig_type": SettingsConstants.MULTISIG})
+        return Destination(SeedExportXpubScriptTypeView, view_args={"seed_num": self.seed_num, "sig_type": button_data[selected_menu_num].return_data})
 
 
 
@@ -737,13 +730,13 @@ class SeedExportXpubScriptTypeView(View):
         button_data = []
         for script_type, display_name in SettingsConstants.ALL_SCRIPT_TYPES:
             if script_type in self.settings.get_value(SettingsConstants.SETTING__SCRIPT_TYPES):
-                button_data.append((script_type, display_name))
+                button_data.append(ButtonOption(display_name, return_data=script_type))
 
         selected_menu_num = self.run_screen(
             ButtonListScreen,
             title=title,
             is_button_text_centered=False,
-            button_data=[x[1] for x in button_data],
+            button_data=button_data,
             is_bottom_list=True,
         )
 
@@ -754,7 +747,7 @@ class SeedExportXpubScriptTypeView(View):
             return Destination(BackStackView)
 
         else:
-            args["script_type"] = button_data[selected_menu_num][0]
+            args["script_type"] = button_data[selected_menu_num].return_data
 
             if args["script_type"] == SettingsConstants.CUSTOM_DERIVATION:
                 return Destination(SeedExportXpubCustomDerivationView, view_args=args)
@@ -826,7 +819,9 @@ class SeedExportXpubCoordinatorView(View):
             args["coordinator"] = self.settings.get_value(SettingsConstants.SETTING__COORDINATORS)[0]
             return Destination(SeedExportXpubWarningView, view_args=args, skip_current_view=True)
 
-        button_data = self.settings.get_multiselect_value_display_names(SettingsConstants.SETTING__COORDINATORS)
+        button_data = []
+        for display_name, setting_option in zip(self.settings.get_multiselect_value_display_names(SettingsConstants.SETTING__COORDINATORS), self.settings.get_value(SettingsConstants.SETTING__COORDINATORS)):
+            button_data.append(ButtonOption(display_name, return_data=setting_option))
 
         selected_menu_num = self.run_screen(
             ButtonListScreen,
@@ -838,9 +833,10 @@ class SeedExportXpubCoordinatorView(View):
         if selected_menu_num == RET_CODE__BACK_BUTTON:
             return Destination(BackStackView)
 
-        coordinators_settings_entry = SettingsDefinition.get_settings_entry(SettingsConstants.SETTING__COORDINATORS)
-        selected_display_name = button_data[selected_menu_num]
-        args["coordinator"] = coordinators_settings_entry.get_selection_option_value_by_display_name(selected_display_name)
+        # coordinators_settings_entry = SettingsDefinition.get_settings_entry(SettingsConstants.SETTING__COORDINATORS)
+        # selected_display_name = button_data[selected_menu_num]
+        # args["coordinator"] = coordinators_settings_entry.get_selection_option_value_by_display_name(selected_display_name)
+        args["coordinator"] = button_data[selected_menu_num].return_data
 
         return Destination(SeedExportXpubWarningView, view_args=args)
 
@@ -1048,8 +1044,8 @@ class SeedWordsWarningView(View):
 
 
 class SeedWordsView(View):
-    NEXT = _("Next")
-    DONE = _("Done")
+    NEXT = ButtonOption("Next")
+    DONE = ButtonOption("Done")
 
     def __init__(self, seed_num: int, bip85_data: dict = None, page_index: int = 0):
         super().__init__()
@@ -1126,14 +1122,14 @@ class SeedBIP85ApplicationModeView(View):
         *  XPRV (BIP32)
     """
     # TODO: Future enhancement to display WIF (HD-SEED) and XPRV (Bip32)?
-    WORDS_12 = _("12 Words")
-    WORDS_24 = _("24 Words")
+    WORDS_12 = ButtonOption("12 Words")
+    WORDS_24 = ButtonOption("24 Words")
 
     def __init__(self, seed_num: int):
         super().__init__()
         self.seed_num = seed_num
         self.num_words = 0
-        self.bip85_app_num = 39     # TODO: Support other Application numbers
+        self.bip85_app_num = 39     # TODO: Support other Application numbers; TODO: Define this as a constant
 
 
     def run(self):
@@ -1159,8 +1155,8 @@ class SeedBIP85ApplicationModeView(View):
 
 
 
-# View to retrieve the derived seed index
 class SeedBIP85SelectChildIndexView(View):
+    # View to retrieve the derived seed index
     def __init__(self, seed_num: int, num_words: int):
         super().__init__()
         self.seed_num = seed_num
@@ -1168,7 +1164,7 @@ class SeedBIP85SelectChildIndexView(View):
 
 
     def run(self):
-        # Change this later to use the generic Screen input keyboard
+        # TODO: Change this later to use the generic Screen input keyboard
         ret = seed_screens.SeedBIP85SelectChildIndexScreen().display()
 
         if ret == RET_CODE__BACK_BUTTON:
@@ -1206,7 +1202,7 @@ class SeedBIP85InvalidChildIndexView(View):
             show_back_button=False,
             status_headline=_("Invalid Child Index"),
             text=_("BIP-85 Child Index must be between 0 and 2^31-1."),
-            button_data=[_("Try Again")]
+            button_data=[ButtonOption("Try Again")]
         ).display()
 
         return Destination(
@@ -1224,8 +1220,8 @@ class SeedBIP85InvalidChildIndexView(View):
     Seed Words Backup Test
 ****************************************************************************"""
 class SeedWordsBackupTestPromptView(View):
-    VERIFY = _("Verify")
-    SKIP = _("Skip")
+    VERIFY = ButtonOption("Verify")
+    SKIP = ButtonOption("Skip")
 
     def __init__(self, seed_num: int, bip85_data: dict = None):
         super().__init__()
@@ -1283,10 +1279,10 @@ class SeedWordsBackupTestView(View):
             while self.cur_index in self.confirmed_list:
                 self.cur_index = int(random.random() * len(self.mnemonic_list))
 
-        real_word = self.mnemonic_list[self.cur_index]
-        fake_word1 = bip39.WORDLIST[int(random.random() * 2047)]
-        fake_word2 = bip39.WORDLIST[int(random.random() * 2047)]
-        fake_word3 = bip39.WORDLIST[int(random.random() * 2047)]
+        real_word = ButtonOption(self.mnemonic_list[self.cur_index])
+        fake_word1 = ButtonOption(bip39.WORDLIST[int(random.random() * 2047)])
+        fake_word2 = ButtonOption(bip39.WORDLIST[int(random.random() * 2047)])
+        fake_word3 = ButtonOption(bip39.WORDLIST[int(random.random() * 2047)])
 
         button_data = [real_word, fake_word1, fake_word2, fake_word3]
         random.shuffle(button_data)
@@ -1332,8 +1328,8 @@ class SeedWordsBackupTestView(View):
 
 
 class SeedWordsBackupTestMistakeView(View):
-    REVIEW = _("Review Seed Words")
-    RETRY = _("Try Again")
+    REVIEW = ButtonOption("Review Seed Words")
+    RETRY = ButtonOption("Try Again")
 
     def __init__(self, seed_num: int, bip85_data: dict = None, cur_index: int = None, wrong_word: str = None, confirmed_list: list[bool] = None):
         super().__init__()
@@ -1392,7 +1388,7 @@ class SeedWordsBackupTestSuccessView(View):
             show_back_button=False,
             status_headline=_("Success!"),
             text=_("All mnemonic backup words were successfully verified!"),
-            button_data=[_("OK")]
+            button_data=[ButtonOption("OK")]
         ).display()
 
         if self.seed_num is not None:
@@ -1414,15 +1410,11 @@ class SeedTranscribeSeedQRFormatView(View):
     def run(self):
         seed = self.controller.get_seed(self.seed_num)
         if len(seed.mnemonic_list) == 12:
-            STANDARD = _("Standard: 25x25")
-            COMPACT = _("Compact: 21x21")
-            num_modules_standard = 25
-            num_modules_compact = 21
+            STANDARD = ButtonOption("Standard: 25x25", return_data=25)
+            COMPACT = ButtonOption("Compact: 21x21", return_data=21)
         else:
-            STANDARD = _("Standard: 29x29")
-            COMPACT = _("Compact: 25x25")
-            num_modules_standard = 29
-            num_modules_compact = 25
+            STANDARD = ButtonOption("Standard: 29x29", return_data=29)
+            COMPACT = ButtonOption("Compact: 25x25", return_data=25)
 
         if self.settings.get_value(SettingsConstants.SETTING__COMPACT_SEEDQR) != SettingsConstants.OPTION__ENABLED:
             # Only configured for standard SeedQR
@@ -1431,7 +1423,7 @@ class SeedTranscribeSeedQRFormatView(View):
                 view_args={
                     "seed_num": self.seed_num,
                     "seedqr_format": QRType.SEED__SEEDQR,
-                    "num_modules": num_modules_standard,
+                    "num_modules": STANDARD.return_data,
                 },
                 skip_current_view=True,
             )
@@ -1450,10 +1442,10 @@ class SeedTranscribeSeedQRFormatView(View):
         
         if button_data[selected_menu_num] == STANDARD:
             seedqr_format = QRType.SEED__SEEDQR
-            num_modules = num_modules_standard
         else:
             seedqr_format = QRType.SEED__COMPACTSEEDQR
-            num_modules = num_modules_compact
+
+        num_modules = button_data[selected_menu_num].return_data
         
         return Destination(
             SeedTranscribeSeedQRWarningView,
@@ -1580,8 +1572,8 @@ class SeedTranscribeSeedQRZoomedInView(View):
 
 
 class SeedTranscribeSeedQRConfirmQRPromptView(View):
-    SCAN = (_("Confirm SeedQR"), SeedSignerIconConstants.QRCODE)
-    DONE = _("Done")
+    SCAN = ButtonOption("Confirm SeedQR", SeedSignerIconConstants.QRCODE)
+    DONE = ButtonOption("Done")
 
     def __init__(self, seed_num: int):
         super().__init__()
@@ -1726,8 +1718,8 @@ class AddressVerificationStartView(View):
 
 
 class AddressVerificationSigTypeView(View):
-    SINGLE_SIG = _("Single Sig")
-    MULTISIG = _("Multisig")
+    SINGLE_SIG = ButtonOption("Single Sig")
+    MULTISIG = ButtonOption("Multisig")
 
     def run(self):
         from seedsigner.helpers import embit_utils
@@ -1781,8 +1773,8 @@ class SeedAddressVerificationView(View):
         multisig.
     """
     # TRANSLATOR_NOTE: Option when scanning for a matching address; skips ten addresses ahead
-    SKIP_10 = _("Skip 10")
-    CANCEL = _("Cancel")
+    SKIP_10 = ButtonOption("Skip 10")
+    CANCEL = ButtonOption("Cancel")
 
     def __init__(self, seed_num: int = None):
         super().__init__()
@@ -2000,8 +1992,8 @@ class AddressVerificationSuccessView(View):
 
 
 class LoadMultisigWalletDescriptorView(View):
-    SCAN = (_("Scan Descriptor"), SeedSignerIconConstants.QRCODE)
-    CANCEL = _("Cancel")
+    SCAN = ButtonOption("Scan Descriptor", SeedSignerIconConstants.QRCODE)
+    CANCEL = ButtonOption("Cancel")
 
     def run(self):
         button_data = [self.SCAN, self.CANCEL]
@@ -2025,10 +2017,10 @@ class LoadMultisigWalletDescriptorView(View):
 
 
 class MultisigWalletDescriptorView(View):
-    RETURN = _("Return to PSBT")
-    VERIFY_ADDR = _("Verify Addr")
-    ADDRESS_EXPLORER = _("Address Explorer")
-    OK = _("OK")
+    RETURN = ButtonOption("Return to PSBT")
+    VERIFY_ADDR = ButtonOption("Verify Addr")
+    ADDRESS_EXPLORER = ButtonOption("Address Explorer")
+    OK = ButtonOption("OK")
 
     def run(self):
         descriptor = self.controller.multisig_wallet_descriptor
@@ -2047,8 +2039,8 @@ class MultisigWalletDescriptorView(View):
             if self.controller.resume_main_flow == Controller.FLOW__PSBT:
                 button_data = [self.RETURN]
             elif self.controller.resume_main_flow == Controller.FLOW__VERIFY_MULTISIG_ADDR and self.controller.unverified_address:
-                verify_addr_display = f"""{self.VERIFY_ADDR} {self.controller.unverified_address["address"][:7]}"""
-                button_data = [verify_addr_display]
+                verify_addr_display = f"""{_(self.VERIFY_ADDR.button_label)} {self.controller.unverified_address["address"][:7]}"""
+                button_data = [ButtonOption(verify_addr_display)]
             elif self.controller.resume_main_flow == Controller.FLOW__ADDRESS_EXPLORER:
                 button_data = [self.ADDRESS_EXPLORER]
 
@@ -2069,7 +2061,7 @@ class MultisigWalletDescriptorView(View):
             self.controller.resume_main_flow = None
             return Destination(PSBTChangeDetailsView, view_args=dict(change_address_num=0))
 
-        elif button_data[selected_menu_num].startswith(self.VERIFY_ADDR):
+        elif button_data[selected_menu_num].button_label.startswith(_(self.VERIFY_ADDR.button_label)):
             self.controller.resume_main_flow = None
             return Destination(SeedAddressVerificationView)
 
@@ -2111,12 +2103,7 @@ class SeedSignMessageStartView(View):
         # Note: addr_format["network"] can be MAINNET or [TESTNET, REGTEST]
         if self.settings.get_value(SettingsConstants.SETTING__NETWORK) not in addr_format["network"]:
             from seedsigner.views.view import NetworkMismatchErrorView
-            # TRANSLATOR_NOTE: Inserts mainnet/testnet/regtest and derivation path
-            text = _("Current network setting ({}) doesn't match {}").format(
-                self.settings.get_value_display_name(SettingsConstants.SETTING__NETWORK),
-                self.derivation_path,
-            )
-            self.set_redirect(Destination(NetworkMismatchErrorView, view_args=dict(text=text)))
+            self.set_redirect(Destination(NetworkMismatchErrorView, view_args=dict(derivation_path=self.derivation_path)))
 
             # cleanup. Note: We could leave this in place so the user can resume the
             # flow, but for now we avoid complications and keep things simple.
@@ -2203,11 +2190,7 @@ class SeedSignMessageConfirmAddressView(View):
                 addr_format["network"] = self.settings.get_value(SettingsConstants.SETTING__NETWORK)
             else:
                 from seedsigner.views.view import NetworkMismatchErrorView
-                text = _("Current network setting ({}) doesn't match {}").format(
-                    self.settings.get_value_display_name(SettingsConstants.SETTING__NETWORK),
-                    self.derivation_path,
-                )
-                self.set_redirect(Destination(NetworkMismatchErrorView, view_args=dict(text=text)))
+                self.set_redirect(Destination(NetworkMismatchErrorView, view_args=dict(derivation_path=self.derivation_path)))
 
                 # cleanup. Note: We could leave this in place so the user can resume the
                 # flow, but for now we avoid complications and keep things simple.

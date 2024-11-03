@@ -11,7 +11,7 @@ from seedsigner.gui.components import (BtcAmount, Icon, FontAwesomeIconConstants
 from seedsigner.gui.renderer import Renderer
 from seedsigner.models.threads import BaseThread
 
-from .screen import ButtonListScreen
+from .screen import ButtonListScreen, ButtonOption
 
 
 
@@ -31,7 +31,7 @@ class PSBTOverviewScreen(ButtonListScreen):
         # Customize defaults
         self.title = _("Review PSBT")
         self.is_bottom_list = True
-        self.button_data = [_("Review Details")]
+        self.button_data = [ButtonOption("Review Details")]
 
         # This screen can take a while to load while parsing the PSBT
         self.show_loading_screen = True
@@ -479,7 +479,7 @@ class PSBTMathScreen(ButtonListScreen):
     def __post_init__(self):
         # Customize defaults
         self.title = _("PSBT Math")
-        self.button_data = [_("Review Recipients")]
+        self.button_data = [ButtonOption("Review Recipients")]
         self.is_bottom_list = True
 
         super().__post_init__()
@@ -675,9 +675,18 @@ class PSBTChangeDetailsScreen(ButtonListScreen):
         ))
 
         screen_y = self.components[-1].screen_y + self.components[-1].height + 2*GUIConstants.COMPONENT_PADDING
+
+        change_type = _("Multisig") if self.is_multisig else self.fingerprint
+
+        if self.is_change_derivation_path :
+            addr_type = _("Change")
+        else: 
+            # TRANSLATOR_NOTE: Abbreviation for receive address
+            addr_type = _("Addr")
+
+        value_text = "{}: {} #{}".format(change_type, addr_type, self.derivation_path_addr_index)
         self.components.append(IconTextLine(
-            # TRANSLATOR_NOTE: First variable is either "Multisig" or the fingerprint for single sig; Second is "Change" or "Addr" (change vs receive addr); Third is the address index number (e.g. your #4 receive addr).
-            value_text="""{}: {} #{}""".format(_("Multisig") if self.is_multisig else self.fingerprint, _("Change") if self.is_change_derivation_path else _("Addr"), self.derivation_path_addr_index),
+            value_text=value_text,
             icon_name=SeedSignerIconConstants.FINGERPRINT,
             icon_color=GUIConstants.INFO_COLOR,
             is_text_centered=False,

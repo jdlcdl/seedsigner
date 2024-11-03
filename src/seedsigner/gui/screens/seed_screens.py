@@ -11,7 +11,7 @@ from seedsigner.gui.renderer import Renderer
 from seedsigner.helpers.qr import QR
 from seedsigner.models.threads import BaseThread, ThreadsafeCounter
 
-from .screen import RET_CODE__BACK_BUTTON, BaseScreen, BaseTopNavScreen, ButtonListScreen, KeyboardScreen, WarningEdgesMixin
+from .screen import RET_CODE__BACK_BUTTON, BaseScreen, BaseTopNavScreen, ButtonListScreen, ButtonOption, KeyboardScreen, WarningEdgesMixin
 from ..components import (Button, FontAwesomeIconConstants, Fonts, FormattedAddress, IconButton,
     IconTextLine, SeedSignerIconConstants, TextArea, GUIConstants, reflow_text_into_pages)
 
@@ -607,7 +607,7 @@ class SeedExportXpubDetailsScreen(WarningEdgesMixin, ButtonListScreen):
 
     def __post_init__(self):
         # Programmatically set up other args
-        self.button_data = [_("Export Xpub")]
+        self.button_data = [ButtonOption("Export Xpub")]
         self.title = _("Xpub Details")
 
         # Initialize the base class
@@ -1138,7 +1138,8 @@ class SeedTranscribeSeedQRWholeQRScreen(WarningEdgesMixin, ButtonListScreen):
     def __post_init__(self):
         self.title = _("Transcribe SeedQR")
         # TRANSLATOR_NOTE: Refers to the QR code size: 21x21, 25x25, or 29x29
-        self.button_data = [_("Begin {}x{}").format(self.num_modules, self.num_modules)]
+        button_label = _("Begin {}x{}").format(self.num_modules, self.num_modules)
+        self.button_data = [ButtonOption(button_label)]
         self.is_bottom_list = True
         self.status_color = GUIConstants.DIRE_WARNING_COLOR
         super().__post_init__()
@@ -1564,7 +1565,7 @@ class SeedSignMessageConfirmMessageScreen(ButtonListScreen):
             self.title = f"""Message (pt {self.page_num + 1}/{len(self.sign_message_data["paged_message"])})"""
         self.is_bottom_list = True
         self.is_button_text_centered = True
-        self.button_data = [_("Next")]
+        self.button_data = [ButtonOption("Next")]
         super().__post_init__()
 
         message_display = TextArea(
@@ -1586,7 +1587,7 @@ class SeedSignMessageConfirmAddressScreen(ButtonListScreen):
         self.title = _("Confirm Address")
         self.is_bottom_list = True
         self.is_button_text_centered = True
-        self.button_data = [_("Sign Message")]
+        self.button_data = [ButtonOption("Sign Message")]
         super().__post_init__()
 
         derivation_path_display = IconTextLine(

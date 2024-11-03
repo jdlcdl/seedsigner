@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Any, List
 
-from gettext import gettext as _
+from seedsigner.helpers.l10n import mark_for_translation as _mft
 
 
 class SettingsConstants:
@@ -11,25 +11,25 @@ class SettingsConstants:
     OPTION__PROMPT = "P"
     OPTION__REQUIRED = "R"
     OPTIONS__ENABLED_DISABLED = [
-        (OPTION__ENABLED, _("Enabled")),
-        (OPTION__DISABLED, _("Disabled")),
+        (OPTION__ENABLED, _mft("Enabled")),
+        (OPTION__DISABLED, _mft("Disabled")),
     ]
     OPTIONS__ONLY_DISABLED = [
-        (OPTION__DISABLED, _("Disabled")),
+        (OPTION__DISABLED, _mft("Disabled")),
     ]
     OPTIONS__PROMPT_REQUIRED_DISABLED = [
-        (OPTION__PROMPT, _("Prompt")),
-        (OPTION__REQUIRED, _("Required")),
-        (OPTION__DISABLED, _("Disabled")),
+        (OPTION__PROMPT, _mft("Prompt")),
+        (OPTION__REQUIRED, _mft("Required")),
+        (OPTION__DISABLED, _mft("Disabled")),
     ]
     OPTIONS__ENABLED_DISABLED_REQUIRED = OPTIONS__ENABLED_DISABLED +[
-        (OPTION__REQUIRED, _("Required")),
+        (OPTION__REQUIRED, _mft("Required")),
     ]
     OPTIONS__ENABLED_DISABLED_PROMPT = OPTIONS__ENABLED_DISABLED + [
-        (OPTION__PROMPT, _("Prompt")),
+        (OPTION__PROMPT, _mft("Prompt")),
     ]
     ALL_OPTIONS = OPTIONS__ENABLED_DISABLED_PROMPT + [
-        (OPTION__REQUIRED, _("Required")),
+        (OPTION__REQUIRED, _mft("Required")),
     ]
 
     # User-facing selection options
@@ -77,10 +77,10 @@ class SettingsConstants:
     BTC_DENOMINATION__THRESHOLD = "thr"
     BTC_DENOMINATION__BTCSATSHYBRID = "hyb"
     ALL_BTC_DENOMINATIONS = [
-        (BTC_DENOMINATION__BTC, _("BTC")),
-        (BTC_DENOMINATION__SATS, _("sats")),
-        (BTC_DENOMINATION__THRESHOLD, _("Threshold at 0.01")),
-        (BTC_DENOMINATION__BTCSATSHYBRID, _("BTC | sats hybrid")),
+        (BTC_DENOMINATION__BTC, _mft("BTC")),
+        (BTC_DENOMINATION__SATS, _mft("sats")),
+        (BTC_DENOMINATION__THRESHOLD, _mft("Threshold at 0.01")),
+        (BTC_DENOMINATION__BTCSATSHYBRID, _mft("BTC | sats hybrid")),
     ]
 
     CAMERA_ROTATION__0 = 0
@@ -88,10 +88,10 @@ class SettingsConstants:
     CAMERA_ROTATION__180 = 180
     CAMERA_ROTATION__270 = 270
     ALL_CAMERA_ROTATIONS = [
-        (CAMERA_ROTATION__0, _("0°")),
-        (CAMERA_ROTATION__90, _("90°")),
-        (CAMERA_ROTATION__180, _("180°")),
-        (CAMERA_ROTATION__270, _("270°")),
+        (CAMERA_ROTATION__0, _mft("0°")),
+        (CAMERA_ROTATION__90, _mft("90°")),
+        (CAMERA_ROTATION__180, _mft("180°")),
+        (CAMERA_ROTATION__270, _mft("270°")),
     ]
 
     # QR code constants
@@ -99,11 +99,11 @@ class SettingsConstants:
     DENSITY__MEDIUM = "M"
     DENSITY__HIGH = "H"
     # TRANSLATOR_NOTE: QR code density option: Low, Medium, High
-    density_low = _("Low")
+    density_low = _mft("Low")
     # TRANSLATOR_NOTE: QR code density option: Low, Medium, High
-    density_medium = _("Medium")
+    density_medium = _mft("Medium")
     # TRANSLATOR_NOTE: QR code density option: Low, Medium, High
-    density_high = _("High")
+    density_high = _mft("High")
     ALL_DENSITIES = [
         (DENSITY__LOW, density_low),
         (DENSITY__MEDIUM, density_medium),
@@ -115,9 +115,9 @@ class SettingsConstants:
     TESTNET = "T"
     REGTEST = "R"
     ALL_NETWORKS = [
-        (MAINNET, _("Mainnet")),
-        (TESTNET, _("Testnet")),
-        (REGTEST, _("Regtest"))
+        (MAINNET, _mft("Mainnet")),
+        (TESTNET, _mft("Testnet")),
+        (REGTEST, _mft("Regtest"))
     ]
 
     @classmethod
@@ -130,14 +130,14 @@ class SettingsConstants:
         if network == SettingsConstants.REGTEST:
             return "regtest"
     
-    PERSISTENT_SETTINGS__SD_INSERTED__HELP_TEXT = _("Store Settings on SD card")
-    PERSISTENT_SETTINGS__SD_REMOVED__HELP_TEXT = _("Insert SD card to enable")
+    PERSISTENT_SETTINGS__SD_INSERTED__HELP_TEXT = _mft("Store Settings on SD card")
+    PERSISTENT_SETTINGS__SD_REMOVED__HELP_TEXT = _mft("Insert SD card to enable")
 
     SINGLE_SIG = "ss"
     MULTISIG = "ms"
     ALL_SIG_TYPES = [
-        (SINGLE_SIG, _("Single Sig")),
-        (MULTISIG, _("Multisig")),
+        (SINGLE_SIG, _mft("Single Sig")),
+        (MULTISIG, _mft("Multisig")),
     ]
 
     LEGACY_P2PKH = "leg"
@@ -146,11 +146,11 @@ class SettingsConstants:
     TAPROOT = "tr"
     CUSTOM_DERIVATION = "cus"
     ALL_SCRIPT_TYPES = [
-        (NATIVE_SEGWIT, _("Native Segwit")),
-        (NESTED_SEGWIT, _("Nested Segwit")),
-        (LEGACY_P2PKH, _("Legacy")),
-        (TAPROOT, _("Taproot")),
-        (CUSTOM_DERIVATION, _("Custom Derivation")),
+        (NATIVE_SEGWIT, _mft("Native Segwit")),
+        (NESTED_SEGWIT, _mft("Nested Segwit")),
+        (LEGACY_P2PKH, _mft("Legacy")),
+        (TAPROOT, _mft("Taproot")),
+        (CUSTOM_DERIVATION, _mft("Custom Derivation")),
     ]
 
     WORDLIST_LANGUAGE__ENGLISH = "en"
@@ -237,9 +237,9 @@ class SettingsConstants:
     ELECTRUM_PBKDF2_ROUNDS=2048
 
     # Label strings
-    LABEL__BIP39_PASSPHRASE = _("BIP-39 Passphrase")
+    LABEL__BIP39_PASSPHRASE = _mft("BIP-39 Passphrase")
     # TRANSLATOR_NOTE: Terminology used by Electrum seeds; equivalent to bip39 passphrase
-    custom_extension = _("Custom Extension")
+    custom_extension = _mft("Custom Extension")
     LABEL__CUSTOM_EXTENSION = custom_extension
 
 
@@ -311,7 +311,7 @@ class SettingsEntry:
                 option_value = option
                 display_name = option
             if option_value == value:
-                return _(display_name)
+                return _mft(display_name)
 
 
     def get_selection_option_value_by_display_name(self, display_name: str):
@@ -380,7 +380,7 @@ class SettingsDefinition:
         SettingsEntry(category=SettingsConstants.CATEGORY__SYSTEM,
                       attr_name=SettingsConstants.SETTING__LOCALE,
                       abbreviated_name="lang",
-                      display_name=_("Language"),
+                      display_name=_mft("Language"),
                       type=SettingsConstants.TYPE__SELECT_1,
                       selection_options=SettingsConstants.ALL_LOCALES,
                       default_value=SettingsConstants.LOCALE__ENGLISH),
@@ -389,7 +389,7 @@ class SettingsDefinition:
         SettingsEntry(category=SettingsConstants.CATEGORY__SYSTEM,
                       attr_name=SettingsConstants.SETTING__WORDLIST_LANGUAGE,
                       abbreviated_name="wordlist_lang",
-                      display_name=_("Mnemonic language"),
+                      display_name=_mft("Mnemonic language"),
                       type=SettingsConstants.TYPE__SELECT_1,
                       visibility=SettingsConstants.VISIBILITY__HIDDEN,
                       selection_options=SettingsConstants.ALL_WORDLIST_LANGUAGES,
@@ -398,14 +398,14 @@ class SettingsDefinition:
         SettingsEntry(category=SettingsConstants.CATEGORY__SYSTEM,
                       attr_name=SettingsConstants.SETTING__PERSISTENT_SETTINGS,
                       abbreviated_name="persistent",
-                      display_name=_("Persistent settings"),
+                      display_name=_mft("Persistent settings"),
                       help_text=SettingsConstants.PERSISTENT_SETTINGS__SD_INSERTED__HELP_TEXT,
                       default_value=SettingsConstants.OPTION__DISABLED),
 
         SettingsEntry(category=SettingsConstants.CATEGORY__WALLET,
                       attr_name=SettingsConstants.SETTING__COORDINATORS,
                       abbreviated_name="coords",
-                      display_name=_("Coordinator software"),
+                      display_name=_mft("Coordinator software"),
                       type=SettingsConstants.TYPE__MULTISELECT,
                       selection_options=SettingsConstants.ALL_COORDINATORS,
                       default_value=[
@@ -418,7 +418,7 @@ class SettingsDefinition:
         SettingsEntry(category=SettingsConstants.CATEGORY__SYSTEM,
                       attr_name=SettingsConstants.SETTING__BTC_DENOMINATION,
                       abbreviated_name="denom",
-                      display_name=_("Denomination display"),
+                      display_name=_mft("Denomination display"),
                       type=SettingsConstants.TYPE__SELECT_1,
                       selection_options=SettingsConstants.ALL_BTC_DENOMINATIONS,
                       default_value=SettingsConstants.BTC_DENOMINATION__THRESHOLD),
@@ -427,7 +427,7 @@ class SettingsDefinition:
         # Advanced options
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__NETWORK,
-                      display_name=_("Bitcoin network"),
+                      display_name=_mft("Bitcoin network"),
                       type=SettingsConstants.TYPE__SELECT_1,
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       selection_options=SettingsConstants.ALL_NETWORKS,
@@ -435,7 +435,7 @@ class SettingsDefinition:
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__QR_DENSITY,
-                      display_name=_("QR code density"),
+                      display_name=_mft("QR code density"),
                       type=SettingsConstants.TYPE__SELECT_1,
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       selection_options=SettingsConstants.ALL_DENSITIES,
@@ -443,14 +443,14 @@ class SettingsDefinition:
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__XPUB_EXPORT,
-                      display_name=_("Xpub export"),
+                      display_name=_mft("Xpub export"),
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       default_value=SettingsConstants.OPTION__ENABLED),
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__SIG_TYPES,
                       abbreviated_name="sigs",
-                      display_name=_("Sig types"),
+                      display_name=_mft("Sig types"),
                       type=SettingsConstants.TYPE__MULTISELECT,
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       selection_options=SettingsConstants.ALL_SIG_TYPES,
@@ -459,7 +459,7 @@ class SettingsDefinition:
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__SCRIPT_TYPES,
                       abbreviated_name="scripts",
-                      display_name=_("Script types"),
+                      display_name=_mft("Script types"),
                       type=SettingsConstants.TYPE__MULTISELECT,
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       selection_options=SettingsConstants.ALL_SCRIPT_TYPES,
@@ -467,13 +467,13 @@ class SettingsDefinition:
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__XPUB_DETAILS,
-                      display_name=_("Show xpub details"),
+                      display_name=_mft("Show xpub details"),
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       default_value=SettingsConstants.OPTION__ENABLED),
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__PASSPHRASE,
-                      display_name=_("BIP-39 passphrase"),
+                      display_name=_mft("BIP-39 passphrase"),
                       type=SettingsConstants.TYPE__SELECT_1,
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       selection_options=SettingsConstants.OPTIONS__ENABLED_DISABLED_REQUIRED,
@@ -482,7 +482,7 @@ class SettingsDefinition:
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__CAMERA_ROTATION,
                       abbreviated_name="camera",
-                      display_name=_("Camera rotation"),
+                      display_name=_mft("Camera rotation"),
                       type=SettingsConstants.TYPE__SELECT_1,
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       selection_options=SettingsConstants.ALL_CAMERA_ROTATIONS,
@@ -490,14 +490,14 @@ class SettingsDefinition:
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__COMPACT_SEEDQR,
-                      display_name=_("Compact SeedQR"),
+                      display_name=_mft("Compact SeedQR"),
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       default_value=SettingsConstants.OPTION__ENABLED),
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__BIP85_CHILD_SEEDS,
                       abbreviated_name="bip85",
-                      display_name=_("BIP-85 child seeds"),
+                      display_name=_mft("BIP-85 child seeds"),
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       default_value=SettingsConstants.OPTION__DISABLED),
 
@@ -505,40 +505,40 @@ class SettingsDefinition:
                       attr_name=SettingsConstants.SETTING__ELECTRUM_SEEDS,
                       abbreviated_name="electrum",
                       display_name="Electrum seeds",
-                      help_text=_("Native Segwit only"),
+                      help_text=_mft("Native Segwit only"),
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       default_value=SettingsConstants.OPTION__DISABLED),
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__MESSAGE_SIGNING,
-                      display_name=_("Message signing"),
+                      display_name=_mft("Message signing"),
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       default_value=SettingsConstants.OPTION__DISABLED),
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__PRIVACY_WARNINGS,
                       abbreviated_name="priv_warn",
-                      display_name=_("Show privacy warnings"),
+                      display_name=_mft("Show privacy warnings"),
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       default_value=SettingsConstants.OPTION__ENABLED),
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__DIRE_WARNINGS,
                       abbreviated_name="dire_warn",
-                      display_name=_("Show dire warnings"),
+                      display_name=_mft("Show dire warnings"),
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       default_value=SettingsConstants.OPTION__ENABLED),
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__QR_BRIGHTNESS_TIPS,
-                      display_name=_("Show QR brightness tips"),
+                      display_name=_mft("Show QR brightness tips"),
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       default_value=SettingsConstants.OPTION__ENABLED),
 
         SettingsEntry(category=SettingsConstants.CATEGORY__FEATURES,
                       attr_name=SettingsConstants.SETTING__PARTNER_LOGOS,
                       abbreviated_name="partners",
-                      display_name=_("Show partner logos"),
+                      display_name=_mft("Show partner logos"),
                       visibility=SettingsConstants.VISIBILITY__ADVANCED,
                       default_value=SettingsConstants.OPTION__ENABLED),
 
@@ -554,7 +554,7 @@ class SettingsDefinition:
         SettingsEntry(category=SettingsConstants.CATEGORY__SYSTEM,
                       attr_name=SettingsConstants.SETTING__QR_BRIGHTNESS,
                       abbreviated_name="qr_brightness",
-                      display_name=_("QR background color"),
+                      display_name=_mft("QR background color"),
                       type=SettingsConstants.TYPE__FREE_ENTRY,
                       visibility=SettingsConstants.VISIBILITY__HIDDEN,
                       default_value=62),

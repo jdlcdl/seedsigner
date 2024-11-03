@@ -3,16 +3,16 @@ from gettext import gettext as _
 from seedsigner.models.psbt_parser import PSBTParser
 from seedsigner.models.settings import SettingsConstants
 from seedsigner.gui.components import FontAwesomeIconConstants, SeedSignerIconConstants
-from seedsigner.gui.screens.screen import (RET_CODE__BACK_BUTTON, ButtonListScreen, WarningScreen, DireWarningScreen, QRDisplayScreen)
+from seedsigner.gui.screens.screen import (RET_CODE__BACK_BUTTON, ButtonListScreen, ButtonOption, WarningScreen, DireWarningScreen, QRDisplayScreen)
 from seedsigner.views.view import BackStackView, MainMenuView, NotYetImplementedView, View, Destination
 
 
 
 class PSBTSelectSeedView(View):
-    SCAN_SEED = (_("Scan a seed"), SeedSignerIconConstants.QRCODE)
-    TYPE_12WORD = (_("Enter 12-word seed"), FontAwesomeIconConstants.KEYBOARD)
-    TYPE_24WORD = (_("Enter 24-word seed"), FontAwesomeIconConstants.KEYBOARD)
-    TYPE_ELECTRUM = (_("Enter Electrum seed"), FontAwesomeIconConstants.KEYBOARD)
+    SCAN_SEED = ButtonOption("Scan a seed", SeedSignerIconConstants.QRCODE)
+    TYPE_12WORD = ButtonOption("Enter 12-word seed", FontAwesomeIconConstants.KEYBOARD)
+    TYPE_24WORD = ButtonOption("Enter 24-word seed", FontAwesomeIconConstants.KEYBOARD)
+    TYPE_ELECTRUM = ButtonOption("Enter Electrum seed", FontAwesomeIconConstants.KEYBOARD)
 
 
     def run(self):
@@ -38,7 +38,7 @@ class PSBTSelectSeedView(View):
                 # TRANSLATOR_NOTE: Inserts fingerprint w/"?" to indicate that this seed can't sign the current PSBT
                 button_str = _("{} (?)").format(button_str)
 
-            button_data.append((button_str, SeedSignerIconConstants.FINGERPRINT))
+            button_data.append(ButtonOption(button_str, SeedSignerIconConstants.FINGERPRINT))
 
         button_data.append(self.SCAN_SEED)
         button_data.append(self.TYPE_12WORD)
@@ -169,7 +169,7 @@ class PSBTUnsupportedScriptTypeWarningView(View):
         selected_menu_num = WarningScreen(
             status_headline=_("Unsupported Script Type!"),
             text=_("PSBT has unsupported input script type, please verify your change addresses."),
-            button_data=[_("Continue")],
+            button_data=[ButtonOption("Continue")],
         ).display()
         
         if selected_menu_num == RET_CODE__BACK_BUTTON:
@@ -190,7 +190,7 @@ class PSBTNoChangeWarningView(View):
             # TRANSLATOR_NOTE: User will receive no change back; the inputs to this transaction are fully spent
             status_headline=_("Full Spend!"),
             text=_("This PSBT spends its entire input value. No change is coming back to your wallet."),
-            button_data=[_("Continue")],
+            button_data=[ButtonOption("Continue")],
         ).display()
 
         if selected_menu_num == RET_CODE__BACK_BUTTON:
@@ -265,10 +265,10 @@ class PSBTAddressDetailsView(View):
 
         button_data = []
         if self.address_num < psbt_parser.num_destinations - 1:
-            button_data.append(_("Next Recipient"))
+            button_data.append(ButtonOption("Next Recipient"))
         else:
             # TRANSLATOR_NOTE: Short for "Next step"
-            button_data.append(_("Next"))
+            button_data.append(ButtonOption("Next"))
 
         selected_menu_num = self.run_screen(
             PSBTAddressDetailsScreen,
@@ -299,10 +299,9 @@ class PSBTAddressDetailsView(View):
 
 
 class PSBTChangeDetailsView(View):
-    NEXT = _("Next")
-    SKIP_VERIFICATION = _("Skip Verification")
-    VERIFY_MULTISIG = _("Verify Multisig Change")
-
+    NEXT = ButtonOption("Next")
+    SKIP_VERIFICATION = ButtonOption("Skip Verification")
+    VERIFY_MULTISIG = ButtonOption("Verify Multisig Change")
 
     def __init__(self, change_address_num):
         super().__init__()
@@ -349,7 +348,7 @@ class PSBTChangeDetailsView(View):
             title = _("Your Change")
         else:
             title = _("Self-Transfer")
-            self.VERIFY_MULTISIG = _("Verify Multisig Addr")
+            self.VERIFY_MULTISIG.button_label = _("Verify Multisig Addr")
         # if psbt_parser.num_change_outputs > 1:
         #     title += f" (#{self.change_address_num + 1})"
 
@@ -473,7 +472,7 @@ class PSBTAddressVerificationFailedView(View):
             title=title,
             status_headline=_("Address Verification Failed"),
             text=text,
-            button_data=[_("Discard PSBT")],
+            button_data=[ButtonOption("Discard PSBT")],
             show_back_button=False,
         ).display()
 
@@ -495,8 +494,8 @@ class PSBTOpReturnView(View):
             # Should not be able to get here
             raise Exception("Routing error")
 
-        title = "OP_RETURN"
-        button_data = ["Next"]
+        title = _("OP_RETURN")
+        button_data = [ButtonOption("Next")]
 
         selected_menu_num = self.run_screen(
             PSBTOpReturnScreen,
@@ -515,7 +514,7 @@ class PSBTOpReturnView(View):
 class PSBTFinalizeView(View):
     """
     """
-    APPROVE_PSBT = "Approve PSBT"
+    APPROVE_PSBT = ButtonOption("Approve PSBT")
 
     
     def run(self):
@@ -524,7 +523,6 @@ class PSBTFinalizeView(View):
 
         psbt_parser: PSBTParser = self.controller.psbt_parser
         psbt: PSBT = self.controller.psbt
-        self.APPROVE_PSBT = _("Approve PSBT")
 
         if not psbt_parser:
             # Should not be able to get here
@@ -573,7 +571,7 @@ class PSBTSignedQRDisplayView(View):
 
 
 class PSBTSigningErrorView(View):
-    SELECT_DIFF_SEED = _("Select Diff Seed")
+    SELECT_DIFF_SEED = ButtonOption("Select Diff Seed")
     
     def run(self):
         psbt_parser: PSBTParser = self.controller.psbt_parser

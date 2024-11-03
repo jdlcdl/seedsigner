@@ -2,7 +2,7 @@ import logging
 import re
 
 from gettext import gettext as _
-
+from seedsigner.helpers.l10n import mark_for_translation as _mft
 from seedsigner.models.settings import SettingsConstants
 from seedsigner.views.view import BackStackView, ErrorView, MainMenuView, NotYetImplementedView, View, Destination
 
@@ -19,8 +19,8 @@ class ScanView(View):
         dedicated errors when an unexpected QR type is scanned (e.g. Scan PSBT was
         selected but a SeedQR was scanned).
     """
-    instructions_text = _("Scan a QR code")
-    invalid_qr_type_message = _("QRCode not recognized or not yet supported.")
+    instructions_text = _mft("Scan a QR code")
+    invalid_qr_type_message = _mft("QRCode not recognized or not yet supported.")
 
 
     def __init__(self):
@@ -176,8 +176,8 @@ class ScanView(View):
 
 
 class ScanPSBTView(ScanView):
-    instructions_text = _("Scan PSBT")
-    invalid_qr_type_message = _("Expected a PSBT")
+    instructions_text = _mft("Scan PSBT")
+    invalid_qr_type_message = _mft("Expected a PSBT")
 
     @property
     def is_valid_qr_type(self):
@@ -186,8 +186,8 @@ class ScanPSBTView(ScanView):
 
 
 class ScanSeedQRView(ScanView):
-    instructions_text = _("Scan SeedQR")
-    invalid_qr_type_message = _("Expected a SeedQR")
+    instructions_text = _mft("Scan SeedQR")
+    invalid_qr_type_message = _mft("Expected a SeedQR")
 
     @property
     def is_valid_qr_type(self):
@@ -196,8 +196,8 @@ class ScanSeedQRView(ScanView):
 
 
 class ScanWalletDescriptorView(ScanView):
-    instructions_text = _("Scan descriptor")
-    invalid_qr_type_message = _("Expected a wallet descriptor QR")
+    instructions_text = _mft("Scan descriptor")
+    invalid_qr_type_message = _mft("Expected a wallet descriptor QR")
 
     @property
     def is_valid_qr_type(self):
@@ -206,8 +206,8 @@ class ScanWalletDescriptorView(ScanView):
 
 
 class ScanAddressView(ScanView):
-    instructions_text = _("Scan address QR")
-    invalid_qr_type_message = _("Expected an address QR")
+    instructions_text = _mft("Scan address QR")
+    invalid_qr_type_message = _mft("Expected an address QR")
 
     @property
     def is_valid_qr_type(self):

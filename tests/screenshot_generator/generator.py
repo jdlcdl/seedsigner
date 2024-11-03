@@ -295,7 +295,7 @@ def test_generate_screenshots(target_locale):
             "Misc Error Views": [
                 NotYetImplementedView,
                 (UnhandledExceptionView, dict(error=["IndexError", "line 1, in some_buggy_code.py", "list index out of range"])),
-                NetworkMismatchErrorView,
+                (NetworkMismatchErrorView, dict(derivation_path="m/84'/1'/0'")),
                 (OptionDisabledView, dict(settings_attr=SettingsConstants.SETTING__MESSAGE_SIGNING)),
                 (ErrorView, dict(
                     title="Error",

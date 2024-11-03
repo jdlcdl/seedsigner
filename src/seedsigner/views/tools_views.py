@@ -7,6 +7,7 @@ from gettext import gettext as _
 
 from seedsigner.gui.components import FontAwesomeIconConstants, GUIConstants, SeedSignerIconConstants
 from seedsigner.gui.screens import RET_CODE__BACK_BUTTON, ButtonListScreen
+from seedsigner.gui.screens.screen import ButtonOption
 from seedsigner.helpers import mnemonic_generation
 from seedsigner.models.seed import Seed
 from seedsigner.models.settings_definition import SettingsConstants
@@ -19,11 +20,11 @@ logger = logging.getLogger(__name__)
 
 
 class ToolsMenuView(View):
-    IMAGE = (_("New seed"), FontAwesomeIconConstants.CAMERA)
-    DICE = (_("New seed"), FontAwesomeIconConstants.DICE)
-    KEYBOARD = (_("Calc 12th/24th word"), FontAwesomeIconConstants.KEYBOARD)
-    ADDRESS_EXPLORER = _("Address Explorer")
-    VERIFY_ADDRESS = _("Verify Address")
+    IMAGE = ButtonOption("New seed", FontAwesomeIconConstants.CAMERA)
+    DICE = ButtonOption("New seed", FontAwesomeIconConstants.DICE)
+    KEYBOARD = ButtonOption("Calc 12th/24th word", FontAwesomeIconConstants.KEYBOARD)
+    ADDRESS_EXPLORER = ButtonOption("Address Explorer")
+    VERIFY_ADDRESS = ButtonOption("Verify Address")
 
     def run(self):
         button_data = [self.IMAGE, self.DICE, self.KEYBOARD, self.ADDRESS_EXPLORER, self.VERIFY_ADDRESS]
@@ -113,8 +114,8 @@ class ToolsImageEntropyFinalImageView(View):
 
 
 class ToolsImageEntropyMnemonicLengthView(View):
-    TWELVE_WORDS = _("12 words")
-    TWENTYFOUR_WORDS = _("24 words")
+    TWELVE_WORDS = ButtonOption("12 words", return_data=12)
+    TWENTYFOUR_WORDS = ButtonOption("24 words", return_data=24)
 
     def run(self):
         button_data = [self.TWELVE_WORDS, self.TWENTYFOUR_WORDS]
@@ -127,10 +128,7 @@ class ToolsImageEntropyMnemonicLengthView(View):
         if selected_menu_num == RET_CODE__BACK_BUTTON:
             return Destination(BackStackView)
         
-        if button_data[selected_menu_num] == self.TWELVE_WORDS:
-            mnemonic_length = 12
-        else:
-            mnemonic_length = 24
+        mnemonic_length = button_data[selected_menu_num].return_data
 
         preview_images = self.controller.image_entropy_preview_frames
         seed_entropy_image = self.controller.image_entropy_final_image
@@ -186,15 +184,19 @@ class ToolsImageEntropyMnemonicLengthView(View):
     Dice rolls Views
 ****************************************************************************"""
 class ToolsDiceEntropyMnemonicLengthView(View):
-    # TRANSLATOR_NOTE: Inserts the number of dice rolls needed for a 12-word mnemonic
-    TWELVE = _("12 words ({} rolls)").format(mnemonic_generation.DICE__NUM_ROLLS__12WORD)
-
-    # TRANSLATOR_NOTE: Inserts the number of dice rolls needed for a 24-word mnemonic
-    TWENTY_FOUR = _("24 words ({} rolls)").format(mnemonic_generation.DICE__NUM_ROLLS__24WORD)
-
-
     def run(self):
-        button_data = [self.TWELVE, self.TWENTY_FOUR]
+        # Since we're dynamically building the ButtonOption button_labels here, it's too
+        # awkward to use the usual class-level attr approach.
+
+        # TRANSLATOR_NOTE: Inserts the number of dice rolls needed for a 12-word mnemonic
+        twelve = _("12 words ({} rolls)").format(mnemonic_generation.DICE__NUM_ROLLS__12WORD)
+        TWELVE = ButtonOption(twelve, return_data=mnemonic_generation.DICE__NUM_ROLLS__12WORD)
+
+        # TRANSLATOR_NOTE: Inserts the number of dice rolls needed for a 24-word mnemonic
+        twenty_four = _("24 words ({} rolls)").format(mnemonic_generation.DICE__NUM_ROLLS__24WORD)
+        TWENTY_FOUR = ButtonOption(twenty_four, return_data=mnemonic_generation.DICE__NUM_ROLLS__24WORD)
+
+        button_data = [TWELVE, TWENTY_FOUR]
         selected_menu_num = ButtonListScreen(
             title=_("Mnemonic Length"),
             is_bottom_list=True,
@@ -205,10 +207,10 @@ class ToolsDiceEntropyMnemonicLengthView(View):
         if selected_menu_num == RET_CODE__BACK_BUTTON:
             return Destination(BackStackView)
 
-        elif button_data[selected_menu_num] == self.TWELVE:
+        elif button_data[selected_menu_num] == TWELVE:
             return Destination(ToolsDiceEntropyEntryView, view_args=dict(total_rolls=mnemonic_generation.DICE__NUM_ROLLS__12WORD))
 
-        elif button_data[selected_menu_num] == self.TWENTY_FOUR:
+        elif button_data[selected_menu_num] == TWENTY_FOUR:
             return Destination(ToolsDiceEntropyEntryView, view_args=dict(total_rolls=mnemonic_generation.DICE__NUM_ROLLS__24WORD))
 
 
@@ -243,8 +245,8 @@ class ToolsDiceEntropyEntryView(View):
     Calc final word Views
 ****************************************************************************"""
 class ToolsCalcFinalWordNumWordsView(View):
-    TWELVE = _("12 words")
-    TWENTY_FOUR = _("24 words")
+    TWELVE = ButtonOption("12 words", return_data=12)
+    TWENTY_FOUR = ButtonOption("24 words", return_data=24)
 
     def run(self):
         button_data = [self.TWELVE, self.TWENTY_FOUR]
@@ -260,29 +262,21 @@ class ToolsCalcFinalWordNumWordsView(View):
         if selected_menu_num == RET_CODE__BACK_BUTTON:
             return Destination(BackStackView)
 
-        elif button_data[selected_menu_num] == self.TWELVE:
-            self.controller.storage.init_pending_mnemonic(12)
+        self.controller.storage.init_pending_mnemonic(button_data[selected_menu_num].return_data)
 
-            # return Destination(SeedMnemonicEntryView, view_args=dict(is_calc_final_word=True))
-            return Destination(SeedMnemonicEntryView, view_args=dict(is_calc_final_word=True))
-
-        elif button_data[selected_menu_num] == self.TWENTY_FOUR:
-            self.controller.storage.init_pending_mnemonic(24)
-
-            # return Destination(SeedMnemonicEntryView, view_args=dict(is_calc_final_word=True))
-            return Destination(SeedMnemonicEntryView, view_args=dict(is_calc_final_word=True))
+        return Destination(SeedMnemonicEntryView, view_args=dict(is_calc_final_word=True))
 
 
 
 class ToolsCalcFinalWordFinalizePromptView(View):
     # TRANSLATOR_NOTE: Label to gather entropy through coin tosses
-    COIN_FLIPS = _("Coin flip entropy")
+    COIN_FLIPS = ButtonOption("Coin flip entropy")
 
     # TRANSLATOR_NOTE: Label to gather entropy through user specified BIP-39 word
-    SELECT_WORD = _("Word selection entropy")
+    SELECT_WORD = ButtonOption("Word selection entropy")
 
     # TRANSLATOR_NOTE: Label to allow user to default entropy as all-zeros
-    ZEROS = _("Finalize with zeros")
+    ZEROS = ButtonOption("Finalize with zeros")
 
     def run(self):
         from seedsigner.gui.screens.tools_screens import ToolsCalcFinalWordFinalizePromptScreen
@@ -343,7 +337,7 @@ class ToolsCalcFinalWordCoinFlipsView(View):
 
 
 class ToolsCalcFinalWordShowFinalWordView(View):
-    NEXT = _("Next")
+    NEXT = ButtonOption("Next")
 
     def __init__(self, coin_flips: str = None):
         super().__init__()
@@ -399,10 +393,13 @@ class ToolsCalcFinalWordShowFinalWordView(View):
     def run(self):
         from seedsigner.gui.screens.tools_screens import ToolsCalcFinalWordScreen
         button_data = [self.NEXT]
+
+        # TRANSLATOR_NOTE: label to calculate the last word of a BIP-39 mnemonic seed phrase
+        title = _("Final Word Calc")
+
         selected_menu_num = self.run_screen(
             ToolsCalcFinalWordScreen,
-            # TRANSLATOR_NOTE: label to calculate the last word of a BIP-39 mnemonic seed phrase
-            title=_("Final Word Calc"),
+            title=title,
             button_data=button_data,
             selected_final_word=self.selected_final_word,
             selected_final_bits=self.selected_final_bits,
@@ -419,8 +416,8 @@ class ToolsCalcFinalWordShowFinalWordView(View):
 
 
 class ToolsCalcFinalWordDoneView(View):
-    LOAD = _("Load seed")
-    DISCARD = (_("Discard"), None, None, "red")
+    LOAD = ButtonOption("Load seed")
+    DISCARD = ButtonOption("Discard", button_label_color="red")
 
     def run(self):
         from seedsigner.gui.screens.tools_screens import ToolsCalcFinalWordDoneScreen
@@ -454,11 +451,11 @@ class ToolsCalcFinalWordDoneView(View):
     Address Explorer Views
 ****************************************************************************"""
 class ToolsAddressExplorerSelectSourceView(View):
-    SCAN_SEED = (_("Scan a seed"), SeedSignerIconConstants.QRCODE)
-    SCAN_DESCRIPTOR = (_("Scan wallet descriptor"), SeedSignerIconConstants.QRCODE)
-    TYPE_12WORD = (_("Enter 12-word seed"), FontAwesomeIconConstants.KEYBOARD)
-    TYPE_24WORD = (_("Enter 24-word seed"), FontAwesomeIconConstants.KEYBOARD)
-    TYPE_ELECTRUM = (_("Enter Electrum seed"), FontAwesomeIconConstants.KEYBOARD)
+    SCAN_SEED = ButtonOption("Scan a seed", SeedSignerIconConstants.QRCODE)
+    SCAN_DESCRIPTOR = ButtonOption("Scan wallet descriptor", SeedSignerIconConstants.QRCODE)
+    TYPE_12WORD = ButtonOption("Enter 12-word seed", FontAwesomeIconConstants.KEYBOARD, return_data=12)
+    TYPE_24WORD = ButtonOption("Enter 24-word seed", FontAwesomeIconConstants.KEYBOARD, return_data=24)
+    TYPE_ELECTRUM = ButtonOption("Enter Electrum seed", FontAwesomeIconConstants.KEYBOARD)
 
     def run(self):
         from seedsigner.controller import Controller
@@ -467,11 +464,11 @@ class ToolsAddressExplorerSelectSourceView(View):
         button_data = []
         for seed in seeds:
             button_str = seed.get_fingerprint(self.settings.get_value(SettingsConstants.SETTING__NETWORK))
-            button_data.append((button_str, SeedSignerIconConstants.FINGERPRINT))
+            button_data.append(ButtonOption(button_str, SeedSignerIconConstants.FINGERPRINT))
         button_data = button_data + [self.SCAN_SEED, self.SCAN_DESCRIPTOR, self.TYPE_12WORD, self.TYPE_24WORD]
         if self.settings.get_value(SettingsConstants.SETTING__ELECTRUM_SEEDS) == SettingsConstants.OPTION__ENABLED:
             button_data.append(self.TYPE_ELECTRUM)
-        
+
         selected_menu_num = self.run_screen(
             ButtonListScreen,
             title=_("Address Explorer"),
@@ -508,10 +505,7 @@ class ToolsAddressExplorerSelectSourceView(View):
 
         elif button_data[selected_menu_num] in [self.TYPE_12WORD, self.TYPE_24WORD]:
             from seedsigner.views.seed_views import SeedMnemonicEntryView
-            if button_data[selected_menu_num] == self.TYPE_12WORD:
-                self.controller.storage.init_pending_mnemonic(num_words=12)
-            else:
-                self.controller.storage.init_pending_mnemonic(num_words=24)
+            self.controller.storage.init_pending_mnemonic(num_words=button_data[selected_menu_num].return_data)
             return Destination(SeedMnemonicEntryView)
 
         elif button_data[selected_menu_num] == self.TYPE_ELECTRUM:
@@ -522,10 +516,10 @@ class ToolsAddressExplorerSelectSourceView(View):
 
 class ToolsAddressExplorerAddressTypeView(View):
     # TRANSLATOR_NOTE: label for addresses where others send us incoming payments
-    RECEIVE = _("Receive Addresses")
+    RECEIVE = ButtonOption("Receive Addresses")
 
     # TRANSLATOR_NOTE: label for addresses that collect the change from our own outgoing payments
-    CHANGE = _("Change Addresses")
+    CHANGE = ButtonOption("Change Addresses")
 
 
     def __init__(self, seed_num: int = None, script_type: str = None, custom_derivation: str = None):
@@ -689,10 +683,11 @@ class ToolsAddressExplorerAddressListView(View):
                 end_digits = -5
             else:
                 end_digits = -4
-            button_data.append(f"{cur_index}:{address[:8]}...{address[end_digits:]}")
+            button_data.append(ButtonOption(f"{cur_index}:{address[:8]}...{address[end_digits:]}"))
 
         # TRANSLATOR_NOTE: Insert the number of addrs displayed per screen (e.g. "Next 10")
-        button_data.append((_("Next {}").format(addrs_per_screen), None, None, None, SeedSignerIconConstants.CHEVRON_RIGHT))
+        button_label = _("Next {}").format(addrs_per_screen)
+        button_data.append(ButtonOption(button_label, right_icon_name=SeedSignerIconConstants.CHEVRON_RIGHT))
 
         selected_menu_num = self.run_screen(
             ButtonListScreen,
