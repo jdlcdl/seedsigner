@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: seedsigner 0.8.5\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2024-11-03 14:10-0600\n"
+"POT-Creation-Date: 2024-11-03 14:15-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1011,7 +1011,7 @@ msgid "Scan a SeedQR"
 msgstr ""
 
 #: src/seedsigner/views/seed_views.py
-msgid " Create a seed"
+msgid "Create a seed"
 msgstr ""
 
 #: src/seedsigner/views/seed_views.py
