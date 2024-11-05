@@ -564,7 +564,7 @@ class SeedOptionsView(View):
 
         if self.controller.unverified_address:
             addr = self.controller.unverified_address["address"][:7]
-            self.VERIFY_ADDRESS += f" {addr}"
+            self.VERIFY_ADDRESS.button_label += f" {addr}"
             button_data.append(self.VERIFY_ADDRESS)
 
         button_data.append(self.SCAN_PSBT)
