@@ -128,6 +128,15 @@ def generate_screenshots(locale):
         controller.storage.seeds.append(seed_24)
         controller.storage.set_pending_seed(seed_24_w_passphrase)
 
+        # Seed: Verify Address data
+        controller.unverified_address = dict(
+            # These are all totally fake data
+            address="bc1q6p00wazu4nnqac29fvky6vhjnnhku5u2g9njss62rvy7e0yuperq86f5ek",
+            sig_type=SettingsConstants.NATIVE_SEGWIT,
+            verified_index=5,
+            verified_index_is_change=False
+        )
+
         # Pending mnemonic for ToolsCalcFinalWordShowFinalWordView
         controller.storage.init_pending_mnemonic(num_words=12)
         for i, word in enumerate(mnemonic_12[:11]):
@@ -139,19 +148,6 @@ def generate_screenshots(locale):
         decoder.add_data(BASE64_PSBT_1)
         controller.psbt = decoder.get_psbt()
         controller.psbt_seed = seed_12b
-
-        # Multisig wallet descriptor for the multisig in the above PSBT
-        MULTISIG_WALLET_DESCRIPTOR = """wsh(sortedmulti(1,[22bde1a9/48h/1h/0h/2h]tpubDFfsBrmpj226ZYiRszYi2qK6iGvh2vkkghfGB2YiRUVY4rqqedHCFEgw12FwDkm7rUoVtq9wLTKc6BN2sxswvQeQgp7m8st4FP8WtP8go76/{0,1}/*,[73c5da0a/48h/1h/0h/2h]tpubDFH9dgzveyD8zTbPUFuLrGmCydNvxehyNdUXKJAQN8x4aZ4j6UZqGfnqFrD4NqyaTVGKbvEW54tsvPTK2UoSbCC1PJY8iCNiwTL3RWZEheQ/{0,1}/*))#3jhtf6yx"""
-        controller.multisig_wallet_descriptor = embit.descriptor.Descriptor.from_string(MULTISIG_WALLET_DESCRIPTOR)
-        
-        # Message signing data
-        derivation_path = "m/84h/0h/0h/0/0"
-        controller.sign_message_data = {
-            "seed_num": 0,
-            "derivation_path": derivation_path,
-            "message": "I attest that I control this bitcoin address blah blah blah",
-            "addr_format": embit_utils.parse_derivation_path(derivation_path)
-        }
 
         # Multisig wallet descriptor for the multisig in the above PSBT
         MULTISIG_WALLET_DESCRIPTOR = """wsh(sortedmulti(1,[22bde1a9/48h/1h/0h/2h]tpubDFfsBrmpj226ZYiRszYi2qK6iGvh2vkkghfGB2YiRUVY4rqqedHCFEgw12FwDkm7rUoVtq9wLTKc6BN2sxswvQeQgp7m8st4FP8WtP8go76/{0,1}/*,[73c5da0a/48h/1h/0h/2h]tpubDFH9dgzveyD8zTbPUFuLrGmCydNvxehyNdUXKJAQN8x4aZ4j6UZqGfnqFrD4NqyaTVGKbvEW54tsvPTK2UoSbCC1PJY8iCNiwTL3RWZEheQ/{0,1}/*))#3jhtf6yx"""
@@ -248,11 +244,10 @@ def generate_screenshots(locale):
                 # Screenshot can't render live preview screens
                 # (seed_views.SeedTranscribeSeedQRConfirmScanView, dict(seed_num=0)),
 
-                #(seed_views.AddressVerificationStartView, dict(address=, script_type="nat", network="M")),
-                #seed_views.AddressVerificationSigTypeView,
-                #seed_views.SeedSingleSigAddressVerificationSelectSeedView,
-                #seed_views.SeedAddressVerificationView,
-                #seed_views.AddressVerificationSuccessView,
+                seed_views.SeedSelectSeedView,
+                seed_views.AddressVerificationSigTypeView,
+                # seed_views.SeedAddressVerificationView,
+                (seed_views.AddressVerificationSuccessView, dict(seed_num=0)),
 
                 seed_views.LoadMultisigWalletDescriptorView,
                 seed_views.MultisigWalletDescriptorView,
@@ -296,11 +291,11 @@ def generate_screenshots(locale):
                 tools_views.ToolsCalcFinalWordCoinFlipsView,
                 (tools_views.ToolsCalcFinalWordShowFinalWordView, {}, "ToolsCalcFinalWordShowFinalWordView_pick_word"),
                 (tools_views.ToolsCalcFinalWordShowFinalWordView, dict(coin_flips="0010101"), "ToolsCalcFinalWordShowFinalWordView_coin_flips"),
-                #tools_views.ToolsCalcFinalWordDoneView,
+                tools_views.ToolsCalcFinalWordDoneView,
                 tools_views.ToolsAddressExplorerSelectSourceView,
                 tools_views.ToolsAddressExplorerAddressTypeView,
                 tools_views.ToolsAddressExplorerAddressListView,
-                #tools_views.ToolsAddressExplorerAddressView,
+                # tools_views.ToolsAddressExplorerAddressView,
             ],
             "Settings Views": settings_views_list + [
                 settings_views.IOTestView,
