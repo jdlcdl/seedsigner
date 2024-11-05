@@ -1106,8 +1106,6 @@ class SeedTranscribeSeedQRFormatScreen(ButtonListScreen):
         self.is_bottom_list = True
         super().__post_init__()
 
-        print(self)
-
         self.components.append(IconTextLine(
             # TRANSLATOR_NOTE: Refers to the SeedQR type: Standard or Compact
             label_text=_("Standard"),

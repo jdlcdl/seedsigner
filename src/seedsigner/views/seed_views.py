@@ -1430,8 +1430,6 @@ class SeedTranscribeSeedQRFormatView(View):
 
         button_data = [STANDARD, COMPACT]
 
-        print(f"button_data: {button_data}")
-
         selected_menu_num = seed_screens.SeedTranscribeSeedQRFormatScreen(
             title=_("SeedQR Format"),
             button_data=button_data,

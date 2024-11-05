@@ -38,7 +38,6 @@ from seedsigner.views.view import ErrorView, NetworkMismatchErrorView, OptionDis
 
 from .utils import ScreenshotComplete, ScreenshotRenderer
 
-# Ignore Pillow 10 DeprecationWarnings "use getbbox() or getlength() instead of getsize()"
 import warnings; warnings.warn = lambda *args, **kwargs: None
 
 
@@ -53,6 +52,7 @@ def test_generate_all(locale, target_locale):
     """
     if target_locale and locale != target_locale:
         pytest.skip(f"Skipping {locale}")
+    
     generate_screenshots(locale)
 
 
