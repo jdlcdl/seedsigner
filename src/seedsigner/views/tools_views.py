@@ -717,6 +717,7 @@ class ToolsAddressExplorerAddressListView(View):
 
 
 class ToolsAddressExplorerAddressView(View):
+    # TODO: pull address str from controller.address_explorer_data and pass addr_storage_key and addr_index instead
     def __init__(self, index: int, address: str, is_change: bool, start_index: int, parent_initial_scroll: int = 0):
         super().__init__()
         self.index = index
