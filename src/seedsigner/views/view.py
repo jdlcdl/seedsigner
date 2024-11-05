@@ -270,22 +270,8 @@ class RestartView(View):
 
 class PowerOffView(View):
     def run(self):
-        if Settings.HOSTNAME == Settings.SEEDSIGNER_OS:
-            self.run_screen(PowerOffNotRequiredScreen)
-            return Destination(BackStackView)
-        else:
-            thread = PowerOffView.PowerOffThread()
-            thread.start()
-            self.run_screen(PowerOffScreen)
-
-
-    class PowerOffThread(BaseThread):
-        def run(self):
-            import time
-            from subprocess import call
-            while self.keep_running:
-                time.sleep(5)
-                call("sudo shutdown --poweroff now", shell=True)
+        self.run_screen(PowerOffNotRequiredScreen)
+        return Destination(BackStackView)
 
 
 
