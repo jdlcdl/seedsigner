@@ -48,7 +48,6 @@ omit = [
   "*/__init__.py",
   "*/tests/*",
   "*/pyzbar/*",
-  "*/gui/*"
 ]
 skip_covered = true
 skip_empty = true
