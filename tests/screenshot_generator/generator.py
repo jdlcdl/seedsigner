@@ -1,5 +1,6 @@
 import embit
 import pathlib
+import pytest
 import os
 import random
 import sys
@@ -41,7 +42,22 @@ from .utils import ScreenshotComplete, ScreenshotRenderer
 import warnings; warnings.warn = lambda *args, **kwargs: None
 
 
-def test_generate_screenshots(target_locale):
+
+# Dynamically generate a pytest test run for each locale
+@pytest.mark.parametrize("locale", [x for x, y in SettingsConstants.ALL_LOCALES])
+def test_generate_all(locale, target_locale):
+    """
+    `target_locale` is a fixture created in conftest.py via the `--locale` command line arg.
+
+    Optionally skips all other locales.
+    """
+    if target_locale and locale != target_locale:
+        pytest.skip(f"Skipping {locale}")
+    generate_screenshots(locale)
+
+
+
+def generate_screenshots(locale):
     """
         The `Renderer` class is mocked so that calls in the normal code are ignored
         (necessary to avoid having it trying to wire up hardware dependencies).
@@ -346,99 +362,93 @@ def test_generate_screenshots(target_locale):
     with open(messages_source_path, 'r') as messages_source_file:
         num_source_messages = messages_source_file.read().count("msgid \"") - 1
 
-    locales = []
-    if target_locale is None:
-        locales = SettingsConstants.ALL_LOCALES
-    else:
-        locales = [locale_tuple for locale_tuple in SettingsConstants.ALL_LOCALES if locale_tuple[0] == target_locale]
-    
-    if not locales:
-        raise Exception(f"Invalid locale: {target_locale}")
+    locale_tuple_list = [locale_tuple for locale_tuple in SettingsConstants.ALL_LOCALES if locale_tuple[0] == locale]
+    if not locale_tuple_list:
+        raise Exception(f"Invalid locale: {locale}")
 
-    for locale, display_name in locales:
-        print(f"\nLooping for locale: {locale}...")
-        Settings.get_instance().set_value(SettingsConstants.SETTING__LOCALE, value=locale)
-        screenshot_renderer.set_screenshot_path(os.path.join(screenshot_root, locale))
+    locale, display_name = locale_tuple_list[0]
 
-        locale_readme = f"""# SeedSigner Screenshots: {display_name}\n"""
+    Settings.get_instance().set_value(SettingsConstants.SETTING__LOCALE, value=locale)
+    screenshot_renderer.set_screenshot_path(os.path.join(screenshot_root, locale))
 
-        # Report the translation progress
-        if locale != SettingsConstants.LOCALE__ENGLISH:
-            try:
-                translated_messages_path = os.path.join(pathlib.Path(__file__).parent.resolve().parent.resolve().parent.resolve(), "src", "seedsigner", "resources", "seedsigner-translations", "l10n", locale, "LC_MESSAGES", "messages.po") 
-                with open(translated_messages_path, 'r') as translation_file:
-                    locale_translations = translation_file.read()
-                    num_locale_translations = locale_translations.count("msgid \"") - locale_translations.count("""msgstr ""\n\n""") - 1
+    locale_readme = f"""# SeedSigner Screenshots: {display_name}\n"""
 
-                    if locale != "en":
-                        locale_readme += f"## Translation progress: {num_locale_translations / num_source_messages:.1%}\n\n"
-                    locale_readme += "---\n\n"
-            except Exception as e:
-                from traceback import print_exc
-                print_exc()
+    # Report the translation progress
+    if locale != SettingsConstants.LOCALE__ENGLISH:
+        try:
+            translated_messages_path = os.path.join(pathlib.Path(__file__).parent.resolve().parent.resolve().parent.resolve(), "src", "seedsigner", "resources", "seedsigner-translations", "l10n", locale, "LC_MESSAGES", "messages.po") 
+            with open(translated_messages_path, 'r') as translation_file:
+                locale_translations = translation_file.read()
+                num_locale_translations = locale_translations.count("msgid \"") - locale_translations.count("""msgstr ""\n\n""") - 1
 
-        for section_name, screenshot_list in setup_screenshots(locale).items():
-            subdir = section_name.lower().replace(" ", "_")
-            screenshot_renderer.set_screenshot_path(os.path.join(screenshot_root, locale, subdir))
-            locale_readme += "\n\n---\n\n"
-            locale_readme += f"## {section_name}\n\n"
-            locale_readme += """<table style="border: 0;">"""
-            locale_readme += f"""<tr><td align="center">"""
-            for screenshot in screenshot_list:
-                if type(screenshot) == tuple:
-                    if len(screenshot) == 2:
-                        view_cls, view_args = screenshot
-                        view_name = view_cls.__name__
-                    elif len(screenshot) == 3:
-                        view_cls, view_args, view_name = screenshot
-                    elif len(screenshot) == 4:
-                        view_cls, view_args, view_name, toast_thread = screenshot
-                else:
-                    view_cls = screenshot
-                    view_args = {}
+                if locale != "en":
+                    locale_readme += f"## Translation progress: {num_locale_translations / num_source_messages:.1%}\n\n"
+                locale_readme += "---\n\n"
+        except Exception as e:
+            from traceback import print_exc
+            print_exc()
+
+    for section_name, screenshot_list in setup_screenshots(locale).items():
+        subdir = section_name.lower().replace(" ", "_")
+        screenshot_renderer.set_screenshot_path(os.path.join(screenshot_root, locale, subdir))
+        locale_readme += "\n\n---\n\n"
+        locale_readme += f"## {section_name}\n\n"
+        locale_readme += """<table style="border: 0;">"""
+        locale_readme += f"""<tr><td align="center">"""
+        for screenshot in screenshot_list:
+            if type(screenshot) == tuple:
+                if len(screenshot) == 2:
+                    view_cls, view_args = screenshot
                     view_name = view_cls.__name__
-                    toast_thread = None
+                elif len(screenshot) == 3:
+                    view_cls, view_args, view_name = screenshot
+                elif len(screenshot) == 4:
+                    view_cls, view_args, view_name, toast_thread = screenshot
+            else:
+                view_cls = screenshot
+                view_args = {}
+                view_name = view_cls.__name__
+                toast_thread = None
 
-                screencap_view(view_cls, view_args, view_name, toast_thread=toast_thread)
-                locale_readme += """  <table align="left" style="border: 1px solid gray;">"""
-                locale_readme += f"""<tr><td align="center">{view_name}<br/><br/><img src="{subdir}/{view_name}.png"></td></tr>"""
-                locale_readme += """</table>\n"""
+            screencap_view(view_cls, view_args, view_name, toast_thread=toast_thread)
+            locale_readme += """  <table align="left" style="border: 1px solid gray;">"""
+            locale_readme += f"""<tr><td align="center">{view_name}<br/><br/><img src="{subdir}/{view_name}.png"></td></tr>"""
+            locale_readme += """</table>\n"""
 
-            locale_readme += "</td></tr></table>"
+        locale_readme += "</td></tr></table>"
 
-        # many screens don't work, leaving a missing image, re-run here for now
-        controller.psbt_seed = None
-        screenshot_renderer.set_screenshot_path(os.path.join(screenshot_root, locale, "psbt_views"))
+    # many screens don't work, leaving a missing image, re-run here for now
+    controller.psbt_seed = None
+    screenshot_renderer.set_screenshot_path(os.path.join(screenshot_root, locale, "psbt_views"))
 
-        decoder = DecodeQR()
-        decoder.add_data(BASE64_PSBT_1)
-        controller.psbt = decoder.get_psbt()
-        controller.psbt_seed = seed_12b
-        controller.multisig_wallet_descriptor = None
-        screencap_view(psbt_views.PSBTChangeDetailsView, view_name='PSBTChangeDetailsView_multisig_unverified', view_args=dict(change_address_num=0))
+    decoder = DecodeQR()
+    decoder.add_data(BASE64_PSBT_1)
+    controller.psbt = decoder.get_psbt()
+    controller.psbt_seed = seed_12b
+    controller.multisig_wallet_descriptor = None
+    screencap_view(psbt_views.PSBTChangeDetailsView, view_name='PSBTChangeDetailsView_multisig_unverified', view_args=dict(change_address_num=0))
 
-        controller.psbt_seed = None
-        screencap_view(psbt_views.PSBTSelectSeedView, view_name='PSBTSelectSeedView')
+    controller.psbt_seed = None
+    screencap_view(psbt_views.PSBTSelectSeedView, view_name='PSBTSelectSeedView')
 
-        # Render OP_RETURN screens for real
-        controller.psbt_seed = seed_12b
-        decoder = DecodeQR()
-        decoder.add_data(BASE64_PSBT_WITH_OP_RETURN_TEXT)
-        controller.psbt = decoder.get_psbt()
-        controller.psbt_parser = PSBTParser(p=controller.psbt, seed=seed_12b)
-        screencap_view(psbt_views.PSBTOverviewView, view_name='PSBTOverviewView_op_return')
-        screencap_view(psbt_views.PSBTOpReturnView, view_name="PSBTOpReturnView_text")
+    # Render OP_RETURN screens for real
+    controller.psbt_seed = seed_12b
+    decoder = DecodeQR()
+    decoder.add_data(BASE64_PSBT_WITH_OP_RETURN_TEXT)
+    controller.psbt = decoder.get_psbt()
+    controller.psbt_parser = PSBTParser(p=controller.psbt, seed=seed_12b)
+    screencap_view(psbt_views.PSBTOverviewView, view_name='PSBTOverviewView_op_return')
+    screencap_view(psbt_views.PSBTOpReturnView, view_name="PSBTOpReturnView_text")
 
-        decoder.add_data(BASE64_PSBT_WITH_OP_RETURN_RAW_BYTES)
-        controller.psbt = decoder.get_psbt()
-        controller.psbt_parser = PSBTParser(p=controller.psbt, seed=seed_12b)
-        screencap_view(psbt_views.PSBTOpReturnView, view_name="PSBTOpReturnView_raw_hex_data")
+    decoder.add_data(BASE64_PSBT_WITH_OP_RETURN_RAW_BYTES)
+    controller.psbt = decoder.get_psbt()
+    controller.psbt_parser = PSBTParser(p=controller.psbt, seed=seed_12b)
+    screencap_view(psbt_views.PSBTOpReturnView, view_name="PSBTOpReturnView_raw_hex_data")
 
-        with open(os.path.join(screenshot_root, locale, "README.md"), 'w') as readme_file:
-            readme_file.write(locale_readme)
+    with open(os.path.join(screenshot_root, locale, "README.md"), 'w') as readme_file:
+        readme_file.write(locale_readme)
 
-        print(f"Done with locale: {locale}.")
-        
+    print(f"Done with locale: {locale}.")
 
     # Write the main README; ensure it writes all locales, not just the one that may
     # have been specified for this run.
