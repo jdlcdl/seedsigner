@@ -55,6 +55,7 @@ skip_empty = true
 
 [tool.coverage.run]
 branch = true
+parallel = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

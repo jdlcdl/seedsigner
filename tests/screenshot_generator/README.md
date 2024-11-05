@@ -11,7 +11,8 @@ pytest tests/screenshot_generator/generator.py
 
 You can also run a `coverage` report to see exactly what the screenshots are and are not hitting:
 ```bash
-coverage run -m pytest tests/screenshot_generator/generator.py --locale es && coverage report
+coverage erase
+coverage run -m pytest tests/screenshot_generator/generator.py --locale es && coverage combine && coverage report
 
 # Generate the interactive html report
 coverage html

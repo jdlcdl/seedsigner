@@ -45,18 +45,36 @@ Annoying complications:
 * Better idea: use a proper logger in the test file and use one of the above options to display logs
 
 
-### Test Coverage
+## Screenshot generator
+The screenshot generator is meant to mostly be a utility and not really part of the test suite. However,
+it is actually implemented to be run by `pytest`.
+
+see: [Screenshot generator README](screenshot_generator/README.md)
+
+
+## Test Coverage
 Run tests and generate test coverage
-```
+```bash
 coverage run -m pytest
 ```
 
-Show the resulting test coverage details:
+The screenshots have to be run separately, but they can also add to overall coverage:
+
+```bash
+coverage run -m pytest tests/screenshot_generator/generator.py --locale es
 ```
+
+Each run creates its own `.coverage.*` results file. Merge them into one result with:
+```bash
+coverage combine
+```
+
+Show the resulting test coverage details:
+```bash
 coverage report
 ```
 
 Generate the html overview:
-```
+```bash
 coverage html
 ```
