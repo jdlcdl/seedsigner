@@ -67,15 +67,9 @@ Run tests and generate test coverage
 coverage run -m pytest
 ```
 
-The screenshots have to be run separately, but they can also add to overall coverage:
-
+The screenshots can generate their own separate coverage report:
 ```bash
 coverage run -m pytest tests/screenshot_generator/generator.py --locale es
-```
-
-Each run creates its own `.coverage.*` results file. Merge them into one result with:
-```bash
-coverage combine
 ```
 
 Show the resulting test coverage details:
@@ -83,7 +77,7 @@ Show the resulting test coverage details:
 coverage report
 ```
 
-Generate the html overview:
+Generate the interactive html report:
 ```bash
 coverage html
 ```

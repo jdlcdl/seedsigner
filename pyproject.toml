@@ -47,8 +47,6 @@ exclude_lines = [
 omit = [
   "*/__init__.py",
   "*/tests/*",
-  "*/hardware/*",
-  "*/pyzbar/*",
 ]
 skip_covered = false
 skip_empty = true
