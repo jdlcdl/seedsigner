@@ -444,7 +444,9 @@ def generate_screenshots(locale):
 
     # Write the main README; ensure it writes all locales, not just the one that may
     # have been specified for this run.
-    main_readme = """# SeedSigner Screenshots \n\n"""
+    with open(os.path.join("tests", "screenshot_generator", "template.md"), 'r') as readme_template:
+        main_readme = readme_template.read()
+
     for locale, display_name in SettingsConstants.ALL_LOCALES:
         main_readme += f"* [{display_name}]({locale}/README.md)\n"
 

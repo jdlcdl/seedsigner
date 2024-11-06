@@ -6,7 +6,6 @@ src/seedsigner.egg-info/
 src/seedsigner/models/settings_definition.json
 .idea
 .coverage*
-seedsigner-screenshots
 
 *.po
 *.mo
