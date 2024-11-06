@@ -43,19 +43,27 @@ jobs:
       - name: Test with pytest
         run: |
           mkdir artifacts
-          coverage run --data-file=./artifacts/coverage/results -m pytest \
+          coverage run \
+            --rcfile=pyproject.toml \
+            --data-file=cov_unit_tests \
+            -m pytest \
             --color=yes \
             --durations 5 \
             -vv
+          coverage report --data-file=cov_unit_tests
       - name: Generate screenshots
         run: |
-          coverage run --data-file=./artifacts/coverage/results -m pytest tests/screenshot_generator/generator.py \
+          coverage run \
+            --data-file=cov_screenshots \
+            --rcfile=pyproject.toml \
+            -m pytest tests/screenshot_generator/generator.py \
             --color=yes \
             -vv
+          coverage report --data-file=cov_screenshots
           cp -r ./seedsigner-screenshots ./artifacts/
       - name: Coverage report
         run: |
-          coverage combine ./artifacts/coverage/*
+          coverage combine cov_unit_tests cov_screenshots
           coverage html --directory=./artifacts/cov_html
           coverage report
       - name: Archive CI Artifacts
