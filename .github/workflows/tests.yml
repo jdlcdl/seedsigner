@@ -43,25 +43,20 @@ jobs:
       - name: Test with pytest
         run: |
           mkdir artifacts
-          coverage run -m pytest \
+          coverage run --data-file=./artifacts/coverage/results -m pytest \
             --color=yes \
-            --cov=seedsigner \
-            --cov-append \
-            --cov-branch \
-            --cov-report term \
-            --cov-report html \
-            --cov-report html:./artifacts/cov_html \
-            --cov-report xml \
             --durations 5 \
             -vv
       - name: Generate screenshots
         run: |
-          coverage run -m pytest tests/screenshot_generator/generator.py
+          coverage run --data-file=./artifacts/coverage/results -m pytest tests/screenshot_generator/generator.py \
+            --color=yes \
+            -vv
           cp -r ./seedsigner-screenshots ./artifacts/
       - name: Coverage report
         run: |
-          coverage combine
-          coverage report
+          coverage combine ./artifacts/coverage/*
+          coverage report --directory=./artifacts/cov_html
       - name: Archive CI Artifacts
         uses: actions/upload-artifact@v3
         with:
