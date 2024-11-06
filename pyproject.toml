@@ -54,7 +54,6 @@ skip_covered = false
 skip_empty = true
 
 [tool.coverage.run]
-source = ["src"]
 branch = true
 
 [tool.pytest.ini_options]

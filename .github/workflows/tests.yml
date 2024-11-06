@@ -43,21 +43,24 @@ jobs:
       - name: Test with pytest
         run: |
           mkdir artifacts
-          coverage run \
-            --data-file=./artifacts/cov_unit_tests \
-            -m pytest \
+          python -m pytest \
             --color=yes \
+            --cov=seedsigner \
+            --cov-append \
+            --cov-branch \
+            --cov-report term \
             --durations 5 \
             -vv
-          coverage report --data-file=./artifacts/cov_unit_tests
       - name: Generate screenshots
         run: |
-          coverage run \
-            --data-file=./artifacts/cov_screenshots \
-            -m pytest tests/screenshot_generator/generator.py \
+            python -m pytest tests/screenshot_generator/generator.py \
             --color=yes \
+            --cov=seedsigner \
+            --cov-append \
+            --cov-branch \
+            --cov-report term \
+            --cov-report html:./artifacts/cov_html \
             -vv
-          coverage report --data-file=./artifacts/cov_screenshots
           cp -r ./seedsigner-screenshots ./artifacts/
       - name: Coverage report
         run: |
