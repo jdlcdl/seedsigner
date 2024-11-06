@@ -48,7 +48,6 @@ jobs:
             --cov=seedsigner \
             --cov-append \
             --cov-branch \
-            --cov-report term \
             --durations 5 \
             -vv
       - name: Generate screenshots
@@ -58,15 +57,11 @@ jobs:
             --cov=seedsigner \
             --cov-append \
             --cov-branch \
-            --cov-report term \
             --cov-report html:./artifacts/cov_html \
             -vv
           cp -r ./seedsigner-screenshots ./artifacts/
       - name: Coverage report
-        run: |
-          coverage combine ./artifacts/cov_unit_tests ./artifacts/cov_screenshots
-          coverage html --directory=./artifacts/cov_html
-          coverage report
+        run: coverage report
       - name: Archive CI Artifacts
         uses: actions/upload-artifact@v3
         with:
