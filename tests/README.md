@@ -2,6 +2,7 @@
 
 The tests are designed to be run on non-Raspi hardware.
 
+## Setup
 On your testing machine you'll have to install:
 ```bash
 # general dependencies
@@ -16,6 +17,14 @@ Then make the `seedsigner` python module visible/importable to the tests by inst
 pip3 install -e .
 ```
 
+## Running all tests, calculating overall test coverage
+tldr: just run the convenience script from the project root:
+
+```bash
+./tests/run_full_coverage.sh
+```
+
+## Running tests manually
 Run the whole test suite:
 ```
 pytest
@@ -52,7 +61,7 @@ it is actually implemented to be run by `pytest`.
 see: [Screenshot generator README](screenshot_generator/README.md)
 
 
-## Test Coverage
+## Generate coverage manually
 Run tests and generate test coverage
 ```bash
 coverage run -m pytest

@@ -49,7 +49,7 @@ omit = [
   "*/tests/*",
   "*/pyzbar/*",
 ]
-skip_covered = true
+skip_covered = false
 skip_empty = true
 
 [tool.coverage.run]
