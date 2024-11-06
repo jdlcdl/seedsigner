@@ -56,7 +56,8 @@ jobs:
       - name: Coverage report
         run: |
           coverage combine ./artifacts/coverage/*
-          coverage report --directory=./artifacts/cov_html
+          coverage html --directory=./artifacts/cov_html
+          coverage report
       - name: Archive CI Artifacts
         uses: actions/upload-artifact@v3
         with:
