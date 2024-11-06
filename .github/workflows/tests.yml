@@ -58,7 +58,7 @@ jobs:
         run: |
           coverage run -m pytest tests/screenshot_generator/generator.py
           cp -r ./seedsigner-screenshots ./artifacts/
-      -name: Coverage report
+      - name: Coverage report
         run: |
           coverage combine
           coverage report
