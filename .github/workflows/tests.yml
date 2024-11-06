@@ -53,7 +53,7 @@ jobs:
             -vv
       - name: Generate screenshots
         run: |
-            python -m pytest tests/screenshot_generator/generator.py \
+          python -m pytest tests/screenshot_generator/generator.py \
             --color=yes \
             --cov=seedsigner \
             --cov-append \
