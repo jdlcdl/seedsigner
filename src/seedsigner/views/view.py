@@ -368,7 +368,7 @@ class OptionDisabledView(View):
 
         # TRANSLATOR_NOTE: Inserts the name of a settings option (e.g. "Persistent Settings" is currently...)
         self.error_msg = _("\"{}\" is currently disabled in Settings.").format(
-            self.settings_entry.display_name,
+            _(self.settings_entry.display_name),
         )
 
 
