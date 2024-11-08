@@ -921,6 +921,7 @@ class LargeIconStatusScreen(ButtonListScreen):
                 width=self.canvas_width,
                 screen_y=next_y,
                 font_color=self.status_color,
+                auto_line_break=False,  # Force headline to be on one line
             )
             self.components.append(self.warning_headline_textarea)
             next_y = next_y + self.warning_headline_textarea.height
