@@ -15,7 +15,7 @@ from embit.script import Script
 # These must precede any SeedSigner imports.
 sys.modules['seedsigner.hardware.ST7789'] = MagicMock()
 sys.modules['seedsigner.gui.screens.screensaver'] = MagicMock()
-sys.modules['seedsigner.views.screensaver'] = MagicMock()
+sys.modules['seedsigner.views.screensaver.ScreensaverScreen'] = MagicMock()
 sys.modules['RPi'] = MagicMock()
 sys.modules['RPi.GPIO'] = MagicMock()
 sys.modules['seedsigner.hardware.camera'] = MagicMock()
@@ -34,6 +34,7 @@ from seedsigner.models.settings import Settings
 from seedsigner.models.settings_definition import SettingsConstants, SettingsDefinition
 from seedsigner.views import (MainMenuView, PowerOptionsView, RestartView, NotYetImplementedView, UnhandledExceptionView, 
     psbt_views, seed_views, settings_views, tools_views)
+from seedsigner.views.screensaver import OpeningSplashView
 from seedsigner.views.view import ErrorView, NetworkMismatchErrorView, OptionDisabledView, PowerOffView, View
 
 from .utils import ScreenshotComplete, ScreenshotRenderer
@@ -189,6 +190,8 @@ def generate_screenshots(locale):
 
         screenshot_sections = {
             "Main Menu Views": [
+                (OpeningSplashView, dict(is_screenshot_renderer=True, force_partner_logos=True)),
+                (OpeningSplashView, dict(is_screenshot_renderer=True, force_partner_logos=False), "OpeningSplashView_no_partner_logos"),
                 MainMenuView,
                 (MainMenuView, {}, 'MainMenuView_SDCardStateChangeToast_removed', SDCardStateChangeToastManagerThread(action=MicroSD.ACTION__REMOVED)),
                 (MainMenuView, {}, 'MainMenuView_SDCardStateChangeToast_inserted', SDCardStateChangeToastManagerThread(action=MicroSD.ACTION__INSERTED)),
@@ -223,8 +226,8 @@ def generate_screenshots(locale):
                 (seed_views.SeedBIP85SelectChildIndexView, dict(seed_num=0, num_words=24)),
                 (seed_views.SeedBIP85InvalidChildIndexView, dict(seed_num=0, num_words=12)), 
                 (seed_views.SeedWordsBackupTestPromptView, dict(seed_num=0)),
-                (seed_views.SeedWordsBackupTestView, dict(seed_num=0)),
-                (seed_views.SeedWordsBackupTestMistakeView, dict(seed_num=0, cur_index=7, wrong_word="unlucky")),
+                (seed_views.SeedWordsBackupTestView, dict(seed_num=0, rand_seed=6102)),
+                (seed_views.SeedWordsBackupTestMistakeView, dict(seed_num=0, cur_index=7, wrong_word="satoshi")),
                 (seed_views.SeedWordsBackupTestSuccessView, dict(seed_num=0)),
                 (seed_views.SeedTranscribeSeedQRFormatView, dict(seed_num=0)),
                 (seed_views.SeedTranscribeSeedQRWarningView, dict(seed_num=0)),
@@ -389,6 +392,7 @@ def generate_screenshots(locale):
         locale_readme += f"""<tr><td align="center">"""
         for screenshot in screenshot_list:
             if type(screenshot) == tuple:
+                toast_thread = None
                 if len(screenshot) == 2:
                     view_cls, view_args = screenshot
                     view_name = view_cls.__name__

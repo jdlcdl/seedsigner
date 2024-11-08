@@ -1250,7 +1250,11 @@ class SeedWordsBackupTestPromptView(View):
 
 
 class SeedWordsBackupTestView(View):
-    def __init__(self, seed_num: int, bip85_data: dict = None, confirmed_list: list[bool] = None, cur_index: int = None):
+    def __init__(self, seed_num: int, bip85_data: dict = None, confirmed_list: list[bool] = None, cur_index: int = None, rand_seed: int = None):
+        """
+        Note: `rand_seed` is ONLY USED BY THE SCREENSHOT GENERATOR!!! (to ensure
+        consistent screenshot results).
+        """
         super().__init__()
         self.seed_num = seed_num
         if self.seed_num is None:
@@ -1269,10 +1273,14 @@ class SeedWordsBackupTestView(View):
             self.confirmed_list = []
 
         self.cur_index = cur_index
+        self.rand_seed = rand_seed
 
 
     def run(self):
         from embit import bip39
+
+        if self.rand_seed is not None:
+            random.seed(self.rand_seed + self.cur_index if self.cur_index is not None else 0)
 
         if self.cur_index is None:
             self.cur_index = int(random.random() * len(self.mnemonic_list))

@@ -238,10 +238,10 @@ class Controller(Singleton):
             used. Only used by the test suite.
         """
         from seedsigner.views import MainMenuView, BackStackView
-        from seedsigner.views.screensaver import OpeningSplashScreen
+        from seedsigner.views.screensaver import OpeningSplashView
         from seedsigner.gui.toast import RemoveSDCardToastManagerThread
 
-        OpeningSplashScreen().start()
+        OpeningSplashView().run()
 
         """ Class references can be stored as variables in python!
 
