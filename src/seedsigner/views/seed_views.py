@@ -1320,7 +1320,7 @@ class SeedWordsBackupTestView(View):
                     seed_num=self.seed_num,
                     bip85_data=self.bip85_data,
                     cur_index=self.cur_index,
-                    wrong_word=button_data[selected_menu_num],
+                    wrong_word=button_data[selected_menu_num].button_label,
                     confirmed_list=self.confirmed_list,
                 )
             )
