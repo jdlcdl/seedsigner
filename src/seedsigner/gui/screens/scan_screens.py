@@ -65,7 +65,6 @@ class ScanScreen(BaseScreen):
         self.frames_decoded_counter = ThreadsafeCounter()
 
         self.threads.append(ScanScreen.LivePreviewThread(
-            camera=self.camera,
             decoder=self.decoder,
             renderer=self.renderer,
             instructions_text=self.instructions_text,
