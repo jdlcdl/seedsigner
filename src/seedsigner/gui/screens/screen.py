@@ -47,6 +47,10 @@ class BaseScreen(BaseComponent):
 
 
     def display(self) -> Any:
+        # each Component could have its own child threads; collect them first
+        for component in self.components:
+            self.threads += component.threads
+
         try:
             with self.renderer.lock:
                 self._render()

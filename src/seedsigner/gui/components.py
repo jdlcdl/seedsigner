@@ -3,7 +3,7 @@ import math
 import os
 import pathlib
 import re
-from time import time
+import time
 
 from dataclasses import dataclass
 from decimal import Decimal
@@ -11,9 +11,11 @@ from gettext import gettext as _
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from typing import Any, List, Tuple
 
+from seedsigner.gui.renderer import Renderer
 from seedsigner.models.settings import Settings
 from seedsigner.models.settings_definition import SettingsConstants
 from seedsigner.models.singleton import Singleton
+from seedsigner.models.threads import BaseThread
 
 logger = logging.getLogger(__name__)
 
@@ -188,6 +190,7 @@ class FontAwesomeIconConstants:
     X = "\u0058"
 
 
+
 class SeedSignerIconConstants:
     # Menu icons
     SCAN = "\ue900"
@@ -334,6 +337,9 @@ class BaseComponent:
         self.canvas_width = self.renderer.canvas_width
         self.canvas_height = self.renderer.canvas_height
 
+        # Component threads will be managed in their parent's `Screen.display()`
+        self.threads: list[BaseThread] = []
+
         if not self.image_draw:
             self.set_image_draw(self.renderer.draw)
 
@@ -343,6 +349,7 @@ class BaseComponent:
 
     def set_image_draw(self, image_draw: ImageDraw):
         self.image_draw = image_draw
+
 
     def set_canvas(self, canvas: Image):
         self.canvas = canvas
@@ -382,10 +389,18 @@ class TextArea(BaseComponent):
     supersampling_factor: int = 1
     auto_line_break: bool = True
     allow_text_overflow: bool = False
+    is_horizontal_scrolling_enabled: bool = False
     height_ignores_below_baseline: bool = False  # If True, characters that render below the baseline (e.g. "pqgy") will not affect the final height calculation
 
 
     def __post_init__(self):
+        if self.is_horizontal_scrolling_enabled and self.auto_line_break:
+            raise Exception("TextArea: Cannot have auto_line_break and horizontal scrolling enabled at the same time")
+
+        if self.is_horizontal_scrolling_enabled and not self.allow_text_overflow:
+            self.allow_text_overflow = True
+            logger.warning("TextArea: allow_text_overflow gets overridden to True when horizontal scrolling is enabled")
+
         if not self.font_name:
             self.font_name = GUIConstants.get_body_font_name()
         if not self.font_size:
@@ -401,34 +416,49 @@ class TextArea(BaseComponent):
 
         self.line_spacing = GUIConstants.BODY_LINE_SPACING
 
-        # We have to figure out if and where to make line breaks in the text so that it
-        #   fits in its bounding rect (plus accounting for edge padding) using its given
-        #   font.
-        # Do initial calcs without worrying about supersampling.
-        self.text_lines = reflow_text_for_width(
-            text=self.text,
-            width=self.width - 2*self.edge_padding,
-            font_name=self.font_name,
-            font_size=self.font_size,
-            allow_text_overflow=self.allow_text_overflow,
-        )
-
         # Calculate the actual font height from the "baseline" anchor ("_s")
         font = Fonts.get_font(self.font_name, self.font_size)
 
         # Note: from the baseline anchor, `top` is a negative number while `bottom`
         # conveys the height of the pixels that rendered below the baseline, if any
         # (e.g. "py" in "python").
-        (left, top, right, bottom) = font.getbbox(self.text, anchor="ls")
+        (left, top, full_text_width, bottom) = font.getbbox(self.text, anchor="ls")
         self.text_height_above_baseline = -1 * top
         self.text_height_below_baseline = bottom
 
         # Initialize the text rendering relative to the baseline
         self.text_y = self.text_height_above_baseline
 
-        # Other components, like IconTextLine will need to know how wide the actual
-        # rendered text will be, separate from the TextArea's defined overall `width`.
-        self.text_width = max(line["text_width"] for line in self.text_lines)
+        self.visible_width = self.width - max(self.edge_padding, self.min_text_x) - self.edge_padding
+
+        if self.is_horizontal_scrolling_enabled or not self.auto_line_break:
+            # Guaranteed to be a single line of text, possibly wider than self.width
+            self.text_lines = [{"text": self.text, "text_width": full_text_width}]
+            self.text_width = full_text_width
+            if self.text_width > self.visible_width:
+                # We'll have to left justify the text and scroll it (if scrolling is enabled,
+                # otherwise it'll just run off the right edge).
+                self.is_text_centered = False
+            else:
+                # The text fits; horizontal scrolling isn't needed
+                self.is_horizontal_scrolling_enabled = False
+
+        else:
+            # We have to figure out if and where to make line breaks in the text so that it
+            #   fits in its bounding rect (plus accounting for edge padding) using its given
+            #   font.
+            # Do initial calcs without worrying about supersampling.
+            self.text_lines = reflow_text_for_width(
+                text=self.text,
+                width=self.width - 2*self.edge_padding,
+                font_name=self.font_name,
+                font_size=self.font_size,
+                allow_text_overflow=self.allow_text_overflow,
+            )
+
+            # Other components, like IconTextLine will need to know how wide the actual
+            # rendered text will be, separate from the TextArea's defined overall `width`.
+            self.text_width = max(line["text_width"] for line in self.text_lines)
 
         # Calculate the actual height
         if len(self.text_lines) == 1:
@@ -443,6 +473,7 @@ class TextArea(BaseComponent):
                 # Last line has at least one char that dips below baseline
                 total_text_height += self.text_height_below_baseline
 
+        self.text_offset_y = 0
         if self.height is None:
             # Autoscale height to text lines
             self.height = total_text_height
@@ -450,17 +481,19 @@ class TextArea(BaseComponent):
         else:
             if total_text_height > self.height:
                 if not self.allow_text_overflow:
-                    pass #raise TextDoesNotFitException(f"Text cannot fit in target rect with this font/size\n\ttotal_text_height: {total_text_height} | self.height: {self.height}")
+                    # For now, early into the l10n rollout, we can't enforce strict
+                    # conformance here. Too many screens will just break if this is were
+                    # to raise an exception.
+                    logger.warning(f"Text cannot fit in target rect with this font/size\n\ttotal_text_height: {total_text_height} | self.height: {self.height}")
                 else:
-                    # Just let it render off the edge, but preserve the top portion
+                    # Just let it render past the bottom edge
                     pass
 
             else:
                 # Vertically center the text's starting point
-                self.text_y += int(self.height - total_text_height)/2
+                self.text_offset_y = int((self.height - total_text_height)/2)
+                self.text_y += self.text_offset_y  # (relative to text rendering baseline)
 
-
-    def render(self):
         # Render to a temp img scaled up by self.supersampling_factor, then resize down
         #   with bicubic resampling.
         # Add a `resample_padding` above and below when supersampling to avoid edge
@@ -469,34 +502,43 @@ class TextArea(BaseComponent):
         if self.font_size < 20 and (not self.supersampling_factor or self.supersampling_factor == 1):
             self.supersampling_factor = 2
 
-        actual_text_height = self.height
         if self.height_ignores_below_baseline:
             # Even though we're ignoring the pixels below the baseline for spacing
             # purposes, we have to make sure we don't crop those pixels out during the
             # supersampling operations here.
-            actual_text_height += self.text_height_below_baseline
+            total_text_height += self.text_height_below_baseline
 
         resample_padding = 10 if self.supersampling_factor > 1.0 else 0
+
+        if self.is_horizontal_scrolling_enabled:
+            # Temp img will be the full width of the text
+            image_width = self.text_width
+        else:
+            # Temp img will be the component's width
+            image_width = self.width
+
         img = Image.new(
             "RGBA",
             (
-                self.width * self.supersampling_factor,
-                (actual_text_height + 2*resample_padding) * self.supersampling_factor
+                image_width * self.supersampling_factor,
+                (total_text_height + 2*resample_padding) * self.supersampling_factor
             ),
             self.background_color
         )
         draw = ImageDraw.Draw(img)
 
-        cur_y = (self.text_y + resample_padding) * self.supersampling_factor
+        cur_y = (resample_padding + self.text_height_above_baseline) * self.supersampling_factor
         supersampled_font = Fonts.get_font(self.font_name, int(self.supersampling_factor * self.font_size))
 
         if self.is_text_centered:
+            # middle baseline
             anchor = "ms"
         else:
+            # left baseline
             anchor = "ls"
 
-        # Position where we'll render each line of text
-        text_x = self.edge_padding
+        # Default, not-centered text will be relative to its left-justified starting point
+        text_x = max([self.edge_padding, self.min_text_x])
 
         for line in self.text_lines:
             if self.is_text_centered:
@@ -505,23 +547,148 @@ class TextArea(BaseComponent):
                 if text_x - int(line["text_width"]/2) < self.min_text_x:
                     # The left edge of the centered text will protrude too far; nudge it right
                     text_x = self.min_text_x + int(line["text_width"]/2)
+            
+            elif self.is_horizontal_scrolling_enabled:
+                # Scrolling temp img isn't relative to any positioning other than its own text
+                text_x = 0
 
             draw.text((text_x * self.supersampling_factor, cur_y), line["text"], fill=self.font_color, font=supersampled_font, anchor=anchor)
 
             # Debugging: show the exact vertical extents of each line of text
-            # draw.line((0, cur_y - self.text_height_above_baseline * self.supersampling_factor, self.width * self.supersampling_factor, cur_y - self.text_height_above_baseline * self.supersampling_factor), fill="red", width=int(self.supersampling_factor))
-            # draw.line((0, cur_y, self.width * self.supersampling_factor, cur_y), fill="red", width=int(self.supersampling_factor))
+            # draw.line((0, cur_y - self.text_height_above_baseline * self.supersampling_factor, image_width * self.supersampling_factor, cur_y - self.text_height_above_baseline * self.supersampling_factor), fill="blue", width=int(self.supersampling_factor))
+            # draw.line((0, cur_y, image_width * self.supersampling_factor, cur_y), fill="red", width=int(self.supersampling_factor))
 
             cur_y += (self.text_height_above_baseline + self.line_spacing) * self.supersampling_factor
 
         # Crop off the top_padding and resize the result down to onscreen size
         if self.supersampling_factor > 1.0:
-            resized = img.resize((self.width, actual_text_height + 2*resample_padding), Image.LANCZOS)
+            resized = img.resize((image_width, total_text_height + 2*resample_padding), Image.LANCZOS)
             sharpened = resized.filter(ImageFilter.SHARPEN)
 
-            # Crop args are actually (left, top, WIDTH, HEIGHT)
-            img = sharpened.crop((0, resample_padding, self.width, actual_text_height + resample_padding))
-        self.canvas.paste(img, (self.screen_x, self.screen_y))
+            img = sharpened.crop((0, resample_padding, image_width, resample_padding + total_text_height))
+        
+        self.rendered_text_img = img
+
+        if self.is_horizontal_scrolling_enabled:
+            # Start the horizontal scrolling renderer thread
+            self.threads.append(
+                TextArea.HorizontalTextScrollThread(
+                    rendered_text_img=self.rendered_text_img,
+                    screen_x=self.min_text_x,
+                    screen_y=self.screen_y + self.text_offset_y,
+                    visible_width=self.visible_width
+                )
+            )
+
+
+    class HorizontalTextScrollThread(BaseThread):
+        def __init__(self, rendered_text_img: Image, screen_x: int, screen_y: int, visible_width: int):
+            super().__init__()
+            self.rendered_text_img = rendered_text_img
+            self.screen_x = screen_x
+            self.screen_y = screen_y
+            self.visible_width = visible_width
+
+            self.renderer = Renderer.get_instance()
+        
+
+        def run(self):
+            """
+            Subjective opinion: on a Pi Zero, scrolling at 40px/sec looks smooth but
+            50px/sec creates a slight ghosting / doubling effect that impedes
+            readability. 45px/sec is better but still perceptually a bit stuttery.
+            """
+            horizontal_scroll_position = 0
+            scroll_pace = 45  # px per sec
+            scroll_increment_sign = 1  # flip to negative to scroll text to the right
+            begin_hold_secs = 2.0
+            end_hold_secs = 1.0
+
+            max_scroll = self.rendered_text_img.width - self.visible_width
+
+            while self.keep_running:
+                with self.renderer.lock:
+                    img = self.rendered_text_img.crop((horizontal_scroll_position, 0, horizontal_scroll_position + self.visible_width, self.rendered_text_img.height))
+                    self.renderer.canvas.paste(img, (self.screen_x, self.screen_y))
+                    self.renderer.show_image()
+
+                if horizontal_scroll_position == 0:
+                    # Pause on initial (left-justified) position...                
+                    time.sleep(begin_hold_secs)
+
+                    # Don't count those pause seconds
+                    last_render_time = None
+
+                    # Scroll the text left
+                    scroll_increment_sign = 1
+
+                elif horizontal_scroll_position == max_scroll:
+                    # ...and slight pause at end of scroll
+                    time.sleep(end_hold_secs)
+
+                    # Don't count those pause seconds
+                    last_render_time = None
+
+                    # Scroll the text right
+                    scroll_increment_sign = -1
+                
+                else:
+                    # No need to CPU limit when running in its own thread?
+                    time.sleep(0.02)
+                
+                next_render_time = time.time()
+
+                if not last_render_time:
+                    # First frame when pulling off either end will move 1 pixel; have to
+                    # "get off zero" for the real increment calc logic to kick in.
+                    scroll_position_increment = 1 * scroll_increment_sign
+                else:
+                    scroll_position_increment = int(scroll_pace * (next_render_time - last_render_time) * scroll_increment_sign)
+
+                if abs(scroll_position_increment) > 0:
+                    horizontal_scroll_position += scroll_position_increment
+                    horizontal_scroll_position = max(0, min(horizontal_scroll_position, max_scroll))
+
+                    last_render_time = next_render_time
+                else:
+                    # Wait to accumulate more time before scrolling
+                    pass
+
+
+    def render(self):
+        """
+            Even if we need to animate for scrolling, all instances should explicitly render
+            their initial state. Note that the screenshot generator currently does not render
+            anything from within child threads.
+        """
+        # Default text and centered text already include any edge padding considerations
+        # in their rendered img that we're about to paste onto the canvas.
+        text_x = self.screen_x
+        text_img = self.rendered_text_img
+        if self.is_horizontal_scrolling_enabled:
+            # Scrolling text has no edge considerations so must be placed exactly
+            text_x = self.min_text_x
+
+            # Must also account for the right edge running off our visible width
+            text_img = text_img.crop((0, 0, self.visible_width, text_img.height))
+
+        self.canvas.paste(text_img, (text_x, self.screen_y + self.text_offset_y))
+
+
+
+@dataclass
+class ScrollableTextLine(TextArea):
+    """
+    Convenience class to more clearly communicate usage intention:
+    * A single line of text
+    * Can be centered (e.g. TopNav title)
+    * Will automatically scroll if it does not fit the specified width
+    """
+    def __post_init__(self):
+        self.auto_line_break = False
+        self.is_horizontal_scrolling_enabled = True
+        self.allow_text_overflow = True
+        super().__post_init__()
 
 
 
@@ -1352,7 +1519,7 @@ class TopNav(BaseComponent):
                 height=GUIConstants.TOP_NAV_BUTTON_SIZE,
             )
 
-        min_text_x = 0
+        min_text_x = GUIConstants.EDGE_PADDING
         if self.show_back_button:
             # Don't let the title intrude on the BACK button
             min_text_x = self.left_button.screen_x + self.left_button.width + GUIConstants.COMPONENT_PADDING
@@ -1371,7 +1538,7 @@ class TopNav(BaseComponent):
                 font_size=self.font_size,
             )
         else:
-            self.title = TextArea(
+            self.title = ScrollableTextLine(
                 screen_x=0,
                 screen_y=0,
                 min_text_x=min_text_x,
@@ -1383,6 +1550,7 @@ class TopNav(BaseComponent):
                 font_size=self.font_size,
                 height_ignores_below_baseline=True,  # Consistently vertically center text, ignoring chars that render below baseline (e.g. "pqyj")
             )
+            self.threads += self.title.threads
 
 
     @property
@@ -1465,7 +1633,6 @@ def reflow_text_for_width(text: str,
     # We have to figure out if and where to make line breaks in the text so that it
     #   fits in its bounding rect (plus accounting for edge padding) using its given
     #   font.
-    start = time()
     font = Fonts.get_font(font_name=font_name, size=font_size)
     # Measure from left baseline ("ls")
     (left, top, full_text_width, bottom) = font.getbbox(text, anchor="ls")
