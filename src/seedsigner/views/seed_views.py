@@ -52,14 +52,14 @@ class SeedsMenuView(View):
             button_data=button_data
         )
 
-        if len(self.seeds) > 0 and selected_menu_num < len(self.seeds):
+        if selected_menu_num == RET_CODE__BACK_BUTTON:
+            return Destination(BackStackView)
+
+        elif len(self.seeds) > 0 and selected_menu_num < len(self.seeds):
             return Destination(SeedOptionsView, view_args={"seed_num": selected_menu_num})
 
         elif button_data[selected_menu_num] == self.LOAD:
             return Destination(LoadSeedView)
-
-        elif selected_menu_num == RET_CODE__BACK_BUTTON:
-            return Destination(BackStackView)
 
 
 
