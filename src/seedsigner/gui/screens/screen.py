@@ -44,27 +44,31 @@ class BaseScreen(BaseComponent):
 
         # Tracks position on scrollable pages, determines which elements are visible.
         self.scroll_y = 0
+    
+
+    def get_threads(self) -> List[BaseThread]:
+        threads = self.threads.copy()
+        for component in self.components:
+            threads += component.threads
+        return threads
 
 
     def display(self) -> Any:
-        # each Component could have its own child threads; collect them first
-        for component in self.components:
-            self.threads += component.threads
-
         try:
             with self.renderer.lock:
                 self._render()
                 self.renderer.show_image()
 
-            for t in self.threads:
-                t.start()
+            for t in self.get_threads():
+                if not t.is_alive():
+                    t.start()
 
             return self._run()
         except Exception as e:
             repr(e)
             raise e
         finally:
-            for t in self.threads:
+            for t in self.get_threads():
                 t.stop()
 
 
@@ -268,6 +272,7 @@ class ButtonOption:
     right_icon_name: str = None
     button_label_color: str = None
     return_data: Any = None
+    active_button_label: str = None  # Changes displayed button label when button is active
 
 
 
@@ -326,29 +331,14 @@ class ButtonListScreen(BaseTopNavScreen):
                 icon_color = button_option.icon_color
                 right_icon_name = button_option.right_icon_name
                 button_label_color = button_option.button_label_color
+                active_button_label = button_option.active_button_label
             
             else:
                 raise Exception("Refactor needed!")
 
-            # # TODO: Complete refactor away from str|tuple to ButtonOption
-            # elif type(button_option) == str:
-            #     button_label = button_option
-            # elif type(button_option) == tuple:
-            #     if len(button_option) == 2:
-            #         (button_label, icon_name) = button_option
-            #         icon_color = GUIConstants.BUTTON_FONT_COLOR
-
-            #     elif len(button_option) == 3:
-            #         (button_label, icon_name, icon_color) = button_option
-
-            #     elif len(button_option) == 4:
-            #         (button_label, icon_name, icon_color, button_label_color) = button_option
-
-            #     elif len(button_option) == 5:
-            #         (button_label, icon_name, icon_color, button_label_color, right_icon_name) = button_option
-
             button_kwargs = dict(
                 text=_(button_label),  # Wrap here for just-in-time translations
+                active_text=_(active_button_label),  # Wrap here for just-in-time translations
                 icon_name=icon_name,
                 icon_color=icon_color if icon_color else GUIConstants.BUTTON_FONT_COLOR,
                 is_icon_inline=True,
@@ -362,13 +352,14 @@ class ButtonListScreen(BaseTopNavScreen):
                 font_name=self.button_font_name,
                 font_size=self.button_font_size,
                 font_color=button_label_color if button_label_color else GUIConstants.BUTTON_FONT_COLOR,
-                selected_color=self.button_selected_color
+                selected_color=self.button_selected_color,
+                is_scrollable_text=True,  # We need to use the ScrollableText class for long button labels
             )
             if self.checked_buttons and i in self.checked_buttons:
                 button_kwargs["is_checked"] = True
             button = self.Button_cls(**button_kwargs)
             self.buttons.append(button)
-        
+
         if self.has_scroll_arrows:
             self.arrow_half_width = 10
             self.cur_scroll_y = self.scroll_y_initial_offset if self.scroll_y_initial_offset is not None else 0
@@ -387,6 +378,14 @@ class ButtonListScreen(BaseTopNavScreen):
 
         cur_selected_button = self.buttons[self.selected_button]
         cur_selected_button.is_selected = True
+
+
+    def get_threads(self) -> List[BaseThread]:
+        threads = super().get_threads()
+        for button in self.buttons:
+            if button.is_scrollable_text:
+                threads += button.threads
+        return threads
 
 
     def _render(self):
@@ -550,7 +549,7 @@ class ButtonListScreen(BaseTopNavScreen):
 
 @dataclass
 class LargeButtonScreen(BaseTopNavScreen):
-    button_data: list = None                  # list can be a mix of str or tuple(label: str, icon_name: str)
+    button_data: list = None
     button_font_name: str = None
     button_font_size: int = None
     button_selected_color: str = GUIConstants.ACCENT_COLOR

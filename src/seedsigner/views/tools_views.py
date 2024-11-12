@@ -683,7 +683,7 @@ class ToolsAddressExplorerAddressListView(View):
                 end_digits = -5
             else:
                 end_digits = -4
-            button_data.append(ButtonOption(f"{cur_index}:{address[:8]}...{address[end_digits:]}"))
+            button_data.append(ButtonOption(f"{cur_index}:{address[:8]}...{address[end_digits:]}", active_button_label=f"{cur_index}:{address}"))
 
         # TRANSLATOR_NOTE: Insert the number of addrs displayed per screen (e.g. "Next 10")
         button_label = _("Next {}").format(addrs_per_screen)

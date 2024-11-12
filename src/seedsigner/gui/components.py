@@ -379,6 +379,7 @@ class TextArea(BaseComponent):
     height: int = None      # None = special case: autosize to min height
     screen_x: int = 0
     screen_y: int = 0
+    scroll_y: int = 0
     min_text_x: int = 0  # Text can not start at x any less than this
     background_color: str = GUIConstants.BACKGROUND_COLOR
     font_name: str = None
@@ -386,10 +387,13 @@ class TextArea(BaseComponent):
     font_color: str = GUIConstants.BODY_FONT_COLOR
     edge_padding: int = GUIConstants.EDGE_PADDING
     is_text_centered: bool = True
-    supersampling_factor: int = 1
+    supersampling_factor: int = 2  # 1 = disabled; 2 = default, double sample (4px square rendered for 1px)
     auto_line_break: bool = True
     allow_text_overflow: bool = False
     is_horizontal_scrolling_enabled: bool = False
+    horizontal_scroll_speed: int = 40  # px per sec
+    horizontal_scroll_begin_hold_secs: float = 2.0
+    horizontal_scroll_end_hold_secs: float = 1.0
     height_ignores_below_baseline: bool = False  # If True, characters that render below the baseline (e.g. "pqgy") will not affect the final height calculation
 
 
@@ -499,8 +503,15 @@ class TextArea(BaseComponent):
         # Add a `resample_padding` above and below when supersampling to avoid edge
         # effects (resized text that's right up against the top/bottom gets slightly
         # dimmer at the edge otherwise).
-        if self.font_size < 20 and (not self.supersampling_factor or self.supersampling_factor == 1):
-            self.supersampling_factor = 2
+        # if self.background_color == GUIConstants.ACCENT_COLOR and self.supersampling_factor == 1:
+        #     # Don't boost supersampling factor. Text against the accent color does not
+        #     # render well when supersampled.
+        #     pass
+        # elif self.font_size < 20 and (not self.supersampling_factor or self.supersampling_factor == 1):
+        #     self.supersampling_factor = 2
+        if self.font_size >= 20 and self.supersampling_factor != 1:
+            self.supersampling_factor = 1
+            logger.warning(f"Supersampling disabled for large font size: {self.font_size}")
 
         if self.height_ignores_below_baseline:
             # Even though we're ignoring the pixels below the baseline for spacing
@@ -508,14 +519,21 @@ class TextArea(BaseComponent):
             # supersampling operations here.
             total_text_height += self.text_height_below_baseline
 
-        resample_padding = 10 if self.supersampling_factor > 1.0 else 0
+        resample_padding = 10 if self.supersampling_factor > 1 else 0
 
         if self.is_horizontal_scrolling_enabled:
             # Temp img will be the full width of the text
             image_width = self.text_width
         else:
-            # Temp img will be the component's width
-            image_width = self.width
+            # Temp img will be the component's width, but must respect right edge padding
+            image_width = self.width - self.edge_padding
+        
+        if self.supersampling_factor > 1:
+            start = time.time()
+            supersampled_font = Fonts.get_font(self.font_name, int(self.supersampling_factor * self.font_size))
+            print(f"Supersampled font load time: {time.time() - start:.04}")
+        else:
+            supersampled_font = font
 
         img = Image.new(
             "RGBA",
@@ -524,11 +542,11 @@ class TextArea(BaseComponent):
                 (total_text_height + 2*resample_padding) * self.supersampling_factor
             ),
             self.background_color
+            # "red"
         )
         draw = ImageDraw.Draw(img)
 
         cur_y = (resample_padding + self.text_height_above_baseline) * self.supersampling_factor
-        supersampled_font = Fonts.get_font(self.font_name, int(self.supersampling_factor * self.font_size))
 
         if self.is_text_centered:
             # middle baseline
@@ -561,7 +579,7 @@ class TextArea(BaseComponent):
             cur_y += (self.text_height_above_baseline + self.line_spacing) * self.supersampling_factor
 
         # Crop off the top_padding and resize the result down to onscreen size
-        if self.supersampling_factor > 1.0:
+        if self.supersampling_factor > 1:
             resized = img.resize((image_width, total_text_height + 2*resample_padding), Image.LANCZOS)
             sharpened = resized.filter(ImageFilter.SHARPEN)
 
@@ -569,28 +587,48 @@ class TextArea(BaseComponent):
         
         self.rendered_text_img = img
 
+        self.horizontal_text_scroll_thread: TextArea.HorizontalTextScrollThread = None
         if self.is_horizontal_scrolling_enabled:
-            # Start the horizontal scrolling renderer thread
-            self.threads.append(
-                TextArea.HorizontalTextScrollThread(
-                    rendered_text_img=self.rendered_text_img,
-                    screen_x=self.min_text_x,
-                    screen_y=self.screen_y + self.text_offset_y,
-                    visible_width=self.visible_width
-                )
+            self.horizontal_text_scroll_thread = TextArea.HorizontalTextScrollThread(
+                rendered_text_img=self.rendered_text_img,
+                screen_x=self.screen_x + self.min_text_x,
+                screen_y=self.screen_y + self.text_y - self.text_height_above_baseline,
+                visible_width=self.visible_width,
+                horizontal_scroll_speed=self.horizontal_scroll_speed,
+                begin_hold_secs=self.horizontal_scroll_begin_hold_secs,
+                end_hold_secs=self.horizontal_scroll_end_hold_secs
             )
 
 
     class HorizontalTextScrollThread(BaseThread):
-        def __init__(self, rendered_text_img: Image, screen_x: int, screen_y: int, visible_width: int):
+        def __init__(self, rendered_text_img: Image, screen_x: int, screen_y: int, visible_width: int, horizontal_scroll_speed:int, begin_hold_secs: float, end_hold_secs: float):
             super().__init__()
             self.rendered_text_img = rendered_text_img
             self.screen_x = screen_x
             self.screen_y = screen_y
             self.visible_width = visible_width
+            self.horizontal_scroll_speed = horizontal_scroll_speed
+            self.begin_hold_secs = begin_hold_secs
+            self.end_hold_secs = end_hold_secs
 
-            self.renderer = Renderer.get_instance()
-        
+            self.scroll_y = 0
+            self.scrolling_active = True
+            self.horizontal_scroll_position = 0
+            self.scroll_increment_sign = 1  # flip to negative to scroll text to the right
+
+            self.renderer = Renderer.get_instance()        
+
+
+        def stop_scrolling(self):
+            self.scrolling_active = False
+
+
+        def start_scrolling(self):
+            # Reset scroll position to left edge
+            self.horizontal_scroll_position = 0
+            self.scroll_increment_sign = 1
+            self.scrolling_active = True
+
 
         def run(self):
             """
@@ -598,39 +636,37 @@ class TextArea(BaseComponent):
             50px/sec creates a slight ghosting / doubling effect that impedes
             readability. 45px/sec is better but still perceptually a bit stuttery.
             """
-            horizontal_scroll_position = 0
-            scroll_pace = 45  # px per sec
-            scroll_increment_sign = 1  # flip to negative to scroll text to the right
-            begin_hold_secs = 2.0
-            end_hold_secs = 1.0
-
             max_scroll = self.rendered_text_img.width - self.visible_width
 
             while self.keep_running:
+                if not self.scrolling_active:
+                    time.sleep(0.1)
+                    continue
+
                 with self.renderer.lock:
-                    img = self.rendered_text_img.crop((horizontal_scroll_position, 0, horizontal_scroll_position + self.visible_width, self.rendered_text_img.height))
-                    self.renderer.canvas.paste(img, (self.screen_x, self.screen_y))
+                    img = self.rendered_text_img.crop((self.horizontal_scroll_position, 0, self.horizontal_scroll_position + self.visible_width, self.rendered_text_img.height))
+                    self.renderer.canvas.paste(img, (self.screen_x, self.screen_y - self.scroll_y))
                     self.renderer.show_image()
 
-                if horizontal_scroll_position == 0:
+                if self.horizontal_scroll_position == 0:
                     # Pause on initial (left-justified) position...                
-                    time.sleep(begin_hold_secs)
+                    time.sleep(self.begin_hold_secs)
 
                     # Don't count those pause seconds
                     last_render_time = None
 
                     # Scroll the text left
-                    scroll_increment_sign = 1
+                    self.scroll_increment_sign = 1
 
-                elif horizontal_scroll_position == max_scroll:
+                elif self.horizontal_scroll_position == max_scroll:
                     # ...and slight pause at end of scroll
-                    time.sleep(end_hold_secs)
+                    time.sleep(self.end_hold_secs)
 
                     # Don't count those pause seconds
                     last_render_time = None
 
                     # Scroll the text right
-                    scroll_increment_sign = -1
+                    self.scroll_increment_sign = -1
                 
                 else:
                     # No need to CPU limit when running in its own thread?
@@ -641,13 +677,13 @@ class TextArea(BaseComponent):
                 if not last_render_time:
                     # First frame when pulling off either end will move 1 pixel; have to
                     # "get off zero" for the real increment calc logic to kick in.
-                    scroll_position_increment = 1 * scroll_increment_sign
+                    scroll_position_increment = 1 * self.scroll_increment_sign
                 else:
-                    scroll_position_increment = int(scroll_pace * (next_render_time - last_render_time) * scroll_increment_sign)
+                    scroll_position_increment = int(self.horizontal_scroll_speed * (next_render_time - last_render_time) * self.scroll_increment_sign)
 
                 if abs(scroll_position_increment) > 0:
-                    horizontal_scroll_position += scroll_position_increment
-                    horizontal_scroll_position = max(0, min(horizontal_scroll_position, max_scroll))
+                    self.horizontal_scroll_position += scroll_position_increment
+                    self.horizontal_scroll_position = max(0, min(self.horizontal_scroll_position, max_scroll))
 
                     last_render_time = next_render_time
                 else:
@@ -667,12 +703,19 @@ class TextArea(BaseComponent):
         text_img = self.rendered_text_img
         if self.is_horizontal_scrolling_enabled:
             # Scrolling text has no edge considerations so must be placed exactly
-            text_x = self.min_text_x
+            text_x += self.min_text_x
 
             # Must also account for the right edge running off our visible width
             text_img = text_img.crop((0, 0, self.visible_width, text_img.height))
 
-        self.canvas.paste(text_img, (text_x, self.screen_y + self.text_offset_y))
+        self.canvas.paste(text_img, (text_x, self.screen_y + self.text_y - self.text_height_above_baseline - self.scroll_y))
+
+
+    def set_scroll_y(self, scroll_y: int):
+        """ Used by ButtonListScreen """
+        self.scroll_y = scroll_y
+        if self.horizontal_text_scroll_thread:
+            self.horizontal_text_scroll_thread.scroll_y = scroll_y
 
 
 
@@ -689,6 +732,16 @@ class ScrollableTextLine(TextArea):
         self.is_horizontal_scrolling_enabled = True
         self.allow_text_overflow = True
         super().__post_init__()
+
+
+    @property
+    def needs_scroll(self) -> bool:
+        return self.horizontal_text_scroll_thread is not None
+
+
+    @property
+    def scroll_thread(self) -> TextArea.HorizontalTextScrollThread:
+        return self.horizontal_text_scroll_thread
 
 
 
@@ -1251,12 +1304,29 @@ class BtcAmount(BaseComponent):
 
 @dataclass
 class Button(BaseComponent):
-    # TODO: Rename the seedsigner.helpers.Buttons class (to Inputs?) to reduce confusion
-    # with this GUI component.
     """
-        Attrs with defaults must be listed last.
+    Buttons offer two rendering methods:
+
+    * Reusable in-memory image (is_scrollable_text = True; default): For both active and
+        inactive states, the text is rendered once (on a just-in-time basis) into an
+        in-memory image that is then reused as needed during the life of the Component.
+
+        Specifically built with l10n in mind. Will automatically add scrolling via
+        ScrollableTextLine for the Button's active state when necessary; a static
+        TextArea is used otherwise.
+
+        This means that this setting is not suitable for Buttons whose
+        text label needs to interactively change (e.g. the "ABC" vs "abc" soft keys in
+        the passphrase entry Keyboard). 
+
+    * Real-time text (is_scrollable_text = False): The label text's active/inactive state
+        is just rendered as basic text on-the-fly, so it can support uses where the button
+        label can change. Text scrolling is not supported in this mode so in general it
+        should not to used with l10n content whose length might vary by language.
+
     """
     text: str = "Button Label"
+    active_text: str = None  # Optional alt text to replace the button label when the button is selected
     screen_x: int = 0
     screen_y: int = 0
     scroll_y: int = 0
@@ -1282,6 +1352,7 @@ class Button(BaseComponent):
     selected_outline_color: str = None
     is_text_centered: bool = True
     is_selected: bool = False
+    is_scrollable_text: bool = True  # True: active state will automatically scroll if necessary, text is rendered once (not dynamic)
 
 
     def __post_init__(self):
@@ -1302,16 +1373,11 @@ class Button(BaseComponent):
         if not self.icon_color:
             self.icon_color = GUIConstants.BUTTON_FONT_COLOR
 
-        self.font = Fonts.get_font(self.font_name, self.font_size)
+        self.active_button_label = None
 
         if self.text is not None:
-            if self.is_text_centered:
-                self.text_x = int(self.width/2)
-                self.text_anchor = "ms"  # centered horizontally, baseline
-            else:
-                self.text_x = GUIConstants.COMPONENT_PADDING
-                self.text_anchor = "ls"  # left, baseline
-            
+            self.font = Fonts.get_font(self.font_name, self.font_size)
+
             # Calc true pixel height (any anchor from "baseline" will work)
             (left, top, self.text_width, bottom) = self.font.getbbox(self.text, anchor="ls")
             # print(f"left: {left} |  top: {top} | right: {self.text_width} | bottom: {bottom}")
@@ -1321,25 +1387,65 @@ class Button(BaseComponent):
             # regardless of the Button text.
             self.text_height = -1 * top
 
-            # TODO: Only apply screen_y at render
+            # Total space available just for the text (will contract later if there are icons)
+            self.visible_text_width = self.width - 2*GUIConstants.COMPONENT_PADDING
+
+            if self.text_width > self.visible_text_width and not self.is_scrollable_text:
+                logger.warning("Button label \"{self.text}\" will not fit but is_scrollable_text is False")
+
+            if self.is_text_centered and self.text_width < self.visible_text_width:
+                # self.text_x = int(self.width/2)
+                # self.text_anchor = "ms"  # centered horizontally, baseline
+
+                # Calculate the centered text's starting point, but relative to the "ls"
+                # anchor point.
+                self.text_x = int((self.width - self.text_width)/2)
+                self.text_anchor = "ls"  # left, baseline
+            else:
+                # Text is left-justified or has to be because it will be scrolled
+                self.is_text_centered = False
+                self.text_x = GUIConstants.COMPONENT_PADDING
+                self.text_anchor = "ls"  # left, baseline
+
             if self.text_y_offset:
                 self.text_y = self.text_y_offset + self.text_height
             else:
                 self.text_y = self.height - int((self.height - self.text_height)/2)
 
+            print(f"Button: {self.text_y_offset=}, {self.text_height=}, {self.height=}, {self.text_y=} | {self.text=}")
+
         # Preload the icon and its "_selected" variant
+        icon_padding = GUIConstants.COMPONENT_PADDING
         if self.icon_name:
-            icon_padding = GUIConstants.COMPONENT_PADDING
             self.icon = Icon(icon_name=self.icon_name, icon_size=self.icon_size, icon_color=self.icon_color)
             self.icon_selected = Icon(icon_name=self.icon_name, icon_size=self.icon_size, icon_color=self.selected_icon_color)
 
+            if self.icon_y_offset:
+                self.icon_y = self.icon_y_offset
+            else:
+                self.icon_y = math.ceil((self.height - self.icon.height)/2)
+
             if self.is_icon_inline:
+                self.visible_text_width -= self.icon.width + icon_padding
+                if self.text_width > self.visible_text_width:
+                    self.is_text_centered = False
+                    self.text_x = GUIConstants.COMPONENT_PADDING
+
+                    if not self.is_scrollable_text:
+                        logger.warning("Button label \"{self.text}\" with icon inline will not fit but is_scrollable_text is False")
+
                 if self.is_text_centered:
-                    # Shift the text's centering
                     if self.text:
+                        # Shift the text's center-based anchor to the right to make room
+                        # self.text_x += int((self.icon.width + icon_padding) / 2)
+
+                        # Shift the text's "ls"-based anchor to the right to make room
                         self.text_x += int((self.icon.width + icon_padding) / 2)
-                        self.icon_x = self.text_x - int(self.text_width/2) - (self.icon.width + icon_padding)
+
+                        # Position the icon's left-based anchor on the left
+                        self.icon_x = self.text_x - (self.icon.width + icon_padding)
                     else:
+                        # TODO: Is an inline icon but w/no text even a sensible input configuration?
                         self.icon_x = math.ceil((self.width - self.icon.width)/2)
 
                 else:
@@ -1349,19 +1455,61 @@ class Button(BaseComponent):
 
             else:
                 self.icon_x = int((self.width - self.icon.width) / 2)
-
-            if self.icon_y_offset:
-                self.icon_y = self.icon_y_offset
-            else:
-                self.icon_y = math.ceil((self.height - self.icon.height)/2)
+                if self.text:
+                    self.text_y = self.icon_y + self.icon.height + GUIConstants.COMPONENT_PADDING
 
         if self.right_icon_name:
             self.right_icon = Icon(icon_name=self.right_icon_name, icon_size=self.right_icon_size, icon_color=self.right_icon_color)
             self.right_icon_selected = Icon(icon_name=self.right_icon_name, icon_size=self.right_icon_size, icon_color=self.selected_icon_color)
 
+            self.visible_text_width -= self.right_icon.width + icon_padding
+            if self.text_width > self.visible_text_width:
+                self.is_text_centered = False
+
+                if not self.is_scrollable_text:
+                    logger.warning("Button label \"{self.text}\" with icon inline will not fit but is_scrollable_text is False")
+
             self.right_icon_x = self.width - self.right_icon.width - GUIConstants.COMPONENT_PADDING
 
             self.right_icon_y = math.ceil((self.height - self.right_icon.height)/2)
+
+        if self.text and self.is_scrollable_text:
+            button_kwargs = dict(
+                text=self.active_text if self.active_text else self.text,
+                font_name=self.font_name,
+                font_size=self.font_size,
+                supersampling_factor=1,  # disable; not necessary at button font size. Also black text on orange supersamples poorly
+                font_color=self.selected_font_color,
+                background_color=self.selected_color,
+                screen_x=self.screen_x,
+                screen_y=self.screen_y + self.text_y_offset,
+                width=self.width,
+                height=self.text_height if self.icon_name and not self.is_icon_inline else self.height,
+                min_text_x=self.text_x if self.icon_name and self.is_icon_inline else GUIConstants.COMPONENT_PADDING,
+                is_text_centered=self.is_text_centered,
+                height_ignores_below_baseline=True,  # Consistently vertically center text, ignoring chars that render below baseline (e.g. "pqyj")
+                horizontal_scroll_speed=30,  #px per sec
+                horizontal_scroll_begin_hold_secs=0.5,
+                horizontal_scroll_end_hold_secs=0.5,
+            )
+
+            # ButtonListScreens with lots of buttons will take too long to pre-render all
+            # the Buttons, so we use a just-in-time approach to create BOTH the active and
+            # inactive Buttons. For simple "Done" screens, the inactive state will never be
+            # rendered.
+            self.active_button_label = None
+            self.active_button_label_kwargs = button_kwargs.copy()
+
+            button_kwargs["text"] = self.text
+            button_kwargs["font_color"] = self.font_color
+            button_kwargs["background_color"] = self.background_color
+            button_kwargs["allow_text_overflow"] = True
+            button_kwargs["auto_line_break"] = False
+            del button_kwargs["horizontal_scroll_begin_hold_secs"]
+            del button_kwargs["horizontal_scroll_end_hold_secs"]
+
+            self.inactive_button_label = None
+            self.inactive_button_label_kwargs = button_kwargs.copy()
 
 
     def render(self):
@@ -1388,13 +1536,44 @@ class Button(BaseComponent):
         )
 
         if self.text is not None:
-            self.image_draw.text(
-                (self.screen_x + self.text_x, self.screen_y + self.text_y - self.scroll_y),
-                self.text,
-                fill=font_color,
-                font=self.font,
-                anchor=self.text_anchor
-            )
+            if not self.is_scrollable_text:
+                # Just directly render the text for the current active/inactive state
+                self.image_draw.text(
+                    (self.screen_x + self.text_x, self.screen_y + self.text_y - self.scroll_y),
+                    self.text,
+                    fill=font_color,
+                    font=self.font,
+                    anchor=self.text_anchor
+                )
+
+            else:
+                # Use just-in-time instatiation of pre-rendered ScrollableTextLine and TextArea
+                if self.is_selected:
+                    if not self.active_button_label:
+                        # Just-in-time create the active button label
+                        self.active_button_label = ScrollableTextLine(**self.active_button_label_kwargs)
+
+                        if self.active_button_label.needs_scroll:
+                            self.threads.append(self.active_button_label.scroll_thread)
+                            self.active_button_label.scroll_thread.start()
+
+                    self.active_button_label.set_scroll_y(self.scroll_y)
+                    self.active_button_label.render()
+
+                    if self.active_button_label.needs_scroll:
+                        # Activate the scrollable text line
+                        self.active_button_label.scroll_thread.start_scrolling()
+                
+                else:
+                    if self.active_button_label and self.active_button_label.needs_scroll:
+                        self.active_button_label.scroll_thread.stop_scrolling()
+
+                    if not self.inactive_button_label:
+                        # Just-in-time create the inactive button label
+                        self.inactive_button_label = TextArea(**self.inactive_button_label_kwargs)
+
+                    self.inactive_button_label.set_scroll_y(self.scroll_y)
+                    self.inactive_button_label.render()
 
         if self.icon_name:
             icon = self.icon
@@ -1457,6 +1636,7 @@ class IconButton(Button):
     text: str = None
     is_icon_inline: bool = False
     is_text_centered: bool = True
+    is_scrollable_text: bool = False
 
 
 
@@ -1468,6 +1648,7 @@ class LargeIconButton(IconButton):
     """
     icon_size: int = GUIConstants.ICON_LARGE_BUTTON_SIZE
     icon_y_offset: int = GUIConstants.COMPONENT_PADDING
+    is_scrollable_text: bool = True
 
 
 
@@ -1525,6 +1706,7 @@ class TopNav(BaseComponent):
             min_text_x = self.left_button.screen_x + self.left_button.width + GUIConstants.COMPONENT_PADDING
 
         if self.icon_name:
+            # TODO: Refactor IconTextLine to use ScrollableTextLine
             self.title = IconTextLine(
                 screen_x=0,
                 screen_y=0,
@@ -1550,7 +1732,10 @@ class TopNav(BaseComponent):
                 font_size=self.font_size,
                 height_ignores_below_baseline=True,  # Consistently vertically center text, ignoring chars that render below baseline (e.g. "pqyj")
             )
-            self.threads += self.title.threads
+            if self.title.needs_scroll:
+                # Add the scroll thread to TopNav's self.threads so it automatically runs
+                # for the life of the Component.
+                self.threads.append(self.title.scroll_thread)
 
 
     @property

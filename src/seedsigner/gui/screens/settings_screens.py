@@ -145,6 +145,7 @@ class IOTestScreen(BaseTopNavScreen):
             screen_x=self.canvas_width - key_button_width + GUIConstants.EDGE_PADDING,
             screen_y=key2_y,
             outline_color=GUIConstants.ACCENT_COLOR,
+            is_scrollable_text=False,  # Text has to dynamically update, can't use scrollable Button
         )
         self.key2_button.text = " "  # but default state is empty
         self.components.append(self.key2_button)
@@ -166,6 +167,7 @@ class IOTestScreen(BaseTopNavScreen):
             screen_x=self.canvas_width - key_button_width + GUIConstants.EDGE_PADDING,
             screen_y=key2_y + 3*GUIConstants.COMPONENT_PADDING + key_button_height,
             outline_color=GUIConstants.ACCENT_COLOR,
+            is_scrollable_text=False,  # No help for l10n, but currently ScrollableTextLine interferes with the small button's left edge. (TODO:)
         )
         self.components.append(self.key3_button)
 
@@ -187,18 +189,19 @@ class IOTestScreen(BaseTopNavScreen):
                 cur_selected_button = self.key1_button
 
                 with self.renderer.lock:
-                    cur_selected_button.is_selected = True
-                    cur_selected_button.render()
-                    camera_message.render()
                     # Render edges around message box
                     self.image_draw.rectangle(
                         (
                             -1, int((self.canvas_height - msg_height)/ 2) - 1,
                             self.canvas_width + 1, int((self.canvas_height + msg_height)/ 2) + 1
                         ),
+                        fill="black",
                         outline=GUIConstants.ACCENT_COLOR,
                         width=1,
                     )
+                    cur_selected_button.is_selected = True
+                    cur_selected_button.render()
+                    camera_message.render()
                     self.renderer.show_image()
 
                 # Snap a pic, render it as the background, re-render all onscreen elements
