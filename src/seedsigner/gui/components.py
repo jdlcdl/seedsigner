@@ -1412,8 +1412,6 @@ class Button(BaseComponent):
             else:
                 self.text_y = self.height - int((self.height - self.text_height)/2)
 
-            print(f"Button: {self.text_y_offset=}, {self.text_height=}, {self.height=}, {self.text_y=} | {self.text=}")
-
         # Preload the icon and its "_selected" variant
         icon_padding = GUIConstants.COMPONENT_PADDING
         if self.icon_name:

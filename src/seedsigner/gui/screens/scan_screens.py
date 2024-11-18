@@ -205,7 +205,8 @@ class ScanScreen(BaseScreen):
                             )
 
                             # TRANSLATOR_NOTE: Inserts the percentage value of the animated QR scan progress
-                            text = _("{}%").format(progress_percentage)
+                            # text = _("{}%").format(progress_percentage)
+                            text = f"{progress_percentage}%"
                             draw.text(
                                 xy=(rectangle.width - GUIConstants.EDGE_PADDING, int(rectangle.height / 2)),
                                 text=text,
