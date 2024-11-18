@@ -60,15 +60,15 @@ class SettingsConstants:
     # Do not wrap for translation; always present each language in its native form
     ALL_LOCALES = [
         # (LOCALE__ARABIC, "Arabic"),
-        (LOCALE__CZECH, "čeština"),
+        # (LOCALE__CZECH, "čeština"),
         (LOCALE__ENGLISH, "English"),
-        (LOCALE__FRENCH, "Français"),
-        (LOCALE__GERMAN, "Deutsch"),
+        # (LOCALE__FRENCH, "Français"),
+        # (LOCALE__GERMAN, "Deutsch"),
         # (LOCALE__HEBREW, "Hebrew"),
         # (LOCALE__JAPANESE, "Japanese"),
         # (LOCALE__KOREAN, "Korean"),
-        (LOCALE__PORTUGUESE, "Português"),
-        (LOCALE__RUSSIAN, "русский"),
+        # (LOCALE__PORTUGUESE, "Português"),
+        # (LOCALE__RUSSIAN, "русский"),
         (LOCALE__SPANISH, "Español"),
     ]
 
