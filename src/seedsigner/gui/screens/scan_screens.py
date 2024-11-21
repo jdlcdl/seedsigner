@@ -102,7 +102,7 @@ class ScanScreen(BaseScreen):
             instructions_font = Fonts.get_font(GUIConstants.get_body_font_name(), GUIConstants.get_button_font_size())
 
             # pre-calculate how big the animated QR percent display can be
-            left, _, right, _ = instructions_font.getbbox("100%")
+            left, top, right, bottom = instructions_font.getbbox("100%")
             progress_text_width = right - left
 
             start_time = time.time()
@@ -205,8 +205,8 @@ class ScanScreen(BaseScreen):
                             )
 
                             # TRANSLATOR_NOTE: Inserts the percentage value of the animated QR scan progress
-                            # text = _("{}%").format(progress_percentage)
-                            text = f"{progress_percentage}%"
+                            text = _("{}%").format(progress_percentage)
+
                             draw.text(
                                 xy=(rectangle.width - GUIConstants.EDGE_PADDING, int(rectangle.height / 2)),
                                 text=text,
