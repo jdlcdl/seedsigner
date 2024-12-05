@@ -242,6 +242,6 @@ class TestToolsFlows(FlowTest):
             FlowStep(scan_views.ScanWalletDescriptorView, before_run=load_descriptor_into_decoder),  # simulate read descriptor QR
             FlowStep(seed_views.MultisigWalletDescriptorView, screen_return_value=0),
             FlowStep(seed_views.SeedAddressVerificationView),
-            FlowStep(seed_views.AddressVerificationSuccessView),
+            FlowStep(seed_views.SeedAddressVerificationSuccessView),
         ])
 

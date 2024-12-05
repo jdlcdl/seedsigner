@@ -347,14 +347,23 @@ class SeedFinalizeView(View):
 
 
 class SeedAddPassphraseView(View):
-    def __init__(self):
+    """
+    initial_keyboard: used by the screenshot generator to render each different keyboard layout.
+    """
+    def __init__(self, initial_keyboard: str = seed_screens.SeedAddPassphraseScreen.KEYBOARD__LOWERCASE_BUTTON_TEXT):
         super().__init__()
+        self.initial_keyboard = initial_keyboard
         self.seed = self.controller.storage.get_pending_seed()
 
 
     def run(self):
         passphrase_title=self.seed.passphrase_label
-        ret_dict = self.run_screen(seed_screens.SeedAddPassphraseScreen, passphrase=self.seed.passphrase, title=passphrase_title)
+        ret_dict = self.run_screen(
+            seed_screens.SeedAddPassphraseScreen,
+            passphrase=self.seed.passphrase,
+            title=passphrase_title,
+            initial_keyboard=self.initial_keyboard,
+        )
 
         # The new passphrase will be the return value; it might be empty.
         self.seed.set_passphrase(ret_dict["passphrase"])
@@ -1540,12 +1549,18 @@ class SeedTranscribeSeedQRWholeQRView(View):
 
 
 class SeedTranscribeSeedQRZoomedInView(View):
-    def __init__(self, seed_num: int, seedqr_format: str):
+    """
+    intial_block_x, initial_block_y: Used by the screenshot generator to shift the view
+    to a more interesting part of the QR code template.
+    """
+    def __init__(self, seed_num: int, seedqr_format: str, initial_block_x: int = 0, initial_block_y: int = 0):
         super().__init__()
         self.seed_num = seed_num
         self.seedqr_format = seedqr_format
         self.seed = self.controller.get_seed(seed_num)
-    
+        self.initial_block_x = initial_block_x
+        self.initial_block_y = initial_block_y 
+
 
     def run(self):
         encoder_args = dict(mnemonic=self.seed.mnemonic_list,
@@ -1571,6 +1586,8 @@ class SeedTranscribeSeedQRZoomedInView(View):
         seed_screens.SeedTranscribeSeedQRZoomedInScreen(
             qr_data=data,
             num_modules=num_modules,
+            initial_block_x=self.initial_block_x,
+            initial_block_y=self.initial_block_y,
         ).display()
 
         return Destination(SeedTranscribeSeedQRConfirmQRPromptView, view_args={"seed_num": self.seed_num})
@@ -1887,7 +1904,7 @@ class SeedAddressVerificationView(View):
             # Successfully verified the addr; update the data
             self.controller.unverified_address["verified_index"] = self.verified_index.cur_count
             self.controller.unverified_address["verified_index_is_change"] = self.verified_index_is_change.cur_count == 1
-            return Destination(AddressVerificationSuccessView, view_args=dict(seed_num=self.seed_num))
+            return Destination(SeedAddressVerificationSuccessView, view_args=dict(seed_num=self.seed_num))
 
         else:
             # Halt the thread if the user gave up (will already be stopped if it verified the
@@ -1953,7 +1970,7 @@ class SeedAddressVerificationView(View):
         
 
 
-class AddressVerificationSuccessView(View):
+class SeedAddressVerificationSuccessView(View):
     def __init__(self, seed_num: int):
         super().__init__()
         self.seed_num = seed_num

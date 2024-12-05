@@ -197,14 +197,14 @@ class SeedMnemonicEntryScreen(BaseTopNavScreen):
                     break
 
                 if row < highlighted_row:
-                    cur_y = self.highlighted_row_y - GUIConstants.COMPONENT_PADDING - (highlighted_row - row - 1) * self.matches_list_row_height
+                    self.cur_y = self.highlighted_row_y - GUIConstants.COMPONENT_PADDING - (highlighted_row - row - 1) * self.matches_list_row_height
 
                 elif row > highlighted_row:
-                    cur_y = self.highlighted_row_y + self.matches_list_highlight_button.height + (row - highlighted_row) * self.matches_list_row_height
+                    self.cur_y = self.highlighted_row_y + self.matches_list_highlight_button.height + (row - highlighted_row) * self.matches_list_row_height
 
                 # else draw the nth row
                 draw.text(
-                    (word_indent, cur_y),
+                    (word_indent, self.cur_y),
                     self.possible_words[i],
                     fill="#ddd",
                     font=self.word_font,
@@ -655,6 +655,10 @@ class SeedExportXpubDetailsScreen(WarningEdgesMixin, ButtonListScreen):
 @dataclass
 class SeedAddPassphraseScreen(BaseTopNavScreen):
     passphrase: str = ""
+
+    # Only used by the screenshot generator
+    initial_keyboard: str = None
+
     KEYBOARD__LOWERCASE_BUTTON_TEXT = "abc"
     KEYBOARD__UPPERCASE_BUTTON_TEXT = "ABC"
     KEYBOARD__DIGITS_BUTTON_TEXT = "123"
@@ -843,18 +847,37 @@ class SeedAddPassphraseScreen(BaseTopNavScreen):
     def _render(self):
         super()._render()
 
+        # Change from the default lowercase keyboard for the screenshot generator
+        if self.initial_keyboard == self.KEYBOARD__UPPERCASE_BUTTON_TEXT:
+            cur_keyboard = self.keyboard_ABC
+            self.hw_button1.text = self.KEYBOARD__LOWERCASE_BUTTON_TEXT
+
+        elif self.initial_keyboard == self.KEYBOARD__DIGITS_BUTTON_TEXT:
+            cur_keyboard = self.keyboard_digits
+            self.hw_button2.text = self.KEYBOARD__SYMBOLS_1_BUTTON_TEXT
+
+        elif self.initial_keyboard == self.KEYBOARD__SYMBOLS_1_BUTTON_TEXT:
+            cur_keyboard = self.keyboard_symbols_1
+            self.hw_button2.text = self.KEYBOARD__SYMBOLS_2_BUTTON_TEXT
+
+        elif self.initial_keyboard == self.KEYBOARD__SYMBOLS_2_BUTTON_TEXT:
+            cur_keyboard = self.keyboard_symbols_2
+            self.hw_button2.text = self.KEYBOARD__DIGITS_BUTTON_TEXT
+        
+        else:
+            cur_keyboard = self.keyboard_abc
+
         self.text_entry_display.render()
         self.hw_button1.render()
         self.hw_button2.render()
         self.hw_button3.render()
-        self.keyboard_abc.render_keys()
+        cur_keyboard.render_keys()
 
         self.renderer.show_image()
 
 
     def _run(self):
         cursor_position = len(self.passphrase)
-
         cur_keyboard = self.keyboard_abc
         cur_button1_text = self.KEYBOARD__UPPERCASE_BUTTON_TEXT
         cur_button2_text = self.KEYBOARD__DIGITS_BUTTON_TEXT
@@ -1168,6 +1191,8 @@ class SeedTranscribeSeedQRWholeQRScreen(WarningEdgesMixin, ButtonListScreen):
 class SeedTranscribeSeedQRZoomedInScreen(BaseScreen):
     qr_data: str = None
     num_modules: int = None
+    initial_block_x: int = 0
+    initial_block_y: int = 0
 
     def __post_init__(self):
         super().__post_init__()
@@ -1223,36 +1248,28 @@ class SeedTranscribeSeedQRZoomedInScreen(BaseScreen):
         msg = _("click to exit")
         font = Fonts.get_font(GUIConstants.get_body_font_name(), GUIConstants.get_body_font_size())
         (left, top, right, bottom) = font.getbbox(msg, anchor="ls")
-        msg_height = -1 * top
-        msg_width = right
-        # draw.rectangle(
-        #     (
-        #         int((self.canvas_width - msg_width)/2 - GUIConstants.COMPONENT_PADDING),
-        #         self.canvas_height - msg_height - GUIConstants.COMPONENT_PADDING,
-        #         int((self.canvas_width + msg_width)/2 + GUIConstants.COMPONENT_PADDING),
-        #         self.canvas_height
-        #     ),
-        #     fill=GUIConstants.BACKGROUND_COLOR,
-        # )
-        # draw.text(
-        #     (int(self.canvas_width/2), self.canvas_height - int(GUIConstants.COMPONENT_PADDING/2)),
-        #     msg,
-        #     fill=GUIConstants.BODY_FONT_COLOR,
-        #     font=font,
-        #     anchor="ms"  # Middle, baSeline
-        # )
-        TextArea(
-            canvas=self.block_mask,
-            image_draw=draw,
-            text=msg,
-            background_color=GUIConstants.BACKGROUND_COLOR,
-            is_text_centered=True,
-            screen_y=self.canvas_height - GUIConstants.get_body_font_size() - GUIConstants.COMPONENT_PADDING,
-            height=GUIConstants.get_body_font_size() + GUIConstants.COMPONENT_PADDING,
-        ).render()
+        msg_height = -1 * top + GUIConstants.COMPONENT_PADDING
+        msg_width = right + 2*GUIConstants.COMPONENT_PADDING
+        draw.rectangle(
+            (
+                int((self.canvas_width - msg_width)/2),
+                self.canvas_height - msg_height,
+                int((self.canvas_width + msg_width)/2),
+                self.canvas_height
+            ),
+            fill=GUIConstants.BACKGROUND_COLOR,
+        )
+        draw.text(
+            (int(self.canvas_width/2), self.canvas_height - int(GUIConstants.COMPONENT_PADDING/2)),
+            msg,
+            fill=GUIConstants.BODY_FONT_COLOR,
+            font=font,
+            anchor="ms"  # Middle, baSeline
+        )
 
 
-    def draw_block_labels(self, cur_block_x, cur_block_y):
+
+    def draw_block_labels(self):
         # Create overlay for block labels (e.g. "D-5")
         block_labels_x = ["1", "2", "3", "4", "5", "6"]
         block_labels_y = ["A", "B", "C", "D", "E", "F"]
@@ -1263,7 +1280,7 @@ class SeedTranscribeSeedQRZoomedInScreen(BaseScreen):
         draw.rectangle((0, self.mask_height, self.pixels_per_block, self.canvas_height - self.mask_height), fill=GUIConstants.ACCENT_COLOR)
 
         label_font = Fonts.get_font(GUIConstants.FIXED_WIDTH_EMPHASIS_FONT_NAME, 28)
-        x_label = block_labels_x[cur_block_x]
+        x_label = block_labels_x[self.cur_block_x]
         (left, top, right, bottom) = label_font.getbbox(x_label, anchor="ls")
         x_label_height = -1 * top
 
@@ -1275,7 +1292,7 @@ class SeedTranscribeSeedQRZoomedInScreen(BaseScreen):
             anchor="ms",  # Middle, baSeline
         )
 
-        y_label = block_labels_y[cur_block_y]
+        y_label = block_labels_y[self.cur_block_y]
         (left, top, right, bottom) = label_font.getbbox(y_label, anchor="ls")
         y_label_height = -1 * top
         draw.text(
@@ -1289,63 +1306,65 @@ class SeedTranscribeSeedQRZoomedInScreen(BaseScreen):
         return block_labels
 
 
-    def _run(self):
+    def _render(self):
         # Track our current coordinates for the upper left corner of our view
-        cur_block_x = 0
-        cur_block_y = 0
-        cur_x = self.qr_border * self.pixels_per_block - self.mask_width
-        cur_y = self.qr_border * self.pixels_per_block - self.mask_height
-        next_x = cur_x
-        next_y = cur_y
+        self.cur_block_x = self.initial_block_x
+        self.cur_block_y = self.initial_block_y
+        self.cur_x = (self.cur_block_x * self.qr_blocks_per_zoom * self.pixels_per_block) + self.qr_border * self.pixels_per_block - self.mask_width
+        self.cur_y = (self.cur_block_y * self.qr_blocks_per_zoom * self.pixels_per_block) + self.qr_border * self.pixels_per_block - self.mask_height
+        self.next_x = self.cur_x
+        self.next_y = self.cur_y
 
-        block_labels = self.draw_block_labels(0, 0)
+        block_labels = self.draw_block_labels()
 
         self.renderer.show_image(
-            self.qr_image.crop((cur_x, cur_y, cur_x + self.canvas_width, cur_y + self.canvas_height)),
+            self.qr_image.crop((self.cur_x, self.cur_y, self.cur_x + self.canvas_width, self.cur_y + self.canvas_height)),
             alpha_overlay=Image.alpha_composite(self.block_mask, block_labels)
         )
 
+
+    def _run(self):
         while True:
             input = self.hw_inputs.wait_for(HardwareButtonsConstants.KEYS__LEFT_RIGHT_UP_DOWN + HardwareButtonsConstants.KEYS__ANYCLICK)
             if input == HardwareButtonsConstants.KEY_RIGHT:
-                next_x = cur_x + self.qr_blocks_per_zoom * self.pixels_per_block
-                cur_block_x += 1
-                if next_x > self.qr_width - self.canvas_width:
-                    next_x = cur_x
-                    cur_block_x -= 1
+                self.next_x = self.cur_x + self.qr_blocks_per_zoom * self.pixels_per_block
+                self.cur_block_x += 1
+                if self.next_x > self.qr_width - self.canvas_width:
+                    self.next_x = self.cur_x
+                    self.cur_block_x -= 1
             elif input == HardwareButtonsConstants.KEY_LEFT:
-                next_x = cur_x - self.qr_blocks_per_zoom * self.pixels_per_block
-                cur_block_x -= 1
-                if next_x < 0:
-                    next_x = cur_x
-                    cur_block_x += 1
+                self.next_x = self.cur_x - self.qr_blocks_per_zoom * self.pixels_per_block
+                self.cur_block_x -= 1
+                if self.next_x < 0:
+                    self.next_x = self.cur_x
+                    self.cur_block_x += 1
             elif input == HardwareButtonsConstants.KEY_DOWN:
-                next_y = cur_y + self.qr_blocks_per_zoom * self.pixels_per_block
-                cur_block_y += 1
-                if next_y > self.height - self.canvas_height:
-                    next_y = cur_y
-                    cur_block_y -= 1
+                self.next_y = self.cur_y + self.qr_blocks_per_zoom * self.pixels_per_block
+                self.cur_block_y += 1
+                if self.next_y > self.height - self.canvas_height:
+                    self.next_y = self.cur_y
+                    self.cur_block_y -= 1
             elif input == HardwareButtonsConstants.KEY_UP:
-                next_y = cur_y - self.qr_blocks_per_zoom * self.pixels_per_block
-                cur_block_y -= 1
-                if next_y < 0:
-                    next_y = cur_y
-                    cur_block_y += 1
+                self.next_y = self.cur_y - self.qr_blocks_per_zoom * self.pixels_per_block
+                self.cur_block_y -= 1
+                if self.next_y < 0:
+                    self.next_y = self.cur_y
+                    self.cur_block_y += 1
             elif input in HardwareButtonsConstants.KEYS__ANYCLICK:
                 return
 
             # Create overlay for block labels (e.g. "D-5")
-            block_labels = self.draw_block_labels(cur_block_x, cur_block_y)
+            block_labels = self.draw_block_labels()
 
-            if cur_x != next_x or cur_y != next_y:
+            if self.cur_x != self.next_x or self.cur_y != self.next_y:
                 self.renderer.show_image_pan(
                     self.qr_image,
-                    cur_x, cur_y, next_x, next_y,
+                    self.cur_x, self.cur_y, self.next_x, self.next_y,
                     rate=self.pixels_per_block,
                     alpha_overlay=Image.alpha_composite(self.block_mask, block_labels)
                 )
-                cur_x = next_x
-                cur_y = next_y
+                self.cur_x = self.next_x
+                self.cur_y = self.next_y
 
 
 

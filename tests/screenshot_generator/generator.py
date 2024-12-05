@@ -14,7 +14,6 @@ from embit.script import Script
 # Prevent importing modules w/Raspi hardware dependencies.
 # These must precede any SeedSigner imports.
 sys.modules['seedsigner.hardware.ST7789'] = MagicMock()
-sys.modules['seedsigner.gui.screens.screensaver'] = MagicMock()
 sys.modules['seedsigner.views.screensaver.ScreensaverScreen'] = MagicMock()
 sys.modules['RPi'] = MagicMock()
 sys.modules['RPi.GPIO'] = MagicMock()
@@ -23,6 +22,7 @@ sys.modules['seedsigner.hardware.microsd'] = MagicMock()
 
 from seedsigner.controller import Controller
 from seedsigner.gui.renderer import Renderer
+from seedsigner.gui.screens.seed_screens import SeedAddPassphraseScreen
 from seedsigner.gui.toast import BaseToastOverlayManagerThread, RemoveSDCardToastManagerThread, SDCardStateChangeToastManagerThread
 from seedsigner.hardware.microsd import MicroSD
 from seedsigner.helpers import embit_utils
@@ -130,7 +130,10 @@ def generate_screenshots(locale):
         controller.unverified_address = dict(
             # These are all totally fake data
             address="bc1q6p00wazu4nnqac29fvky6vhjnnhku5u2g9njss62rvy7e0yuperq86f5ek",
-            sig_type=SettingsConstants.NATIVE_SEGWIT,
+            network=SettingsConstants.MAINNET,
+            sig_type=SettingsConstants.SINGLE_SIG,
+            script_type=SettingsConstants.NATIVE_SEGWIT,
+            derivation_path = "m/84h/0h/0h",
             verified_index=5,
             verified_index_is_change=False
         )
@@ -206,7 +209,11 @@ def generate_screenshots(locale):
                 seed_views.SeedMnemonicEntryView,
                 seed_views.SeedMnemonicInvalidView,
                 seed_views.SeedFinalizeView,
-                seed_views.SeedAddPassphraseView,
+                (seed_views.SeedAddPassphraseView, {}, "SeedAddPassphraseView_lowercase"),
+                (seed_views.SeedAddPassphraseView, dict(initial_keyboard=SeedAddPassphraseScreen.KEYBOARD__UPPERCASE_BUTTON_TEXT), "SeedAddPassphraseView_uppercase"),
+                (seed_views.SeedAddPassphraseView, dict(initial_keyboard=SeedAddPassphraseScreen.KEYBOARD__DIGITS_BUTTON_TEXT), "SeedAddPassphraseView_digits"),
+                (seed_views.SeedAddPassphraseView, dict(initial_keyboard=SeedAddPassphraseScreen.KEYBOARD__SYMBOLS_1_BUTTON_TEXT), "SeedAddPassphraseView_symbols_1"),
+                (seed_views.SeedAddPassphraseView, dict(initial_keyboard=SeedAddPassphraseScreen.KEYBOARD__SYMBOLS_2_BUTTON_TEXT), "SeedAddPassphraseView_symbols_2"),
                 seed_views.SeedAddPassphraseExitDialogView,
                 seed_views.SeedReviewPassphraseView,
                 
@@ -235,9 +242,8 @@ def generate_screenshots(locale):
                 (seed_views.SeedTranscribeSeedQRWholeQRView, dict(seed_num=0, seedqr_format=QRType.SEED__SEEDQR, num_modules=25), "SeedTranscribeSeedQRWholeQRView_12_Standard"),
                 (seed_views.SeedTranscribeSeedQRWholeQRView, dict(seed_num=2, seedqr_format=QRType.SEED__COMPACTSEEDQR, num_modules=25), "SeedTranscribeSeedQRWholeQRView_24_Compact"),
                 (seed_views.SeedTranscribeSeedQRWholeQRView, dict(seed_num=2, seedqr_format=QRType.SEED__SEEDQR, num_modules=29), "SeedTranscribeSeedQRWholeQRView_24_Standard"),
-
-                # Screenshot doesn't render properly due to how the transparency mask is pre-rendered
-                # (seed_views.SeedTranscribeSeedQRZoomedInView, dict(seed_num=0, seedqr_format=QRType.SEED__SEEDQR)),
+                (seed_views.SeedTranscribeSeedQRZoomedInView, dict(seed_num=0, seedqr_format=QRType.SEED__COMPACTSEEDQR, initial_block_x=1, initial_block_y=1), "SeedTranscribeSeedQRZoomedInView_12_Compact"),
+                (seed_views.SeedTranscribeSeedQRZoomedInView, dict(seed_num=0, seedqr_format=QRType.SEED__SEEDQR, initial_block_x=2, initial_block_y=2), "SeedTranscribeSeedQRZoomedInView_12_Standard"),
 
                 (seed_views.SeedTranscribeSeedQRConfirmQRPromptView, dict(seed_num=0)),
 
@@ -246,8 +252,8 @@ def generate_screenshots(locale):
 
                 seed_views.SeedSelectSeedView,
                 seed_views.AddressVerificationSigTypeView,
-                # seed_views.SeedAddressVerificationView,
-                (seed_views.AddressVerificationSuccessView, dict(seed_num=0)),
+                (seed_views.SeedAddressVerificationView, dict(seed_num=0)),
+                (seed_views.SeedAddressVerificationSuccessView, dict(seed_num=0)),
 
                 seed_views.LoadMultisigWalletDescriptorView,
                 seed_views.MultisigWalletDescriptorView,
