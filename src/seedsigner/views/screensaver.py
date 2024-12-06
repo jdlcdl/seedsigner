@@ -67,6 +67,12 @@ class OpeningSplashScreen(LogoScreen):
         from seedsigner.controller import Controller
         controller = Controller.get_instance()
 
+        # TODO: Fix for the screenshot generator. When generating screenshots for
+        # multiple locales, there is a button still in the canvas from the previous
+        # screenshot, even though the Renderer has been reconfigured and re-
+        # instantiated. This is a hack to clear the screen for now.
+        self.clear_screen()
+
         show_partner_logos = Settings.get_instance().get_value(SettingsConstants.SETTING__PARTNER_LOGOS) == SettingsConstants.OPTION__ENABLED
         if self.force_partner_logos is not None:
             show_partner_logos = self.force_partner_logos
