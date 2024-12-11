@@ -264,7 +264,7 @@ pip install -e .
 Re-generate the `messages.pot` file:
 
 ```bash
-python setup.py extract_messaages
+python setup.py extract_messages
 ```
 
 This will rescan all wrapped text, picking up new strings as well as updating existings strings that have been edited.
