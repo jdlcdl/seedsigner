@@ -77,11 +77,8 @@ class SeedSelectSeedView(View):
     TYPE_ELECTRUM = ButtonOption("Enter Electrum seed", FontAwesomeIconConstants.KEYBOARD)
 
 
-    def __init__(self, flow: str = None):
-        from seedsigner.controller import Controller
+    def __init__(self, flow: str):
         super().__init__()
-        if not flow:
-            flow = Controller.FLOW__VERIFY_SINGLESIG_ADDR
         self.flow = flow
 
 
@@ -572,6 +569,7 @@ class SeedOptionsView(View):
         button_data = []
 
         if self.controller.unverified_address:
+            # TODO: Verify that an addr verification flow can actually reach this code
             addr = self.controller.unverified_address["address"][:7]
             self.VERIFY_ADDRESS.button_label += f" {addr}"
             button_data.append(self.VERIFY_ADDRESS)
@@ -1701,7 +1699,7 @@ class AddressVerificationStartView(View):
         if self.controller.unverified_address["script_type"] == SettingsConstants.LEGACY_P2PKH:
             # Legacy P2PKH addresses are always singlesig
             sig_type = SettingsConstants.SINGLE_SIG
-            destination = Destination(SeedSelectSeedView, skip_current_view=True)
+            destination = Destination(SeedSelectSeedView, view_args=dict(flow=Controller.FLOW__VERIFY_SINGLESIG_ADDR), skip_current_view=True)
 
         if self.controller.unverified_address["script_type"] == SettingsConstants.NESTED_SEGWIT:
             # No way to differentiate single sig from multisig
@@ -1721,7 +1719,7 @@ class AddressVerificationStartView(View):
 
             else:
                 sig_type = SettingsConstants.SINGLE_SIG
-                destination = Destination(SeedSelectSeedView, skip_current_view=True)
+                destination = Destination(SeedSelectSeedView, view_args=dict(flow=Controller.FLOW__VERIFY_SINGLESIG_ADDR), skip_current_view=True)
 
         elif self.controller.unverified_address["script_type"] == SettingsConstants.TAPROOT:
             # TODO: add Taproot support
@@ -2157,10 +2155,6 @@ class SeedSignMessageConfirmMessageView(View):
     def __init__(self, page_num: int = 0):
         super().__init__()
         self.page_num = page_num  # Note: zero-indexed numbering!
-
-        self.seed_num = self.controller.sign_message_data.get("seed_num")
-        if self.seed_num is None:
-            raise Exception("Routing error: seed_num hasn't been set")
 
 
     def run(self):

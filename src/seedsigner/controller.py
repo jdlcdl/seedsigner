@@ -147,6 +147,16 @@ class Controller(Singleton):
         else:
             # Instantiate the one and only Controller instance
             return cls.configure_instance()
+    
+
+    @classmethod
+    def reset_instance(cls):
+        """
+            Currently used by the screenshot generator, but could potentially be used to
+            wipe and reset the state of the device.
+        """
+        cls._instance = None
+        cls.configure_instance()
 
 
     @classmethod
