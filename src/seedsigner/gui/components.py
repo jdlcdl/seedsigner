@@ -49,11 +49,11 @@ class GUIConstants:
 
     TOP_NAV_TITLE_FONT_NAME = {
         "default": "OpenSans-SemiBold",
-        "ar": "multilanguage/NotoSansAR-Regular",
-        "he": "multilanguage/NotoSansHE-Regular",
-        "ja": "multilanguage/NotoSansJP-Regular",
-        "kr": "multilanguage/NotoSansKR-Regular",
-        "ru": "multilanguage/NotoSans-Regular",
+        # "ar": "multilanguage/NotoSansAR-Regular",
+        # "he": "multilanguage/NotoSansHE-Regular",
+        # "ja": "multilanguage/NotoSansJP-Regular",
+        # "kr": "multilanguage/NotoSansKR-Regular",
+        # "ru": "multilanguage/NotoSans-Regular",
     }
     TOP_NAV_TITLE_FONT_SIZE = {
         "default": 20,
@@ -63,15 +63,15 @@ class GUIConstants:
 
     BODY_FONT_NAME = {
         "default": "OpenSans-Regular",
-        "ar": "multilanguage/NotoSansAR-Regular",
-        "he": "multilanguage/NotoSansHE-Regular",
-        "ja": "multilanguage/NotoSansJP-Regular",
-        "kr": "multilanguage/NotoSansKR-Regular",
-        "ru": "multilanguage/NotoSans-Regular",
+        # "ar": "multilanguage/NotoSansAR-Regular",
+        # "he": "multilanguage/NotoSansHE-Regular",
+        # "ja": "multilanguage/NotoSansJP-Regular",
+        # "kr": "multilanguage/NotoSansKR-Regular",
+        # "ru": "multilanguage/NotoSans-Regular",
     }
     BODY_FONT_SIZE = {
         "default": 17,
-        "ar": 16,
+        # "ar": 16,
     }
     BODY_FONT_MAX_SIZE = TOP_NAV_TITLE_FONT_SIZE["default"]
     BODY_FONT_MIN_SIZE = 15
@@ -86,16 +86,16 @@ class GUIConstants:
 
     BUTTON_FONT_NAME = {
         "default": "OpenSans-SemiBold",
-        "ar": "multilanguage/NotoSansAR-Regular",
-        "he": "multilanguage/NotoSansHE-Regular",
-        "ja": "multilanguage/NotoSansJP-Regular",
-        "kr": "multilanguage/NotoSansKR-Regular",
-        "ru": "multilanguage/NotoSans-Regular",
+        # "ar": "multilanguage/NotoSansAR-Regular",
+        # "he": "multilanguage/NotoSansHE-Regular",
+        # "ja": "multilanguage/NotoSansJP-Regular",
+        # "kr": "multilanguage/NotoSansKR-Regular",
+        # "ru": "multilanguage/NotoSans-Regular",
     }
     BUTTON_FONT_SIZE = {
         "default": 18,
-        "ar": 16,
-        "ja": 16,
+        # "ar": 16,
+        # "ja": 16,
     }
     BUTTON_FONT_COLOR = "#FCFCFC"
     BUTTON_BACKGROUND_COLOR = "#2C2C2C"
