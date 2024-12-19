@@ -434,6 +434,10 @@ class TextArea(BaseComponent):
         self.text_y = self.text_height_above_baseline
 
         self.visible_width = self.width - max(self.edge_padding, self.min_text_x) - self.edge_padding
+        if not ImageFont.core.HAVE_RAQM:
+            # Fudge factor for imprecise width calcs w/out libraqm
+            full_text_width = int(full_text_width * 1.05)
+            self.visible_width = int(self.visible_width * 1.05)
 
         if self.is_horizontal_scrolling_enabled or not self.auto_line_break:
             # Guaranteed to be a single line of text, possibly wider than self.width
@@ -1820,6 +1824,10 @@ def reflow_text_for_width(text: str,
     # Measure from left baseline ("ls")
     (left, top, full_text_width, bottom) = font.getbbox(text, anchor="ls")
 
+    if not ImageFont.core.HAVE_RAQM:
+        # Fudge factor for imprecise width calcs w/out libraqm
+        full_text_width = int(full_text_width * 1.05)
+
     # Stores each line of text and its rendering starting x-coord
     text_lines = []
     def _add_text_line(text, text_width):
@@ -1841,6 +1849,10 @@ def reflow_text_for_width(text: str,
             # Measure rendered width from "left" anchor (anchor="l_")
             (left, top, right, bottom) = font.getbbox(" ".join(words[0:index]), anchor="ls")
             line_width = right - left
+
+            if not ImageFont.core.HAVE_RAQM:
+                # Fudge factor for imprecise width calcs w/out libraqm
+                line_width = int(line_width * 1.05)
 
             if line_width >= width:
                 # Candidate line is still too long. Restrict search range down.

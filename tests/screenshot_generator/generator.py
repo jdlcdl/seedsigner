@@ -20,6 +20,9 @@ sys.modules['RPi.GPIO'] = MagicMock()
 sys.modules['seedsigner.hardware.camera'] = MagicMock()
 sys.modules['seedsigner.hardware.microsd'] = MagicMock()
 
+# Force the screenshots to mimic Pi Zero's output without libraqm
+patch('PIL.ImageFont.core.HAVE_RAQM', False).start()
+
 from seedsigner.controller import Controller
 from seedsigner.gui.renderer import Renderer
 from seedsigner.gui.screens.seed_screens import SeedAddPassphraseScreen
