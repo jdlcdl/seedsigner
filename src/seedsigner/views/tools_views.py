@@ -97,7 +97,7 @@ class ToolsImageEntropyFinalImageView(View):
         ).crop(
             (120, 0, 600, 480)
         ).resize(
-            (self.canvas_width, self.canvas_height), Image.BICUBIC
+            (self.canvas_width, self.canvas_height), Image.Resampling.BICUBIC
         )
         
         ret = ToolsImageEntropyFinalImageScreen(
