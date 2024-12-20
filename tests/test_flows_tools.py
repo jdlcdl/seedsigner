@@ -245,3 +245,28 @@ class TestToolsFlows(FlowTest):
             FlowStep(seed_views.SeedAddressVerificationSuccessView),
         ])
 
+
+    def test__verify_address__singlesig__flow(self):
+        """
+            Address Explorer should be able to scan a singlesig address and
+            verify it against a loaded key.
+        """
+        controller = Controller.get_instance()
+        controller.storage.set_pending_seed(Seed(mnemonic=["abandon "* 11 + "about"]))
+        controller.storage.finalize_pending_seed()        
+        settings = controller.settings
+        settings.set_value(SettingsConstants.SETTING__NETWORK, SettingsConstants.REGTEST)
+
+        def load_address_into_decoder(view: scan_views.ScanView):
+            # Native segwit regtest receive addr @ index 6
+            view.decoder.add_data("bcrt1q4e9q5taxnsvc6m0uxv6h75mkzvnkxeqk6l90u2")
+
+        self.run_sequence([
+            FlowStep(MainMenuView, button_data_selection=MainMenuView.TOOLS),
+            FlowStep(tools_views.ToolsMenuView, button_data_selection=tools_views.ToolsMenuView.VERIFY_ADDRESS),
+            FlowStep(scan_views.ScanAddressView, before_run=load_address_into_decoder),  # simulate read address QR
+            FlowStep(seed_views.AddressVerificationStartView, is_redirect=True),
+            FlowStep(seed_views.SeedSelectSeedView, screen_return_value=0),
+            FlowStep(seed_views.SeedAddressVerificationView),
+            FlowStep(seed_views.SeedAddressVerificationSuccessView),
+        ])
