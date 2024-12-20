@@ -1696,6 +1696,8 @@ class AddressVerificationStartView(View):
 
     def run(self):
         from seedsigner.helpers import embit_utils
+        from seedsigner.controller import Controller
+
         if self.controller.unverified_address["script_type"] == SettingsConstants.LEGACY_P2PKH:
             # Legacy P2PKH addresses are always singlesig
             sig_type = SettingsConstants.SINGLE_SIG
@@ -1713,7 +1715,6 @@ class AddressVerificationStartView(View):
                     # Can jump straight to the brute-force verification View
                     destination = Destination(SeedAddressVerificationView, skip_current_view=True)
                 else:
-                    from seedsigner.controller import Controller
                     self.controller.resume_main_flow = Controller.FLOW__VERIFY_MULTISIG_ADDR
                     destination = Destination(LoadMultisigWalletDescriptorView, skip_current_view=True)
 
