@@ -609,6 +609,12 @@ class TextArea(BaseComponent):
 
 
     class HorizontalTextScrollThread(BaseThread):
+        """
+        Note that Components in general should not try to manage the Renderer.lock; we
+        leave that up to the calling Screen to manage. HOWEVER, since this renders in its
+        own thread, we lose all normal timing guarantees and therefore this thread must
+        manage the lock itself.
+        """
         def __init__(self, rendered_text_img: Image, screen_x: int, screen_y: int, visible_width: int, horizontal_scroll_speed:int, begin_hold_secs: float, end_hold_secs: float):
             super().__init__()
             self.rendered_text_img = rendered_text_img
