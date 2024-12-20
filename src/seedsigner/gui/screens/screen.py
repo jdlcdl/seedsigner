@@ -1185,7 +1185,7 @@ class KeyboardScreen(BaseTopNavScreen):
         self.text_entry_display.render()
 
         self.renderer.show_image()
-    
+
 
     def _run(self):
         self.cursor_position = len(self.user_input)
@@ -1197,84 +1197,85 @@ class KeyboardScreen(BaseTopNavScreen):
                 check_release=True,
                 release_keys=[HardwareButtonsConstants.KEY_PRESS, HardwareButtonsConstants.KEY3]
             )
-    
-            # Check possible exit conditions   
-            if self.top_nav.is_selected and input == HardwareButtonsConstants.KEY_PRESS:
-                return RET_CODE__BACK_BUTTON
-            
-            elif self.show_save_button and input == HardwareButtonsConstants.KEY3:
-                # Save!
-                if len(self.user_input) == 0:
-                    # Don't try to submit zero input
+
+            with self.renderer.lock:
+                # Check possible exit conditions   
+                if self.top_nav.is_selected and input == HardwareButtonsConstants.KEY_PRESS:
+                    return RET_CODE__BACK_BUTTON
+
+                elif self.show_save_button and input == HardwareButtonsConstants.KEY3:
+                    # Save!
+                    if len(self.user_input) == 0:
+                        # Don't try to submit zero input
+                        continue
+
+                    # First show the save button reacting to the click
+                    self.save_button.is_selected = True
+                    self.save_button.render()
+                    self.renderer.show_image()
+
+                    # Then return the input to the View
+                    return self.user_input.strip()
+
+                # Process normal input
+                if input in [HardwareButtonsConstants.KEY_UP, HardwareButtonsConstants.KEY_DOWN] and self.top_nav.is_selected:
+                    # We're navigating off the previous button
+                    self.top_nav.is_selected = False
+                    self.top_nav.render_buttons()
+
+                    # Override the actual input w/an ENTER signal for the Keyboard
+                    if input == HardwareButtonsConstants.KEY_DOWN:
+                        input = Keyboard.ENTER_TOP
+                    else:
+                        input = Keyboard.ENTER_BOTTOM
+                elif input in [HardwareButtonsConstants.KEY_LEFT, HardwareButtonsConstants.KEY_RIGHT] and self.top_nav.is_selected:
+                    # ignore
                     continue
 
-                # First show the save button reacting to the click
-                self.save_button.is_selected = True
-                self.save_button.render()
-                self.renderer.show_image()
+                ret_val = self.keyboard.update_from_input(input)
 
-                # Then return the input to the View
-                return self.user_input.strip()
-    
-            # Process normal input
-            if input in [HardwareButtonsConstants.KEY_UP, HardwareButtonsConstants.KEY_DOWN] and self.top_nav.is_selected:
-                # We're navigating off the previous button
-                self.top_nav.is_selected = False
-                self.top_nav.render_buttons()
-    
-                # Override the actual input w/an ENTER signal for the Keyboard
-                if input == HardwareButtonsConstants.KEY_DOWN:
-                    input = Keyboard.ENTER_TOP
-                else:
-                    input = Keyboard.ENTER_BOTTOM
-            elif input in [HardwareButtonsConstants.KEY_LEFT, HardwareButtonsConstants.KEY_RIGHT] and self.top_nav.is_selected:
-                # ignore
-                continue
-    
-            ret_val = self.keyboard.update_from_input(input)
-    
-            # Now process the result from the keyboard
-            if ret_val in Keyboard.EXIT_DIRECTIONS:
-                self.top_nav.is_selected = True
-                self.top_nav.render_buttons()
-    
-            elif ret_val in Keyboard.ADDITIONAL_KEYS and input == HardwareButtonsConstants.KEY_PRESS:
-                if ret_val == Keyboard.KEY_BACKSPACE["code"]:
-                    if len(self.user_input) > 0:
-                        self.user_input = self.user_input[:-1]
-                        self.cursor_position -= 1
-    
-            elif input == HardwareButtonsConstants.KEY_PRESS and ret_val not in Keyboard.ADDITIONAL_KEYS:
-                # User has locked in the current letter
-                if self.keys_to_values:
-                    # Map the Key display char to its output value (e.g. dice icon to digit)
-                    ret_val = self.keys_to_values[ret_val]
-                self.user_input += ret_val
-                self.cursor_position += 1
-
-                if self.cursor_position == self.return_after_n_chars:
-                    return self.user_input
-
-                # Render a new TextArea over the TopNav title bar
-                if self.update_title():
-                    TextArea(
-                        text=self.title,
-                        font_name=GUIConstants.get_top_nav_title_font_name(),
-                        font_size=GUIConstants.get_top_nav_title_font_size(),
-                        height=self.top_nav.height,
-                    ).render()
+                # Now process the result from the keyboard
+                if ret_val in Keyboard.EXIT_DIRECTIONS:
+                    self.top_nav.is_selected = True
                     self.top_nav.render_buttons()
-    
-            elif input in HardwareButtonsConstants.KEYS__LEFT_RIGHT_UP_DOWN:
-                # Live joystick movement; haven't locked this new letter in yet.
-                # Leave current spot blank for now. Only update the active keyboard keys
-                # when a selection has been locked in (KEY_PRESS) or removed ("del").
-                pass
-    
-            # Render the text entry display and cursor block
-            self.text_entry_display.render(self.user_input)
-    
-            self.renderer.show_image()
+
+                elif ret_val in Keyboard.ADDITIONAL_KEYS and input == HardwareButtonsConstants.KEY_PRESS:
+                    if ret_val == Keyboard.KEY_BACKSPACE["code"]:
+                        if len(self.user_input) > 0:
+                            self.user_input = self.user_input[:-1]
+                            self.cursor_position -= 1
+
+                elif input == HardwareButtonsConstants.KEY_PRESS and ret_val not in Keyboard.ADDITIONAL_KEYS:
+                    # User has locked in the current letter
+                    if self.keys_to_values:
+                        # Map the Key display char to its output value (e.g. dice icon to digit)
+                        ret_val = self.keys_to_values[ret_val]
+                    self.user_input += ret_val
+                    self.cursor_position += 1
+
+                    if self.cursor_position == self.return_after_n_chars:
+                        return self.user_input
+
+                    # Render a new TextArea over the TopNav title bar
+                    if self.update_title():
+                        TextArea(
+                            text=self.title,
+                            font_name=GUIConstants.get_top_nav_title_font_name(),
+                            font_size=GUIConstants.get_top_nav_title_font_size(),
+                            height=self.top_nav.height,
+                        ).render()
+                        self.top_nav.render_buttons()
+
+                elif input in HardwareButtonsConstants.KEYS__LEFT_RIGHT_UP_DOWN:
+                    # Live joystick movement; haven't locked this new letter in yet.
+                    # Leave current spot blank for now. Only update the active keyboard keys
+                    # when a selection has been locked in (KEY_PRESS) or removed ("del").
+                    pass
+
+                # Render the text entry display and cursor block
+                self.text_entry_display.render(self.user_input)
+
+                self.renderer.show_image()
 
 
     def update_title(self) -> bool:

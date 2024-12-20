@@ -9,6 +9,10 @@ from seedsigner.hardware.buttons import HardwareButtonsConstants
 
 
 class Keyboard:
+    """
+    Note that it is up to the calling Screen to manage the Renderer.lock. The Keyboard
+    and its child Keys should NOT attempt to manage the lock.
+    """
     WRAP_TOP = "wrap_top"
     WRAP_BOTTOM = "wrap_bottom"
     WRAP_LEFT = "wrap_left"

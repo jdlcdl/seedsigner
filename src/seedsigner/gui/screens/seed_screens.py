@@ -249,161 +249,162 @@ class SeedMnemonicEntryScreen(BaseTopNavScreen):
                 release_keys=[HardwareButtonsConstants.KEY_PRESS, HardwareButtonsConstants.KEY2]
             )
 
-            if self.is_input_in_top_nav:
-                if input == HardwareButtonsConstants.KEY_PRESS:
-                    # User clicked the "back" arrow
-                    return RET_CODE__BACK_BUTTON
+            with self.renderer.lock:
+                if self.is_input_in_top_nav:
+                    if input == HardwareButtonsConstants.KEY_PRESS:
+                        # User clicked the "back" arrow
+                        return RET_CODE__BACK_BUTTON
 
-                elif input == HardwareButtonsConstants.KEY_UP:
-                    input = Keyboard.ENTER_BOTTOM
-                    self.is_input_in_top_nav = False
-                    # Re-render it without the highlight
-                    self.top_nav.left_button.is_selected = False
+                    elif input == HardwareButtonsConstants.KEY_UP:
+                        input = Keyboard.ENTER_BOTTOM
+                        self.is_input_in_top_nav = False
+                        # Re-render it without the highlight
+                        self.top_nav.left_button.is_selected = False
+                        self.top_nav.left_button.render()
+
+                    elif input == HardwareButtonsConstants.KEY_DOWN:
+                        input = Keyboard.ENTER_TOP
+                        self.is_input_in_top_nav = False
+                        # Re-render it without the highlight
+                        self.top_nav.left_button.is_selected = False
+                        self.top_nav.left_button.render()
+
+                    elif input in [HardwareButtonsConstants.KEY_RIGHT, HardwareButtonsConstants.KEY_LEFT]:
+                        # no action in this context
+                        continue
+
+                ret_val = self.keyboard.update_from_input(input)
+
+                if ret_val in Keyboard.EXIT_DIRECTIONS:
+                    self.is_input_in_top_nav = True
+                    self.top_nav.left_button.is_selected = True
                     self.top_nav.left_button.render()
 
-                elif input == HardwareButtonsConstants.KEY_DOWN:
-                    input = Keyboard.ENTER_TOP
-                    self.is_input_in_top_nav = False
-                    # Re-render it without the highlight
-                    self.top_nav.left_button.is_selected = False
-                    self.top_nav.left_button.render()
+                elif ret_val in Keyboard.ADDITIONAL_KEYS:
+                    if input == HardwareButtonsConstants.KEY_PRESS and ret_val == Keyboard.KEY_BACKSPACE["code"]:
+                        self.letters = self.letters[:-2]
+                        self.letters.append(" ")
 
-                elif input in [HardwareButtonsConstants.KEY_RIGHT, HardwareButtonsConstants.KEY_LEFT]:
-                    # no action in this context
-                    continue
+                        # Reactivate keys after deleting last letter
+                        self.calc_possible_alphabet()
+                        self.keyboard.update_active_keys(active_keys=self.possible_alphabet)
+                        self.keyboard.render_keys()
+                            
+                        # Update the right-hand possible matches area
+                        self.render_possible_matches()
 
-            ret_val = self.keyboard.update_from_input(input)
+                    elif ret_val == Keyboard.KEY_BACKSPACE["code"]:
+                        # We're just hovering over DEL but haven't clicked. Show blank (" ")
+                        #   in the live text entry display at the top.
+                        self.letters = self.letters[:-1]
+                        self.letters.append(" ")
 
-            if ret_val in Keyboard.EXIT_DIRECTIONS:
-                self.is_input_in_top_nav = True
-                self.top_nav.left_button.is_selected = True
-                self.top_nav.left_button.render()
+                # Has the user made a final selection of a candidate word?
+                final_selection = None
+                if input == HardwareButtonsConstants.KEY1 and self.possible_words:
+                    # Scroll the list up
+                    self.selected_possible_words_index -= 1
+                    if self.selected_possible_words_index < 0:
+                        self.selected_possible_words_index = 0
 
-            elif ret_val in Keyboard.ADDITIONAL_KEYS:
-                if input == HardwareButtonsConstants.KEY_PRESS and ret_val == Keyboard.KEY_BACKSPACE["code"]:
-                    self.letters = self.letters[:-2]
-                    self.letters.append(" ")
+                    if not self.arrow_up_is_active:
+                        # Flash the up arrow as selected
+                        self.arrow_up_is_active = True
+                        self.matches_list_up_button.is_selected = True
 
-                    # Reactivate keys after deleting last letter
+                elif input == HardwareButtonsConstants.KEY2:
+                    if self.possible_words:
+                        final_selection = self.possible_words[self.selected_possible_words_index]
+
+                elif input == HardwareButtonsConstants.KEY3 and self.possible_words:
+                    # Scroll the list down
+                    self.selected_possible_words_index += 1
+                    if self.selected_possible_words_index >= len(self.possible_words):
+                        self.selected_possible_words_index = len(self.possible_words) - 1
+
+                    if not self.arrow_down_is_active:
+                        # Flash the down arrow as selected
+                        self.arrow_down_is_active = True
+                        self.matches_list_down_button.is_selected = True
+
+                if input is not HardwareButtonsConstants.KEY1 and self.arrow_up_is_active:
+                    # Deactivate the UP arrow and redraw
+                    self.arrow_up_is_active = False
+                    self.matches_list_up_button.is_selected = False
+
+                if input is not HardwareButtonsConstants.KEY3 and self.arrow_down_is_active:
+                    # Deactivate the DOWN arrow and redraw
+                    self.arrow_down_is_active = False
+                    self.matches_list_down_button.is_selected = False
+
+                if final_selection:
+                    # Animate the selection storage, then return the word to the caller
+                    self.letters = list(final_selection + " ")
+                    self.render_possible_matches(highlight_word=final_selection)
+                    self.text_entry_display.cur_text = ''.join(self.letters)
+                    self.text_entry_display.render()
+                    self.renderer.show_image()
+
+                    return final_selection
+
+                elif input == HardwareButtonsConstants.KEY_PRESS and ret_val in self.possible_alphabet:
+                    # User has locked in the current letter
+                    if self.letters[-1] != " ":
+                        # We'll save that locked in letter next but for now update the
+                        # live text entry display with blank (" ") so that we don't try
+                        # to autocalc matches against a second copy of the letter they
+                        # just selected. e.g. They KEY_PRESS on "s" to build "mus". If
+                        # we advance the live block cursor AND display "s" in it, the
+                        # current word would then be "muss" with no matches. If "mus"
+                        # can get us to our match, we don't want it to disappear right
+                        # as we KEY_PRESS.
+                        self.letters.append(" ")
+                    else:
+                        # clicked same letter twice in a row. Because of the above, an
+                        # immediate second click of the same letter would lock in "ap "
+                        # (note the space) instead of "app". So we replace that trailing
+                        # space with the correct repeated letter and then, as above,
+                        # append a trailing blank.
+                        self.letters = self.letters[:-1]
+                        self.letters.append(ret_val)
+                        self.letters.append(" ")
+
+                    # Recalc and deactivate keys after advancing
                     self.calc_possible_alphabet()
                     self.keyboard.update_active_keys(active_keys=self.possible_alphabet)
+
+                    if len(self.possible_alphabet) == 1:
+                        # If there's only one possible letter left, select it
+                        self.keyboard.set_selected_key(self.possible_alphabet[0])
+
                     self.keyboard.render_keys()
-                        
-                    # Update the right-hand possible matches area
-                    self.render_possible_matches()
 
-                elif ret_val == Keyboard.KEY_BACKSPACE["code"]:
-                    # We're just hovering over DEL but haven't clicked. Show blank (" ")
-                    #   in the live text entry display at the top.
-                    self.letters = self.letters[:-1]
-                    self.letters.append(" ")
+                elif input in HardwareButtonsConstants.KEYS__LEFT_RIGHT_UP_DOWN \
+                        or input in (Keyboard.ENTER_TOP, Keyboard.ENTER_BOTTOM):
+                    if ret_val in self.possible_alphabet:
+                        # Live joystick movement; haven't locked this new letter in yet.
+                        # Replace the last letter w/the currently selected one. But don't
+                        # call `calc_possible_alphabet()` because we want to still be able
+                        # to freely float to a different letter; only update the active
+                        # keyboard keys when a selection has been locked in (KEY_PRESS) or
+                        # removed ("del").
+                        self.letters = self.letters[:-1]
+                        self.letters.append(ret_val)
+                        self.calc_possible_words()  # live update our matches as we move
+                    
+                    else:
+                        # We've navigated to a deactivated letter
+                        pass
 
-            # Has the user made a final selection of a candidate word?
-            final_selection = None
-            if input == HardwareButtonsConstants.KEY1 and self.possible_words:
-                # Scroll the list up
-                self.selected_possible_words_index -= 1
-                if self.selected_possible_words_index < 0:
-                    self.selected_possible_words_index = 0
-
-                if not self.arrow_up_is_active:
-                    # Flash the up arrow as selected
-                    self.arrow_up_is_active = True
-                    self.matches_list_up_button.is_selected = True
-
-            elif input == HardwareButtonsConstants.KEY2:
-                if self.possible_words:
-                    final_selection = self.possible_words[self.selected_possible_words_index]
-
-            elif input == HardwareButtonsConstants.KEY3 and self.possible_words:
-                # Scroll the list down
-                self.selected_possible_words_index += 1
-                if self.selected_possible_words_index >= len(self.possible_words):
-                    self.selected_possible_words_index = len(self.possible_words) - 1
-
-                if not self.arrow_down_is_active:
-                    # Flash the down arrow as selected
-                    self.arrow_down_is_active = True
-                    self.matches_list_down_button.is_selected = True
-
-            if input is not HardwareButtonsConstants.KEY1 and self.arrow_up_is_active:
-                # Deactivate the UP arrow and redraw
-                self.arrow_up_is_active = False
-                self.matches_list_up_button.is_selected = False
-
-            if input is not HardwareButtonsConstants.KEY3 and self.arrow_down_is_active:
-                # Deactivate the DOWN arrow and redraw
-                self.arrow_down_is_active = False
-                self.matches_list_down_button.is_selected = False
-
-            if final_selection:
-                # Animate the selection storage, then return the word to the caller
-                self.letters = list(final_selection + " ")
-                self.render_possible_matches(highlight_word=final_selection)
+                # Render the text entry display and cursor block
                 self.text_entry_display.cur_text = ''.join(self.letters)
                 self.text_entry_display.render()
+
+                # Update the right-hand possible matches area
+                self.render_possible_matches()
+
+                # Now issue one call to send the pixels to the screen
                 self.renderer.show_image()
-
-                return final_selection
-
-            elif input == HardwareButtonsConstants.KEY_PRESS and ret_val in self.possible_alphabet:
-                # User has locked in the current letter
-                if self.letters[-1] != " ":
-                    # We'll save that locked in letter next but for now update the
-                    # live text entry display with blank (" ") so that we don't try
-                    # to autocalc matches against a second copy of the letter they
-                    # just selected. e.g. They KEY_PRESS on "s" to build "mus". If
-                    # we advance the live block cursor AND display "s" in it, the
-                    # current word would then be "muss" with no matches. If "mus"
-                    # can get us to our match, we don't want it to disappear right
-                    # as we KEY_PRESS.
-                    self.letters.append(" ")
-                else:
-                    # clicked same letter twice in a row. Because of the above, an
-                    # immediate second click of the same letter would lock in "ap "
-                    # (note the space) instead of "app". So we replace that trailing
-                    # space with the correct repeated letter and then, as above,
-                    # append a trailing blank.
-                    self.letters = self.letters[:-1]
-                    self.letters.append(ret_val)
-                    self.letters.append(" ")
-
-                # Recalc and deactivate keys after advancing
-                self.calc_possible_alphabet()
-                self.keyboard.update_active_keys(active_keys=self.possible_alphabet)
-
-                if len(self.possible_alphabet) == 1:
-                    # If there's only one possible letter left, select it
-                    self.keyboard.set_selected_key(self.possible_alphabet[0])
-
-                self.keyboard.render_keys()
-
-            elif input in HardwareButtonsConstants.KEYS__LEFT_RIGHT_UP_DOWN \
-                    or input in (Keyboard.ENTER_TOP, Keyboard.ENTER_BOTTOM):
-                if ret_val in self.possible_alphabet:
-                    # Live joystick movement; haven't locked this new letter in yet.
-                    # Replace the last letter w/the currently selected one. But don't
-                    # call `calc_possible_alphabet()` because we want to still be able
-                    # to freely float to a different letter; only update the active
-                    # keyboard keys when a selection has been locked in (KEY_PRESS) or
-                    # removed ("del").
-                    self.letters = self.letters[:-1]
-                    self.letters.append(ret_val)
-                    self.calc_possible_words()  # live update our matches as we move
-                
-                else:
-                    # We've navigated to a deactivated letter
-                    pass
-
-            # Render the text entry display and cursor block
-            self.text_entry_display.cur_text = ''.join(self.letters)
-            self.text_entry_display.render()
-
-            # Update the right-hand possible matches area
-            self.render_possible_matches()
-
-            # Now issue one call to send the pixels to the screen
-            self.renderer.show_image()
 
 
 
