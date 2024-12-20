@@ -591,6 +591,10 @@ class TextArea(BaseComponent):
         
         self.rendered_text_img = img
 
+        if not ImageFont.core.HAVE_RAQM:
+            # At this point we need the visible_width to be the "actual" (yet still incorrect) width
+            self.visible_width = int(self.visible_width * 0.95)
+
         self.horizontal_text_scroll_thread: TextArea.HorizontalTextScrollThread = None
         if self.is_horizontal_scrolling_enabled:
             self.horizontal_text_scroll_thread = TextArea.HorizontalTextScrollThread(
