@@ -49,6 +49,27 @@ class ToolsImageEntropyLivePreviewScreen(BaseScreen):
                 self.hw_inputs.update_last_input_time()
                 self.camera.stop_video_stream_mode()
 
+                with self.renderer.lock:
+                    self.renderer.canvas.paste(frame)
+
+                    self.renderer.draw.text(
+                        xy=(
+                            int(self.renderer.canvas_width/2),
+                            self.renderer.canvas_height - GUIConstants.EDGE_PADDING
+                        ),
+                        text=_("Capturing image..."),
+                        fill=GUIConstants.ACCENT_COLOR,
+                        font=instructions_font,
+                        stroke_width=4,
+                        stroke_fill=GUIConstants.BACKGROUND_COLOR,
+                        anchor="ms"
+                    )
+                    self.renderer.show_image()
+
+                return preview_images
+
+            # If we're still here, it's just another preview frame loop
+            with self.renderer.lock:
                 self.renderer.canvas.paste(frame)
 
                 self.renderer.draw.text(
@@ -56,33 +77,14 @@ class ToolsImageEntropyLivePreviewScreen(BaseScreen):
                         int(self.renderer.canvas_width/2),
                         self.renderer.canvas_height - GUIConstants.EDGE_PADDING
                     ),
-                    text=_("Capturing image..."),
-                    fill=GUIConstants.ACCENT_COLOR,
+                    text="< " + _("back") + "  |  " + _("click joystick"),  # TODO: Render with UI elements instead of text
+                    fill=GUIConstants.BODY_FONT_COLOR,
                     font=instructions_font,
                     stroke_width=4,
                     stroke_fill=GUIConstants.BACKGROUND_COLOR,
                     anchor="ms"
                 )
                 self.renderer.show_image()
-
-                return preview_images
-
-            # If we're still here, it's just another preview frame loop
-            self.renderer.canvas.paste(frame)
-
-            self.renderer.draw.text(
-                xy=(
-                    int(self.renderer.canvas_width/2),
-                    self.renderer.canvas_height - GUIConstants.EDGE_PADDING
-                ),
-                text="< " + _("back") + "  |  " + _("click joystick"),  # TODO: Render with UI elements instead of text
-                fill=GUIConstants.BODY_FONT_COLOR,
-                font=instructions_font,
-                stroke_width=4,
-                stroke_fill=GUIConstants.BACKGROUND_COLOR,
-                anchor="ms"
-            )
-            self.renderer.show_image()
 
             if len(preview_images) == max_entropy_frames:
                 # Keep a moving window of the last n preview frames; pop the oldest
@@ -99,26 +101,27 @@ class ToolsImageEntropyFinalImageScreen(BaseScreen):
     def _run(self):
         instructions_font = Fonts.get_font(GUIConstants.get_body_font_name(), GUIConstants.get_button_font_size())
 
-        self.renderer.canvas.paste(self.final_image)
+        with self.renderer.lock:
+            self.renderer.canvas.paste(self.final_image)
 
-        # TRANSLATOR_NOTE: A prompt to the user to either accept or reshoot the image
-        reshoot = _("reshoot")
+            # TRANSLATOR_NOTE: A prompt to the user to either accept or reshoot the image
+            reshoot = _("reshoot")
 
-        # TRANSLATOR_NOTE: A prompt to the user to either accept or reshoot the image
-        accept = _("accept")
-        self.renderer.draw.text(
-            xy=(
-                int(self.renderer.canvas_width/2),
-                self.renderer.canvas_height - GUIConstants.EDGE_PADDING
-            ),
-            text=" < " + reshoot + "  |  " + accept + " > ",
-            fill=GUIConstants.BODY_FONT_COLOR,
-            font=instructions_font,
-            stroke_width=4,
-            stroke_fill=GUIConstants.BACKGROUND_COLOR,
-            anchor="ms"
-        )
-        self.renderer.show_image()
+            # TRANSLATOR_NOTE: A prompt to the user to either accept or reshoot the image
+            accept = _("accept")
+            self.renderer.draw.text(
+                xy=(
+                    int(self.renderer.canvas_width/2),
+                    self.renderer.canvas_height - GUIConstants.EDGE_PADDING
+                ),
+                text=" < " + reshoot + "  |  " + accept + " > ",
+                fill=GUIConstants.BODY_FONT_COLOR,
+                font=instructions_font,
+                stroke_width=4,
+                stroke_fill=GUIConstants.BACKGROUND_COLOR,
+                anchor="ms"
+            )
+            self.renderer.show_image()
 
         input = self.hw_inputs.wait_for([HardwareButtonsConstants.KEY_LEFT, HardwareButtonsConstants.KEY_RIGHT])
         if input == HardwareButtonsConstants.KEY_LEFT:

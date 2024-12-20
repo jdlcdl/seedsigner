@@ -149,7 +149,7 @@ class SeedMnemonicEntryScreen(BaseTopNavScreen):
         """ Internal helper method to render the KEY 1, 2, 3 word candidates.
             (has access to all vars in the parent's context)
         """
-        # Render the possibler matches to a temp ImageDraw surface and paste it in
+        # Render the possible matches to a temp ImageDraw surface and paste it in
         # BUT render the currently highlighted match as a normal Button element
 
         if not self.possible_words:
@@ -1358,14 +1358,15 @@ class SeedTranscribeSeedQRZoomedInScreen(BaseScreen):
             block_labels = self.draw_block_labels()
 
             if self.cur_x != self.next_x or self.cur_y != self.next_y:
-                self.renderer.show_image_pan(
-                    self.qr_image,
-                    self.cur_x, self.cur_y, self.next_x, self.next_y,
-                    rate=self.pixels_per_block,
-                    alpha_overlay=Image.alpha_composite(self.block_mask, block_labels)
-                )
-                self.cur_x = self.next_x
-                self.cur_y = self.next_y
+                with self.renderer.lock:
+                    self.renderer.show_image_pan(
+                        self.qr_image,
+                        self.cur_x, self.cur_y, self.next_x, self.next_y,
+                        rate=self.pixels_per_block,
+                        alpha_overlay=Image.alpha_composite(self.block_mask, block_labels)
+                    )
+                    self.cur_x = self.next_x
+                    self.cur_y = self.next_y
 
 
 
