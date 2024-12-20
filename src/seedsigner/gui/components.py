@@ -652,6 +652,10 @@ class TextArea(BaseComponent):
                     continue
 
                 with self.renderer.lock:
+                    if not self.scrolling_active:
+                        # We were stopped while waiting for the lock
+                        continue
+
                     img = self.rendered_text_img.crop((self.horizontal_scroll_position, 0, self.horizontal_scroll_position + self.visible_width, self.rendered_text_img.height))
                     self.renderer.canvas.paste(img, (self.screen_x, self.screen_y - self.scroll_y))
                     self.renderer.show_image()
