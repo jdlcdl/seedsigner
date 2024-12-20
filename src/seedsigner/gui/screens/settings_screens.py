@@ -186,6 +186,9 @@ class IOTestScreen(BaseTopNavScreen):
             input = self.hw_inputs.wait_for(keys=HardwareButtonsConstants.ALL_KEYS, check_release=False)
 
             if input == HardwareButtonsConstants.KEY1:
+                # Note that there are three distinct screen updates that happen at
+                # different times, therefore we claim the `Renderer.lock` three separate
+                # times.
                 cur_selected_button = self.key1_button
 
                 with self.renderer.lock:
