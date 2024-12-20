@@ -376,9 +376,8 @@ def generate_screenshots(locale):
         # we were occasionally running into confusing race conditions where the next
         # screenshot would begin rendering over the previous one. Claiming the lock
         # guarantees that the previous screenshot has been fully rendered and saved.
-        screenshot_renderer.lock.acquire()
-        screenshot_renderer.set_screenshot_filename(f"{screenshot_config.screenshot_name}.png")
-        screenshot_renderer.lock.release()
+        with screenshot_renderer.lock:
+            screenshot_renderer.set_screenshot_filename(f"{screenshot_config.screenshot_name}.png")
 
         controller = Controller.get_instance()
         toast_thread = screenshot_config.toast_thread
