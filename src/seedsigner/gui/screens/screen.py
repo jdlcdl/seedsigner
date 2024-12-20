@@ -108,19 +108,17 @@ class BaseScreen(BaseComponent):
 
             For example: A basic menu screen where the user can key up and down. The
             Screen can handle the UI updates to light up the currently selected menu item
-            on its own. Only when the user clicks to make a selection would run() exit
-            and returns the selected option.
+            on its own. Only when the user clicks to make a selection would _run() exit
+            and return the selected option.
 
-            But an alternate use case returns immediately after each user input so the
-            View can update its controlling logic accordingly (e.g. as the user joysticks
-            over different letters in the keyboard UI, we need to make matching changes
-            to the list of mnemonic seed words that match the new letter).
+            In general, _run() will be implemented as a continuous loop waiting for user
+            input and redrawing the screen as needed. When it redraws, it must claim
+            the `Renderer.lock` to ensure that its updates don't conflict with any other
+            threads that might be updating the screen at the same time (e.g. flashing
+            warning edges, auto-scrolling long titles or buttons, etc).
 
-            In this case, it would be called repeatedly in a loop:
-            * run() and wait for it to handle user input
-            * run() exits and returns the user input (e.g. KEY_UP)
-            * View updates its state of the world accordingly
-            * loop and call run() again
+            Just note that this loop cannot hold the lock indefinitely! Each iteration
+            through the loop should claim the lock, render, and then release it.
         """
         raise Exception("Must implement in a child class")
 
