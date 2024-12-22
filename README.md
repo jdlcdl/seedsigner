@@ -7,7 +7,7 @@
 * [Project Summary](#project-summary)
 * [Shopping List](#shopping-list)
 * [Software Installation](#software-installation)
-  * [Verifying the Software](#verifying-the-software)
+  * [Verifying your download](#verifying-your-download)
 * [Enclosure Designs](#enclosure-designs)
 * [SeedQR Printable Templates](#seedqr-printable-templates)
 * [Build from Source](#build-from-source)
@@ -119,13 +119,13 @@ Once the files have all finished downloading, follow the steps below to verify t
 [Our previous software versions are available here](https://github.com/SeedSigner/seedsigner/releases). Choose a specific version and then expand the *Assets* sub-heading to display the .img file binary and also the 2 associated signature files. **Note:** The prior version files will have lower numbers than the scripts and examples provided in this document, but the naming format will be the same, so you can edit them as required for signature verification etc.   
 
 
-## Verifying that the downloaded files are authentic (optional but highly recommended!)
+## Verifying your download
 
-You can quickly verify that the software you just downloaded is both authentic and unaltered, by following these instructions.
-We assume you are running the commands from a computer where both [GPG](https://gnupg.org/download/index.html) and [shasum](https://command-not-found.com/shasum) are already installed, and that you also know [how to navigate on a terminal](https://terminalcheatsheet.com/guides/navigate-terminal). 
+You can quickly verify that the software you just downloaded is both authentic and unaltered by following these instructions.
+We assume you are running the commands from a computer where both [GPG](https://gnupg.org/download/index.html) and [shasum](https://command-not-found.com/shasum) are already installed and that you also know [how to navigate on a terminal](https://terminalcheatsheet.com/guides/navigate-terminal). 
 
 > You must run the following verification before opening or mounting the .img file.
-> Some operating systems modify the file on mount causing verification to fail.
+> Some operating systems modify the file on mount, causing verification to fail.
 
 ### Step 1. Verify that the signature (.sig) file is genuine:
 
