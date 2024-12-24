@@ -344,7 +344,7 @@ class UrXpubQrEncoder(BaseFountainQrEncoder, BaseXpubQrEncoder):
             return Keypath(arr, self.root.my_fingerprint, len(arr))
             
         origin = derivation_to_keypath(self.derivation)
-        self.use_info = None if self.network == "M" else CoinInfo(type=None, network=1)
+        self.use_info = None if self.network == SettingsConstants.MAINNET else CoinInfo(type=None, network=1)
         
         self.ur_hdkey = HDKey({ 'key': self.xpub.key.serialize(),
         'chain_code': self.xpub.chain_code,
