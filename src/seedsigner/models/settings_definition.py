@@ -62,7 +62,7 @@ class SettingsConstants:
         # (LOCALE__ARABIC, "Arabic"),
         # (LOCALE__CZECH, "čeština"),
         (LOCALE__ENGLISH, "English"),
-        # (LOCALE__FRENCH, "Français"),
+        (LOCALE__FRENCH, "Français"),
         # (LOCALE__GERMAN, "Deutsch"),
         # (LOCALE__HEBREW, "Hebrew"),
         # (LOCALE__JAPANESE, "Japanese"),
