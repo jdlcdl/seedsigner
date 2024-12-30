@@ -332,7 +332,7 @@ class ButtonListScreen(BaseTopNavScreen):
                 active_button_label = button_option.active_button_label
             
             else:
-                raise Exception("Refactor needed!")
+                raise Exception("Refactor to ButtonOption approach needed!")
 
             button_kwargs = dict(
                 text=_(button_label),  # Wrap here for just-in-time translations
@@ -923,13 +923,14 @@ class LargeIconStatusScreen(ButtonListScreen):
             self.components.append(self.warning_headline_textarea)
             next_y = next_y + self.warning_headline_textarea.height
 
-        self.components.append(TextArea(
-            height=self.buttons[0].screen_y - next_y,
-            text=_(self.text),
-            width=self.canvas_width,
-            edge_padding=self.text_edge_padding,  # Don't render all the way up to the far left/right edges
-            screen_y=next_y,
-        ))
+        if self.text:
+            self.components.append(TextArea(
+                height=self.buttons[0].screen_y - next_y,
+                text=_(self.text),
+                width=self.canvas_width,
+                edge_padding=self.text_edge_padding,  # Don't render all the way up to the far left/right edges
+                screen_y=next_y,
+            ))
 
 
 

@@ -1977,36 +1977,12 @@ class SeedAddressVerificationSuccessView(View):
     
 
     def run(self):
-        from seedsigner.gui.screens.screen import LargeIconStatusScreen
-        address = self.controller.unverified_address["address"]
-        sig_type = self.controller.unverified_address["sig_type"]
-        verified_index = self.controller.unverified_address["verified_index"]
-        verified_index_is_change = self.controller.unverified_address["verified_index_is_change"]
-
-        if sig_type == SettingsConstants.MULTISIG:
-            source = _("multisig")
-        else:
-            # TRANSLATOR_NOTE: Inserts the seed fingerprint
-            source = _("seed {}").format(self.seed.get_fingerprint())
-
-        # TRANSLATOR_NOTE: Used in a sentence describing the address type (change or receive)
-        change_text = _("change")
-
-        # TRANSLATOR_NOTE: Used in a sentence describing the address type (change or receive)
-        receive_text = _("receive")
-
-        # TRANSLATOR_NOTE: Address verification success message (e.g. "bc1qabc = seed 12345678's receive address #0.")
-        text = _("{} = {}'s {} address #{}.").format(
-            address[:7],
-            source,
-            change_text if verified_index_is_change else receive_text,
-            verified_index
+        self.run_screen(
+            seed_screens.SeedAddressVerificationSuccessScreen,
+            address = self.controller.unverified_address["address"],
+            verified_index = self.controller.unverified_address["verified_index"],
+            verified_index_is_change = self.controller.unverified_address["verified_index_is_change"],
         )
-        LargeIconStatusScreen(
-            status_headline=_("Address Verified"),
-            text=text,
-            show_back_button=False,
-        ).display()
 
         return Destination(MainMenuView)
 
