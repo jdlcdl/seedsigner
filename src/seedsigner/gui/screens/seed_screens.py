@@ -1524,7 +1524,7 @@ class SeedAddressVerificationSuccessScreen(LargeIconStatusScreen):
         self.status_headline = _("Address Verified")
         self.button_data = [ButtonOption("OK")]
         self.is_bottom_list = True
-        self.show_back_button = False,
+        self.show_back_button = False
         super().__post_init__()
 
         if self.verified_index_is_change:
