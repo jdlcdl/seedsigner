@@ -1848,66 +1848,69 @@ class SeedAddressVerificationView(View):
 
     def run(self):
         # Start brute-force calculations from the zero-th index
-        self.addr_verification_thread.start()
+        try:
+            self.addr_verification_thread.start()
 
-        button_data = [self.SKIP_10, self.CANCEL]
+            button_data = [self.SKIP_10, self.CANCEL]
 
-        script_type_settings_entry = SettingsDefinition.get_settings_entry(SettingsConstants.SETTING__SCRIPT_TYPES)
-        script_type_display = script_type_settings_entry.get_selection_option_display_name_by_value(self.script_type)
+            script_type_settings_entry = SettingsDefinition.get_settings_entry(SettingsConstants.SETTING__SCRIPT_TYPES)
+            script_type_display = script_type_settings_entry.get_selection_option_display_name_by_value(self.script_type)
 
-        sig_type_settings_entry = SettingsDefinition.get_settings_entry(SettingsConstants.SETTING__SIG_TYPES)
-        sig_type_display = sig_type_settings_entry.get_selection_option_display_name_by_value(self.sig_type)
+            sig_type_settings_entry = SettingsDefinition.get_settings_entry(SettingsConstants.SETTING__SIG_TYPES)
+            sig_type_display = sig_type_settings_entry.get_selection_option_display_name_by_value(self.sig_type)
 
-        network_settings_entry = SettingsDefinition.get_settings_entry(SettingsConstants.SETTING__NETWORK)
-        network_display = network_settings_entry.get_selection_option_display_name_by_value(self.network)
-        mainnet = network_settings_entry.get_selection_option_display_name_by_value(SettingsConstants.MAINNET)
+            network_settings_entry = SettingsDefinition.get_settings_entry(SettingsConstants.SETTING__NETWORK)
+            network_display = network_settings_entry.get_selection_option_display_name_by_value(self.network)
+            mainnet = network_settings_entry.get_selection_option_display_name_by_value(SettingsConstants.MAINNET)
 
-        # Display the Screen to show the brute-forcing progress.
-        # Using a loop here to handle the SKIP_10 button presses to increment the counter
-        # and resume displaying the screen. User won't even notice that the Screen is
-        # being re-constructed.
-        while True:
-            selected_menu_num = self.run_screen(
-                seed_screens.SeedAddressVerificationScreen,
-                address=self.address,
-                derivation_path=self.derivation_path,
-                script_type=script_type_display,
-                sig_type=sig_type_display,
-                network=network_display,
-                is_mainnet=network_display == mainnet,
-                threadsafe_counter=self.threadsafe_counter,
-                verified_index=self.verified_index,
-                button_data=button_data,
-            )
+            # Display the Screen to show the brute-forcing progress.
+            # Using a loop here to handle the SKIP_10 button presses to increment the counter
+            # and resume displaying the screen. User won't even notice that the Screen is
+            # being re-constructed.
+            while True:
+                selected_menu_num = self.run_screen(
+                    seed_screens.SeedAddressVerificationScreen,
+                    address=self.address,
+                    derivation_path=self.derivation_path,
+                    script_type=script_type_display,
+                    sig_type=sig_type_display,
+                    network=network_display,
+                    is_mainnet=network_display == mainnet,
+                    threadsafe_counter=self.threadsafe_counter,
+                    verified_index=self.verified_index,
+                    button_data=button_data,
+                )
+
+                if self.verified_index.cur_count is not None:
+                    break
+
+                if selected_menu_num == RET_CODE__BACK_BUTTON:
+                    break
+
+                if selected_menu_num is None:
+                    # Only happens in the test suite; the screen isn't actually executed so
+                    # it returns before the brute force thread has completed.
+                    time.sleep(0.1)
+                    continue
+
+                if button_data[selected_menu_num] == self.SKIP_10:
+                    self.threadsafe_counter.increment(10)
+
+                elif button_data[selected_menu_num] == self.CANCEL:
+                    break
 
             if self.verified_index.cur_count is not None:
-                break
+                # Successfully verified the addr; update the data
+                self.controller.unverified_address["verified_index"] = self.verified_index.cur_count
+                self.controller.unverified_address["verified_index_is_change"] = self.verified_index_is_change.cur_count == 1
+                return Destination(SeedAddressVerificationSuccessView, view_args=dict(seed_num=self.seed_num))
 
-            if selected_menu_num == RET_CODE__BACK_BUTTON:
-                break
-
-            if selected_menu_num is None:
-                # Only happens in the test suite; the screen isn't actually executed so
-                # it returns before the brute force thread has completed.
-                time.sleep(0.1)
-                continue
-
-            if button_data[selected_menu_num] == self.SKIP_10:
-                self.threadsafe_counter.increment(10)
-
-            elif button_data[selected_menu_num] == self.CANCEL:
-                break
-
-        if self.verified_index.cur_count is not None:
-            # Successfully verified the addr; update the data
-            self.controller.unverified_address["verified_index"] = self.verified_index.cur_count
-            self.controller.unverified_address["verified_index_is_change"] = self.verified_index_is_change.cur_count == 1
-            return Destination(SeedAddressVerificationSuccessView, view_args=dict(seed_num=self.seed_num))
-
-        else:
+        finally:
             # Halt the thread if the user gave up (will already be stopped if it verified the
             # target addr).
             self.addr_verification_thread.stop()
+
+            # Block until the thread has stopped
             while self.addr_verification_thread.is_alive():
                 time.sleep(0.01)
 
@@ -1933,7 +1936,7 @@ class SeedAddressVerificationView(View):
 
             if self.seed:
                 self.xpub = self.seed.get_xpub(wallet_path=self.derivation_path, network=Settings.get_instance().get_value(SettingsConstants.SETTING__NETWORK))
- 
+
 
         def run(self):
             from seedsigner.helpers import embit_utils
@@ -1965,7 +1968,7 @@ class SeedAddressVerificationView(View):
 
                 # Increment our index counter
                 self.threadsafe_counter.increment()
-        
+
 
 
 class SeedAddressVerificationSuccessView(View):
