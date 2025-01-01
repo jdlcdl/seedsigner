@@ -54,8 +54,6 @@ class HardwareButtons(Singleton):
             cls._instance.GPIO = GPIO
             cls._instance.override_ind = False
 
-            # cls._instance.add_events([HardwareButtonsConstants.KEY_UP, HardwareButtonsConstants.KEY_DOWN, HardwareButtonsConstants.KEY_PRESS, HardwareButtonsConstants.KEY_LEFT, HardwareButtonsConstants.KEY_RIGHT, HardwareButtonsConstants.KEY1, HardwareButtonsConstants.KEY2, HardwareButtonsConstants.KEY3])
-
             # Track state over time so we can apply input delays/ignores as needed
             cls._instance.cur_input = None           # Track which direction or button was last pressed
             cls._instance.cur_input_started = None   # Track when that input began
