@@ -173,8 +173,6 @@ class HardwareButtons(Singleton):
 
 
 # class used as short hand for static button/channel lookup values
-# TODO: Implement `release_lock` functionality as a global somewhere. Mixes up design
-#   patterns to have a static constants class plus a settable global value.
 class HardwareButtonsConstants:
     if GPIO.RPI_INFO['P1_REVISION'] == 3: #This indicates that we have revision 3 GPIO
         KEY_UP = 31
