@@ -1,3 +1,4 @@
+import logging
 import time
 
 from dataclasses import dataclass, field
@@ -14,6 +15,8 @@ from seedsigner.hardware.buttons import HardwareButtonsConstants, HardwareButton
 from seedsigner.models.encode_qr import BaseQrEncoder
 from seedsigner.models.settings import SettingsConstants
 from seedsigner.models.threads import BaseThread, ThreadsafeCounter
+
+logger = logging.getLogger(__name__)
 
 
 # Must be huge numbers to avoid conflicting with the selected_button returned by the
@@ -450,7 +453,7 @@ class ButtonListScreen(BaseTopNavScreen):
         while True:
             ret = self._run_callback()
             if ret is not None:
-                print("Exiting ButtonListScreen due to _run_callback")
+                logging.info("Exiting ButtonListScreen due to _run_callback")
                 return ret
 
             user_input = self.hw_inputs.wait_for(
