@@ -1,24 +1,24 @@
-import math
 import logging
+import math
 import time
 
 from dataclasses import dataclass
 from gettext import gettext as _
+from PIL import Image, ImageDraw, ImageFilter
 from typing import List
 
-from PIL import Image, ImageDraw, ImageFilter
-from seedsigner.gui.renderer import Renderer
+from seedsigner.hardware.buttons import HardwareButtons, HardwareButtonsConstants
 from seedsigner.helpers.qr import QR
+from seedsigner.gui.components import (Button, FontAwesomeIconConstants, Fonts, FormattedAddress, IconButton,
+    IconTextLine, SeedSignerIconConstants, TextArea, GUIConstants, reflow_text_into_pages)
+from seedsigner.gui.keyboard import Keyboard, TextEntryDisplay
+from seedsigner.gui.renderer import Renderer
 from seedsigner.models.threads import BaseThread, ThreadsafeCounter
 
-from .screen import RET_CODE__BACK_BUTTON, BaseScreen, BaseTopNavScreen, ButtonListScreen, ButtonOption, KeyboardScreen, WarningEdgesMixin
-from ..components import (Button, FontAwesomeIconConstants, Fonts, FormattedAddress, IconButton,
-    IconTextLine, SeedSignerIconConstants, TextArea, GUIConstants, reflow_text_into_pages)
-
-from seedsigner.gui.keyboard import Keyboard, TextEntryDisplay
-from seedsigner.hardware.buttons import HardwareButtons, HardwareButtonsConstants
+from .screen import RET_CODE__BACK_BUTTON, BaseScreen, BaseTopNavScreen, ButtonListScreen, ButtonOption, KeyboardScreen, LargeIconStatusScreen, WarningEdgesMixin
 
 logger = logging.getLogger(__name__)
+
 
 
 @dataclass
@@ -1057,7 +1057,6 @@ class SeedAddPassphraseScreen(BaseTopNavScreen):
                     self.hw_button2.render()
 
                 self.renderer.show_image()
-                
 
 
 
@@ -1509,6 +1508,49 @@ class SeedAddressVerificationScreen(ButtonListScreen):
                     self.renderer.show_image()
 
                 time.sleep(0.1)
+
+
+
+@dataclass
+class SeedAddressVerificationSuccessScreen(LargeIconStatusScreen):
+    address: str = None
+    verified_index: int = None
+    verified_index_is_change: bool = None
+
+
+    def __post_init__(self):
+        # Customize defaults
+        self.title = _("Success!")
+        self.status_headline = _("Address Verified")
+        self.button_data = [ButtonOption("OK")]
+        self.is_bottom_list = True
+        self.show_back_button = False
+        super().__post_init__()
+
+        if self.verified_index_is_change:
+            # TRANSLATOR_NOTE: Describes the address type (change or receive)
+            address_type = _("change address")
+        else:
+            # TRANSLATOR_NOTE: Describes the address type (change or receive)
+            address_type = _("receive address")
+
+        self.components.append(FormattedAddress(
+            screen_y=self.components[-1].screen_y + self.components[-1].height + GUIConstants.COMPONENT_PADDING,
+            address=self.address,
+            max_lines=1,  # Use abbreviated format w/ellipsis
+        ))
+
+        self.components.append(TextArea(
+            text=address_type,
+            screen_y=self.components[-1].screen_y + self.components[-1].height + 2*GUIConstants.COMPONENT_PADDING,
+        ))
+
+        # TRANSLATOR_NOTE: Describes the address index (e.g. "index 7")
+        index_str = _("index {}").format(self.verified_index)
+        self.components.append(TextArea(
+            text=index_str,
+            screen_y=self.components[-1].screen_y + self.components[-1].height + GUIConstants.COMPONENT_PADDING,
+        ))
 
 
 
