@@ -414,6 +414,14 @@ class DecodeQR:
             pass
 
         # Is it byte data?
+        if not isinstance(s, bytes):
+            try:
+                # TODO: remove this check & conversion once above cast to str is removed
+                s = s.encode()
+            except UnicodeError:
+                # Couldn't convert back to bytes; shouldn't happen
+                raise Exception("Conversion to bytes failed")
+
         # 32 bytes for 24-word CompactSeedQR; 16 bytes for 12-word CompactSeedQR
         if len(s) == 32 or len(s) == 16:
             try:
