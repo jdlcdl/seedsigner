@@ -183,7 +183,7 @@ class IOTestScreen(BaseTopNavScreen):
             screen_y=int((self.canvas_height - msg_height)/ 2),
         )
         while True:
-            input = self.hw_inputs.wait_for(keys=HardwareButtonsConstants.ALL_KEYS, check_release=False)
+            input = self.hw_inputs.wait_for(keys=HardwareButtonsConstants.ALL_KEYS)
 
             if input == HardwareButtonsConstants.KEY1:
                 # Note that there are three distinct screen updates that happen at

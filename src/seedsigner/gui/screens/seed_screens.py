@@ -243,11 +243,7 @@ class SeedMnemonicEntryScreen(BaseTopNavScreen):
 
     def _run(self):
         while True:
-            input = self.hw_inputs.wait_for(
-                HardwareButtonsConstants.ALL_KEYS,
-                check_release=True,
-                release_keys=[HardwareButtonsConstants.KEY_PRESS, HardwareButtonsConstants.KEY2]
-            )
+            input = self.hw_inputs.wait_for(HardwareButtonsConstants.ALL_KEYS)
 
             with self.renderer.lock:
                 if self.is_input_in_top_nav:
@@ -885,11 +881,7 @@ class SeedAddPassphraseScreen(BaseTopNavScreen):
 
         # Start the interactive update loop
         while True:
-            input = self.hw_inputs.wait_for(
-                HardwareButtonsConstants.ALL_KEYS,
-                check_release=True,
-                release_keys=[HardwareButtonsConstants.KEY_PRESS, HardwareButtonsConstants.KEY1, HardwareButtonsConstants.KEY2, HardwareButtonsConstants.KEY3]
-            )
+            input = self.hw_inputs.wait_for(HardwareButtonsConstants.ALL_KEYS)
 
             keyboard_swap = False
 
@@ -1466,13 +1458,13 @@ class SeedAddressVerificationScreen(ButtonListScreen):
     
 
     def _run_callback(self):
-        # Exit the screen on success via a non-None value
-        logger.info(f"verified_index: {self.verified_index.cur_count}")
+        # Exit the screen on success via a non-None value.
+        # see: ButtonListScreen._run()
         if self.verified_index.cur_count is not None:
-            logger.info("Screen callback returning success!")
-            self.threads[-1].stop()
-            while self.threads[-1].is_alive():
-                time.sleep(0.01)
+            # Note that the ProgressThread will have already exited on its own.
+
+            # Return a success value (anything other than None) to end the 
+            # ButtonListScreen._run() loop.
             return 1
 
 
@@ -1489,10 +1481,13 @@ class SeedAddressVerificationScreen(ButtonListScreen):
             while self.keep_running:
                 if self.verified_index.cur_count is not None:
                     # This thread will detect the success state while its parent Screen
-                    # holds in its `wait_for`. Have to trigger a hw_input event to break
-                    # the Screen._run out of the `wait_for` state. The Screen will then
-                    # call its `_run_callback` and detect the success state and exit.
-                    HardwareButtons.get_instance().trigger_override(force_release=True)
+                    # blocks in its `wait_for`. Have to trigger a hw_input override event
+                    # to break the Screen._run out of the `wait_for` state. The Screen
+                    # will then call its `_run_callback` and detect the success state and
+                    # exit.
+                    HardwareButtons.get_instance().trigger_override()
+
+                    # Exit the loop and thereby end this thread
                     return
 
                 textarea = TextArea(
