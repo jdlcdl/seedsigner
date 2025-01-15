@@ -148,6 +148,10 @@ class SeedSignerIconConstants:
     QRCODE = "\ue920"
     SIGN = "\ue921"
 
+    # Input icons
+    DELETE = "\ue922"
+    SPACE = "\ue923"
+
     MIN_VALUE = SCAN
     MAX_VALUE = QRCODE
 
