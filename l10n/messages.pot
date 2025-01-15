@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: seedsigner 0.8.5-rc1\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-01-14 10:35-0600\n"
+"POT-Creation-Date: 2025-01-15 10:45-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -539,11 +539,12 @@ msgstr ""
 msgid "Build Final Word"
 msgstr ""
 
-#. Number of BIP-39 seed words, and the entropy -- in bits, contained within.
+#. Final word calc. `mnemonic_length` = 12 or 24. `num_bits` = 7 or 3 (bits of
+#. entropy in final word).
 #: src/seedsigner/gui/screens/tools_screens.py
 msgid ""
-"The {}th word is built from {} more entropy bits plus auto-calculated "
-"checksum."
+"The {mnemonic_length}th word is built from {num_bits} more entropy bits "
+"plus auto-calculated checksum."
 msgstr ""
 
 #. current coin-flip number vs total flips (e.g. flip 3 of 4)
