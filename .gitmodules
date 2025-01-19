@@ -1,7 +1,7 @@
 [submodule "src/seedsigner/resources/seedsigner-translations"]
 	path = src/seedsigner/resources/seedsigner-translations
 	url = https://github.com/jdlcdl/seedsigner-translations.git
-	branch = dev
+	branch = 0.8.5rc1+fr
 [submodule "seedsigner-screenshots"]
 	path = seedsigner-screenshots
 	url = https://github.com/jdlcdl/seedsigner-screenshots.git
