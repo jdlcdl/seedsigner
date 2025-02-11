@@ -47,6 +47,7 @@ class SettingsConstants:
     ]
 
     LOCALE__ARABIC = "ar"
+    LOCALE__CATALAN = "ca"
     LOCALE__CZECH = "cs"
     LOCALE__ENGLISH = "en"
     LOCALE__FRENCH = "fr"
@@ -60,6 +61,7 @@ class SettingsConstants:
     # Do not wrap for translation; always present each language in its native form
     ALL_LOCALES = [
         # (LOCALE__ARABIC, "Arabic"),
+        (LOCALE__CATALAN, "Català"),
         # (LOCALE__CZECH, "čeština"),
         (LOCALE__ENGLISH, "English"),
         (LOCALE__FRENCH, "Français"),
