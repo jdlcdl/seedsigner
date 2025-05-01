@@ -170,6 +170,12 @@ class HardwareButtons(Singleton):
             if self.GPIO.input(key) == GPIO.LOW:
                 return True
         return False
+    
+
+    def wait_for_release(self):
+        """ Waits for all buttons to be released """
+        while any(self.GPIO.input(key) == GPIO.LOW for key in HardwareButtonsConstants.ALL_KEYS):
+            time.sleep(0.01)
 
 
 # class used as short hand for static button/channel lookup values
