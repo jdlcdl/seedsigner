@@ -167,14 +167,14 @@ class PSBTTestData:
 
 
 
-def create_output(output_hex: str, value: int = None) -> OutputScope:
+def create_output(output_hex: str, value: int = None, version: int = 2) -> OutputScope:
     """
     Given a change, self-transfer, or receive output's serialized hex, create the
     corresponding OutputScope that can be added to a PSBT.
 
     Optionally override the output's `value`.
     """
-    output = OutputScope.read_from(BytesIO(unhexlify(output_hex)))
+    output = OutputScope.read_from(BytesIO(unhexlify(output_hex)), version=version)
     if value is not None:
         output.value = value
     return output
