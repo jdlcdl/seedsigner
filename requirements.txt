@@ -14,8 +14,10 @@
 # Combining it with unhashed requirements (or `-e .`) in one invocation fails,
 # because any hash in an invocation makes pip require hashes for everything
 # in it.
-embit==0.8.0 \
-    --hash=sha256:8bf4b10073c67400370ce523fb16f035fe759f6fdd987c579bdcc268d75ed770
+#embit==0.8.0 \
+#    --hash=sha256:8bf4b10073c67400370ce523fb16f035fe759f6fdd987c579bdcc268d75ed770
+embit @ git+https://github.com/odudex/embit.git@9b33a67e13373f84655dcc801f2147870a54af4c#egg=embit
+
 Pillow==10.3.0 \
     --hash=sha256:048ad577748b9fa4a99a0548c64f2cb8d672d5bf2e643a739ac8faff1164238c \
     --hash=sha256:048eeade4c33fdf7e08da40ef402e748df113fd0b4584e32c4af74fe78baaeb2 \

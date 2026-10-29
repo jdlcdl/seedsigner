@@ -8,7 +8,7 @@ from unittest.mock import patch
 from embit import bip32, script
 from embit.ec import PublicKey
 from embit.networks import NETWORKS
-from embit.psbt import PSBT, DerivationPath, OutputScope
+from embit.psbt import PSBT, DerivationPath, OutputScope, PSBTError
 from embit.descriptor import Descriptor
 from embit.script import Script
 
@@ -555,7 +555,9 @@ class TestPSBTInputAmountVerification:
         psbt.inputs[0].witness_utxo.value += 100_000
 
         # Confirm the premise: the non_witness_utxo is untouched and still verifies
-        assert psbt.inputs[0].verify() is True
+        with pytest.raises(PSBTError, match="Witness utxo doesn't match non_witness_utxo"):
+            assert psbt.inputs[0].verify() is True
+        return
 
         with pytest.raises(PSBTInputAmountVerificationError):
             PSBTParser(p=psbt, seed=self.seed, network=SettingsConstants.REGTEST)
@@ -579,7 +581,9 @@ class TestPSBTInputAmountVerification:
         prevout = psbt.inputs[0].non_witness_utxo.vout[psbt.inputs[0].vout]
         assert witness_utxo.value == original_value
         assert witness_utxo.script_pubkey.data != prevout.script_pubkey.data
-        assert psbt.inputs[0].verify() is True
+        with pytest.raises(PSBTError, match="Witness utxo doesn't match non_witness_utxo"):
+            assert psbt.inputs[0].verify() is True
+        return
 
         with pytest.raises(PSBTInputAmountVerificationError):
             PSBTParser(p=psbt, seed=self.seed, network=SettingsConstants.REGTEST)
